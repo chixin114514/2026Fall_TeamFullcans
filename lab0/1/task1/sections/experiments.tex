@@ -1,0 +1,160 @@
+% Section 5 translation from the user-provided paper.
+\section{实验结果}\label{sec:experimental-results}
+
+所提出的算法在计算机模拟数据和真实数据上都进行了测试。闭式解涉及对一个小型 \(2n\times 6\) 矩阵进行奇异值分解，其中 \(n\) 为图像数量。Levenberg--Marquardt 算法中的非线性细化经过 \(3\) 至 \(5\) 次迭代即可收敛。
+
+\subsection{计算机模拟}\label{subsec:computer-simulations}
+
+模拟相机的参数为
+\(\alpha=1250\)、\(\beta=900\)、\(c=1.09083\)（等价于 \(89.95^\circ\)）、\(u_0=255\) 和 \(v_0=255\)。图像分辨率为 \(512\times512\)。模型平面是一个包含 \(10\times14=140\) 个角点的棋盘格（因此 \(v\) 方向的数据通常多于 \(u\) 方向），模板尺寸为 \(18\mathrm{cm}\times25\mathrm{cm}\)。平面的姿态用三维向量 \(\mathbf r\) 表示：\(\mathbf r\) 与旋转轴平行，其模等于旋转角。平面的位置用三维向量 \(\mathbf t\) 表示，单位为厘米。
+
+\paragraph{噪声水平的影响}
+
+在该实验中，使用三个平面，其姿态和位置分别为
+\begin{equation}
+\begin{aligned}
+\mathbf r_1&=[20^\circ,0,0]^{\mathsf T},&
+\mathbf t_1&=[-9,-12.5,500]^{\mathsf T},\\
+\mathbf r_2&=[0,20^\circ,0]^{\mathsf T},&
+\mathbf t_2&=[-9,-12.5,510]^{\mathsf T},\\
+\mathbf r_3&=\frac{1}{\sqrt{5}}[-30^\circ,-30^\circ,-15^\circ]^{\mathsf T},&
+\mathbf t_3&=[-10.5,-12.5,525]^{\mathsf T}.
+\end{aligned}
+\label{eq:simulation-poses}
+\end{equation}
+在投影得到的图像点上加入均值为 \(0\)、标准差为 \(\sigma\) 的高斯噪声。将估计得到的相机参数与真实值进行比较：对 \(\alpha\) 和 \(\beta\) 测量相对误差，对 \(u_0\) 和 \(v_0\) 测量绝对误差。噪声水平从 \(0.1\) 像素变化到 \(1.5\) 像素；对每个噪声水平进行 \(100\) 次相互独立的试验，图中结果取平均值。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.88\linewidth]{figure1_noise_errors}
+    \caption{图像点噪声水平对应的误差。}
+    \label{fig:simulation-noise}
+\end{figure}
+
+如图\ref{fig:simulation-noise}所示，误差随噪声水平近似线性增加。参数 \(c\) 的误差未在图中给出，但具有相同的变化规律。当 \(\sigma=0.5\)（该噪声水平高于实际标定中的通常噪声）时，\(\alpha\) 和 \(\beta\) 的误差小于 \(0.3\%\)，而 \(u_0\) 和 \(v_0\) 的误差约为 \(1\) 像素。\(u_0\) 的误差大于 \(v_0\) 的误差，主要原因是 \(u\) 方向的数据少于 \(v\) 方向的数据。
+
+\paragraph{模型平面图像数量的影响}
+
+该实验考察图像数量（更准确地说，是模型平面图像的数量）对性能的影响。前 \(3\) 幅图像中模型平面的姿态和位置与上一小节相同。从第 \(4\) 幅图像开始，首先从均匀球面上随机选择旋转轴，然后施加 \(30^\circ\) 的旋转角。图像数量从 \(2\) 幅变化到 \(16\) 幅。对于每一个图像数量，进行 \(100\) 次相互独立的试验；除前 \(3\) 幅图像外，平面姿态相互独立，噪声也相互独立，噪声均值为 \(0\)，标准差为 \(0.5\) 像素。图\ref{fig:simulation-number}给出了平均结果。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\linewidth]{figure2_num_images}
+    \caption{模型平面图像数量对应的误差。}
+    \label{fig:simulation-number}
+\end{figure}
+
+随着图像数量增加，误差逐渐减小；从 \(2\) 幅图像增加到 \(3\) 幅图像时，误差下降尤其明显。
+
+\paragraph{模型平面姿态的影响}
+
+该实验考察模型平面相对于图像平面的姿态对性能的影响。实验使用 \(3\) 幅图像。平面初始时与图像平面平行，然后从均匀球面上随机选择旋转轴，并绕该轴旋转 \(\theta\) 角。投影图像点上加入均值为 \(0\)、标准差为 \(0.5\) 像素的高斯噪声。重复这一过程 \(100\) 次并计算平均误差，\(\theta\) 从 \(5^\circ\) 变化到 \(75^\circ\)，结果如图\ref{fig:simulation-orientation}所示。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\linewidth,trim=0 0 0 9pt,clip]{figure3_orientation_angle}
+    \caption{模型平面相对于图像平面的角度对应的误差。}
+    \label{fig:simulation-orientation}
+\end{figure}
+
+当 \(\theta=5^\circ\) 时，由于各平面几乎相互平行，\(40\%\) 的试验失败（退化配置）；图\ref{fig:simulation-orientation}中的结果排除了这些失败试验。最佳性能似乎在约 \(45^\circ\) 的角度处取得。需要注意的是，在实际应用中，随着角度增大，透视缩短会使角点检测变得不够精确，但本实验没有考虑这一因素。
+
+\subsection{真实数据}\label{subsec:real-data}
+
+所提出的技术目前已在作者所在的视觉组和图形学组中常规使用。下面给出一个实例的结果。
+
+待标定相机是一台配备 \(6\mathrm{mm}\) 镜头的商用 PULNiX CCD 相机，图像分辨率为 \(640\times480\)。模型平面包含 \(8\times8\) 个方格，因此共有 \(256\) 个角点；模板尺寸为 \(17\mathrm{cm}\times17\mathrm{cm}\)。拍摄了平面处于不同姿态下的 \(5\) 幅图像，如图\ref{fig:real-pattern}所示。可以观察到图像中存在明显的镜头畸变。角点通过拟合每个方格的直线，并取直线交点来检测。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figure4_five_model_images}
+    \caption{模型平面的五幅图像及提取的角点；角点以十字标记表示，但标记过小，难以直接观察。}
+    \label{fig:real-pattern}
+\end{figure}
+
+将标定算法分别应用于前 \(2\)、\(3\)、\(4\) 幅图像以及全部 \(5\) 幅图像，结果见表\ref{tab:real-results}。对于每种配置，表中给出三列结果：第一列（初始值）是闭式解的估计结果，第二列（最终值）是最大似然估计（MLE），第三列（\(\sigma\)）是估计的标准差，用于表示最终结果的不确定性。可以看出，闭式解是合理的；无论使用 \(2\)、\(3\)、\(4\) 还是 \(5\) 幅图像，最终估计值都非常一致。还可以看到，最终估计结果的不确定性随图像数量增加而减小。表\ref{tab:real-results}的最后一行 RMS 表示检测图像点与投影图像点之间距离的均方根，单位为像素；最大似然估计显著改善了这一指标。
+
+\begin{table}[htbp]
+    \centering
+    \caption{使用 \(2\) 至 \(5\) 幅图像的真实数据标定结果。}
+    \label{tab:real-results}
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{c|ccc|ccc|ccc|ccc}
+        \toprule
+        \multicolumn{1}{c|}{图像数} & \multicolumn{3}{c|}{\(2\) 幅图像} & \multicolumn{3}{c|}{\(3\) 幅图像} & \multicolumn{3}{c|}{\(4\) 幅图像} & \multicolumn{3}{c}{\(5\) 幅图像}\\
+        参数 & 初始 & 最终 & \(\sigma\) & 初始 & 最终 & \(\sigma\) & 初始 & 最终 & \(\sigma\) & 初始 & 最终 & \(\sigma\)\\
+        \midrule
+        \(\alpha\) & 825.59 & 830.47 & 4.74 & 917.65 & 830.80 & 2.06 & 876.62 & 831.81 & 1.56 & 877.16 & 832.50 & 1.41\\
+        \(\beta\) & 825.26 & 830.24 & 4.85 & 920.53 & 830.69 & 2.10 & 876.22 & 831.82 & 1.55 & 876.80 & 832.53 & 1.38\\
+        \(c\) & 0 & 0 & 0 & 2.2956 & 0.1676 & 0.109 & 0.0658 & 0.2867 & 0.095 & 0.1752 & 0.2045 & 0.078\\
+        \(u_0\) & 295.79 & 307.03 & 1.37 & 277.09 & 305.77 & 1.45 & 301.31 & 304.53 & 0.86 & 301.04 & 303.96 & 0.71\\
+        \(v_0\) & 217.69 & 206.55 & 0.93 & 223.36 & 206.42 & 1.00 & 220.06 & 206.79 & 0.78 & 220.41 & 206.56 & 0.66\\
+        \(k_1\) & 0.161 & $-0.227$ & 0.006 & 0.128 & $-0.229$ & 0.006 & 0.145 & $-0.229$ & 0.005 & 0.136 & $-0.228$ & 0.003\\
+        \(k_2\) & $-1.955$ & 0.194 & 0.032 & $-1.986$ & 0.196 & 0.034 & $-2.089$ & 0.195 & 0.028 & $-2.042$ & 0.190 & 0.025\\
+        RMS & 0.761 & 0.295 & & 0.987 & 0.393 & & 0.927 & 0.361 & & 0.881 & 0.335 & \\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
+表\ref{tab:real-results}的 RMS 行原表仅列出初始值和最终值，没有给出 \(\sigma\)，因此对应单元格留空。
+
+表\ref{tab:real-results}中 \(k_1\) 和 \(k_2\) 的闭式解与最大似然估计之间存在不一致，细心的读者可能会注意到这一点。原因在于，闭式解在假设不存在畸变的条件下估计相机内参数，预测得到的外侧点比检测点更靠近图像中心。随后进行的畸变估计试图使外侧点向外扩展并增大尺度，以减小误差；然而，这一过程中得到的畸变形状（正 \(k_1\)，称为枕形畸变）并不对应真实畸变（负 \(k_1\)，称为桶形畸变）。非线性细化（MLE）最终恢复了正确的畸变形状。估计得到的畸变参数可以用于校正原始图像中的畸变。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.72\linewidth]{figure5_corrected_images}
+    \caption{径向畸变校正后的第一幅和第二幅图像。}
+    \label{fig:real-corrected}
+\end{figure}
+
+图\ref{fig:real-corrected}显示了经过畸变校正的前两幅图像，应将其与图\ref{fig:real-pattern}中的前两幅图像进行比较。可以清楚地看到，原始图像中弯曲的图案被拉直了。
+
+\paragraph{标定结果的变化}
+
+上文表\ref{tab:real-results}给出了使用 \(2\) 至 \(5\) 幅图像时的标定结果；可以发现这些结果彼此非常一致。为进一步考察所提出算法的稳定性，将可用的 \(5\) 幅图像中所有由 \(4\) 幅图像组成的组合都用于标定，结果见表\ref{tab:quadruple-results}。例如，表中的第三列（1235）表示使用第 \(1\)、\(2\)、\(3\) 和 \(5\) 幅图像组成的组合。最后两列分别给出了 \(5\) 组结果的均值和样本标准差。所有参数的样本标准差都很小，这说明所提出的算法具有很好的稳定性。
+
+\begin{table}[htbp]
+    \centering
+    \caption{所有四幅图像组合之间的标定结果变化。}
+    \label{tab:quadruple-results}
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{c|rrrrrrr}
+        \toprule
+        图像组合/参数 & (1234) & (1235) & (1245) & (1345) & (2345) & 均值 & 偏差\\
+        \midrule
+        \(\alpha\) & 831.81 & 832.09 & 837.53 & 829.69 & 833.14 & 832.85 & 2.90\\
+        \(\beta\) & 831.82 & 832.10 & 837.53 & 829.91 & 833.11 & 832.90 & 2.84\\
+        \(c\) & 0.2867 & 0.1069 & 0.0611 & 0.1363 & 0.1096 & 0.1401 & 0.086\\
+        \(u_0\) & 304.53 & 304.32 & 304.57 & 303.95 & 303.53 & 304.18 & 0.44\\
+        \(v_0\) & 206.79 & 206.23 & 207.30 & 207.16 & 206.33 & 206.76 & 0.48\\
+        \(k_1\) & $-0.229$ & $-0.228$ & $-0.230$ & $-0.227$ & $-0.229$ & $-0.229$ & 0.001\\
+        \(k_2\) & 0.195 & 0.191 & 0.193 & 0.179 & 0.190 & 0.190 & 0.006\\
+        RMS & 0.361 & 0.357 & 0.262 & 0.358 & 0.334 & 0.334 & 0.04\\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
+偏斜参数 \(c\) 与 \(0\) 的差异并不显著，因为其变异系数 \(0.086/0.1401=0.6\) 较大。事实上，\(c=0.1401\)、\(\alpha=832.85\) 对应于图像两轴夹角为 \(89.99^\circ\)，这与 \(90^\circ\) 非常接近。我们还计算了每个四幅图像组合的纵横比 \(\alpha/\beta\)。纵横比的均值为 \(0.99995\)，样本标准差为 \(0.00012\)，因此它非常接近 \(1\)，即像素近似为正方形。
+
+\paragraph{在基于图像的建模中的应用}
+
+使用同一台已完成标定的相机拍摄了一个茶叶罐的两幅图像（见图\ref{fig:tea-tin-images}）。图像中主要可见茶叶罐的两个侧面。我们在每个侧面上手工选取了 \(8\) 个点匹配，并将此前开发的运动恢复结构软件应用于这 \(16\) 个点匹配，以建立茶叶罐的部分模型。重建模型采用 VRML 格式，图\ref{fig:tea-tin-model}给出了三个渲染视图。每个侧面上的重建点确实共面；计算得到的两个重建平面之间的夹角为 \(94.7^\circ\)。虽然没有真实值可供比较，但茶叶罐的两个侧面实际上确实几乎相互正交。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.72\linewidth]{figure6_tea_tin_images}
+    \caption{茶叶罐的两幅图像。}
+    \label{fig:tea-tin-images}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.86\linewidth]{figure7_reconstructed_views}
+    \caption{重建茶叶罐的三个渲染视图。}
+    \label{fig:tea-tin-model}
+\end{figure}
+
+包括全部真实数据、结果和软件在内的资料可从以下网页获得：
+\begin{center}
+\url{http://research.microsoft.com/~zhang/Calib/}。
+\end{center}

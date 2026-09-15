@@ -1,0 +1,58 @@
+\section{程序设计与实现}
+
+程序入口为 \codepath{task2/src/stereo_depth.py}，流程包括输入检查、预处理、StereoSGBM 匹配、有效视差筛选、相对深度计算和结果保存。
+
+\subsection{图像读取与预处理}
+
+程序使用 \texttt{cv2.imread} 读取左右彩色图像，并检查两幅图像均成功读取且尺寸一致。随后将图像转为灰度图用于匹配。默认配置对左右彩色图和灰度图各执行一次 \texttt{cv2.pyrDown}，保证左右图像使用相同的缩放比例；命令行参数 \texttt{--no-pyrdown} 可关闭该步骤。本次运行采用默认降采样，处理尺寸为 $641\times555$。
+
+\subsection{StereoSGBM 视差计算}
+
+程序使用 \texttt{cv2.StereoSGBM\_create} 构造匹配器。实际运行参数来自 \codepath{task2/results/params.json}，列于表~\ref{tab:sgbm-params}。
+
+\begin{table}[H]
+  \centering
+  \caption{本次运行使用的 StereoSGBM 参数}
+  \label{tab:sgbm-params}
+  \begin{tabular}{lr}
+    \toprule
+    参数 & 实际值 \\
+    \midrule
+    \texttt{window\_size} & 3 \\
+    \texttt{minDisparity} & 16 \\
+    \texttt{numDisparities} & 96 \\
+    \texttt{blockSize} & 5 \\
+    $P_1$ & 72 \\
+    $P_2$ & 288 \\
+    \texttt{disp12MaxDiff} & 1 \\
+    \texttt{uniquenessRatio} & 10 \\
+    \texttt{speckleWindowSize} & 100 \\
+    \texttt{speckleRange} & 32 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+OpenCV 的匹配器输出为带固定缩放的视差，程序除以 $16$ 转换为像素单位的浮点数组。核心处理逻辑可简写为：
+
+\begin{lstlisting}[language=Python]
+disparity = matcher.compute(left_match, right_match).astype(np.float32) / 16.0
+valid = np.isfinite(disparity) & (disparity > 15)
+disparity_raw = np.where(valid, disparity, np.nan)
+relative_depth = np.where(valid, 1.0 / disparity_raw, np.nan)
+\end{lstlisting}
+
+其中有效掩码排除了非有限值以及不满足阈值的视差。无效位置在两个浮点数组中保留为 \texttt{NaN}，避免参与范围统计和相对深度计算。视差图和相对深度图的 PNG 仅用于显示，显示过程使用有效像素范围归一化，不能替代原始 \texttt{npy} 数组。
+
+\subsection{输出文件}
+
+程序实际保存了以下结果：
+
+\begin{itemize}
+  \item \codepath{left.png}、\codepath{right.png}：降采样后实际参与实验的左右图像；
+  \item \codepath{disparity_raw.npy}：像素单位的浮点视差，外加无效区域的 \texttt{NaN}；
+  \item \codepath{disparity.png}：归一化视差可视化；
+  \item \codepath{valid_mask.png}：有效视差区域掩码；
+  \item \codepath{depth_proxy.npy}：$1/d$ 的任意尺度相对深度数组；
+  \item \codepath{depth_proxy.png}：相对深度可视化；
+  \item \codepath{params.json}：输入、预处理、匹配参数、运行时版本和输出路径摘要。
+\end{itemize}

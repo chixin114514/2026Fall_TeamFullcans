@@ -1,0 +1,63 @@
+% 任务 2：OpenCV 双目深度估计实验报告
+% 本文件只负责报告的全局配置与章节组织；正文位于 sections/ 下。
+\documentclass[UTF8,a4paper,11pt,fontset=fandol]{ctexart}
+
+% 页面与中文排版：保持模板简洁，避免引入不必要的字体依赖。
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+% 正文可直接引用程序生成的结果图；优先使用 task2/results/，也兼容
+% 后续集成阶段将图片复制到本目录下 figures/ 的方案。
+\graphicspath{{../results/}{figures/}}
+
+% 统一的路径、命令行和 Python 代码显示样式。
+\newcommand{\codepath}[1]{\texttt{\nolinkurl{#1}}}
+\lstdefinestyle{reportcode}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!25},
+  showstringspaces=false
+}
+\lstset{style=reportcode}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  urlcolor=blue!60!black,
+  citecolor=blue!50!black,
+  pdftitle={OpenCV 双目深度估计实验报告},
+  pdfauthor={课程实验}
+}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\setcounter{secnumdepth}{3}
+
+\title{OpenCV 双目深度估计实验报告}
+\author{课程实验}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% 正文章节按实验报告要求固定为：目的、原理、环境、实现、结果、结论。
+\input{sections/objective}
+\input{sections/principle}
+\input{sections/environment}
+\input{sections/implementation}
+\input{sections/results}
+\input{sections/conclusion}
+
+\end{document}

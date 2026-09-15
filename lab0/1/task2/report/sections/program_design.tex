@@ -1,0 +1,36 @@
+\section{程序设计}\label{sec:task2-program-design}
+
+\subsection{输入、配置与输出}
+
+程序以一个简单的 Python 脚本作为入口，从 \texttt{task2/images/}读取手机照片。棋盘格内角点规格和方格实际边长集中放在配置区，分别对应
+\texttt{CHECKERBOARD} 和 \texttt{SQUARE\_SIZE}，便于在更换标定板时修改并复核。程序不应把这些值散落在角点生成、检测和报告输出的多个位置。
+
+对每张输入图像，程序依次执行读取、灰度化、角点检测和亚像素优化。成功样本加入标定点列表，并输出类似
+\texttt{[OK] image\_name}的状态；读取失败或角点检测失败的样本输出
+\texttt{[FAILED] image\_name}及原因，但继续处理其他样本。程序在标定前检查有效图像数是否足够以及所有有效图像的分辨率是否一致；输出目录不存在时应自动创建。
+
+\subsection{核心计算}
+
+三维物点由棋盘格坐标生成，二维像点来自优化后的角点。调用
+\texttt{cv2.calibrateCamera(objectPoints, imagePoints, imageSize, ...)}后，程序获得内参矩阵 \(\mathbf K\)、畸变系数以及每幅有效图像的旋转向量和平移向量。其投影关系对应式\ref{eq:task2-projection}，畸变参数的登记顺序应与 OpenCV 实际返回结果一致。
+
+误差计算使用 \texttt{cv2.projectPoints} 将每幅图像的三维物点重投影到像素平面，然后与检测到的二维角点逐点相减。程序应同时保留 OpenCV 返回的 RMS 和按式\ref{eq:task2-reprojection-error}计算的平均重投影误差；两者的统计定义不同，不能将一个数值重复标为两个指标。
+
+\subsection{可复制的运行命令}\label{sec:task2-command}
+
+本机已验证以下解释器可导入 OpenCV 4.10.0。代码清单\ref{lst:task2-command}中的第一条命令用于查看完整参数，第二条命令指定实际项目路径并运行输入目录。当前没有手机照片，因此第二条命令在本工作区会按程序设计报告无匹配图像；照片采集后可直接重新执行。
+
+\begin{lstlisting}[language=bash,caption={任务 2 程序命令},label={lst:task2-command}]
+/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py --help
+/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py \
+    --images "task2/images/*" --output-dir task2/output
+\end{lstlisting}
+
+正式标定前必须根据实物标定板补充或修改 \texttt{--checkerboard COLSxROWS} 和
+\texttt{--square-size VALUE}；程序默认值只是接口默认配置，不是本次实验的实测记录。
+
+\subsection{结果持久化与可复核性}
+
+建议将最终参数保存为一个 \texttt{camera\_params.npz} 文件，并在标准输出中打印矩阵、畸变系数、有效图像数、RMS 和平均重投影误差。保存文件还应记录图像尺寸、棋盘格配置和运行时版本，或者在报告中与其建立对应关系。每次运行的输入目录、配置值和输出文件名应保持明确，使表\ref{tab:task2-results}中的数字可以由日志和输出文件回读核对。
+
+程序负责计算和记录，不负责替实验者填写手机型号或方格尺寸。硬件信息必须来自采集记录，数值结果必须来自一次可复现的实际运行。

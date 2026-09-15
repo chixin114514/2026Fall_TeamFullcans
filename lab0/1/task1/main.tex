@@ -1,0 +1,61 @@
+% Task 1: Chinese translation of the user-provided Zhang calibration paper.
+% Integration Worker owns this file. Chapter content belongs in sections/*.tex.
+% Use the TeX Live bundled CJK fonts for reproducible compilation on macOS
+% installations where ctex's default STHeiti face is not registered.
+\documentclass[UTF8,a4paper,10pt,fontset=fandol]{ctexart}
+
+% ---- Global document configuration (the only global configuration source) ----
+\usepackage[a4paper,left=2.0cm,right=2.0cm,top=2.0cm,bottom=2.0cm]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{array,booktabs}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\linespread{1.05}
+\captionsetup{font=small,labelfont=bf}
+\setlist{nosep}
+
+% Shared notation macros. Chapter workers should use these where applicable.
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\T}{\mathsf{T}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\keywords}[1]{\par\noindent\textbf{关键词：}#1}
+
+\hypersetup{
+  pdftitle={通过从未知方向观察平面实现灵活的相机标定},
+  pdfauthor={课程作业译稿},
+  pdfsubject={张正友标定法论文中文翻译}
+}
+
+\title{\heiti 通过从未知方向观察平面实现灵活的相机标定}
+\author{课程作业译稿\\[-0.25em]\small 原论文作者：Zhengyou Zhang}
+\date{}
+
+\begin{document}
+\maketitle
+
+% Keep the paper's original section order. Each chapter is maintained by a
+% separate translation worker; do not place substantive prose in this file.
+\input{sections/abstract}
+\input{sections/motivations}
+\input{sections/basic_equations}
+\input{sections/calibration_solution}
+\input{sections/degenerate_configurations}
+\input{sections/experiments}
+\input{sections/conclusion}
+\input{sections/appendices}
+
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

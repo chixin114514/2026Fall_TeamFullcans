@@ -1,0 +1,91 @@
+\begin{thebibliography}{14}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ayache and Lustman(1991)]{ayache1991}
+N.~Ayache and F.~Lustman.
+\newblock Trinocular stereo vision for robotics.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 13:\penalty0 73--85, 1991.
+
+\bibitem[Caprile and Torre(1990)]{caprile1990}
+B.~Caprile and V.~Torre.
+\newblock Using vanishing points for camera calibration.
+\newblock \emph{International Journal of Computer Vision}, 4:\penalty0
+  127--140, 1990.
+
+\bibitem[Dhond and Aggarwal(1989)]{dhond1989}
+U.~R. Dhond and J.~K. Aggarwal.
+\newblock Structure from stereo -- a review.
+\newblock \emph{IEEE Transactions on Systems, Man, and Cybernetics},
+  19\penalty0 (6):\penalty0 1489--1510, 1989.
+
+\bibitem[Faugeras(1993)]{faugeras1993}
+O.~Faugeras.
+\newblock \emph{Three-Dimensional Computer Vision: A Geometric Viewpoint}.
+\newblock The MIT Press, Cambridge, Mass., 1993.
+
+\bibitem[Fusiello et~al.(1998)Fusiello, Trucco, and Verri]{fusiello1998}
+A.~Fusiello, E.~Trucco, and A.~Verri.
+\newblock Rectification with unconstrained stereo geometry.
+\newblock Research Memorandum RM/98/12, CEE Department, Heriot-Watt University,
+  Edinburgh, UK, 1998.
+\newblock URL \url{ftp://ftp.sci.univr.it/pub/Papers/Fusiello/RM-98-12.ps.gz}.
+
+\bibitem[Hartley(1999)]{hartley1999}
+R.~Hartley.
+\newblock Theory and practice of projective rectification.
+\newblock \emph{International Journal of Computer Vision}, 35\penalty0
+  (2):\penalty0 1--16, 1999.
+
+\bibitem[Hartley and Gupta(1993)]{hartley1993}
+R.~Hartley and R.~Gupta.
+\newblock Computing matched-epipolar projections.
+\newblock In \emph{CVPR93}, pages 549--555, New York, NJ, 1993.
+
+\bibitem[Hartley and Sturm(1997)]{hartleySturm1997}
+R.~I. Hartley and P.~Sturm.
+\newblock Triangulation.
+\newblock \emph{Computer Vision and Image Understanding}, 68\penalty0
+  (2):\penalty0 146--157, 1997.
+
+\bibitem[Isgr{\`o} and Trucco(1999)]{isgro1999}
+F.~Isgr{\`o} and E.~Trucco.
+\newblock Projective rectification without epipolar geometry.
+\newblock In \emph{CVPR99}, pages I:94--99, Fort Collins, CO, 1999.
+
+\bibitem[Loop and Zhang(1999)]{loop1999}
+C.~Loop and Z.~Zhang.
+\newblock Computing rectifying homographies for stereo vision.
+\newblock In \emph{CVPR99}, pages I:125--131, Fort Collins, CO, 1999.
+
+\bibitem[Papadimitriou and Dennis(1996)]{papadimitriou1996}
+D.~V. Papadimitriou and T.~J. Dennis.
+\newblock Epipolar line estimation and rectification for stereo images pairs.
+\newblock \emph{IEEE Transactions on Image Processing}, 3\penalty0
+  (4):\penalty0 672--676, 1996.
+
+\bibitem[Pollefeys et~al.(1999)Pollefeys, Koch, and {VanGool}]{pollefeys1999}
+M.~Pollefeys, R.~Koch, and L.~{VanGool}.
+\newblock A simple and efficient rectification method for general motion.
+\newblock In \emph{ICCV99}, pages 496--501, Corfu, Greece, 1999.
+
+\bibitem[Robert(1996)]{robert1996}
+L.~Robert.
+\newblock Camera calibration without feature extraction.
+\newblock \emph{Computer Vision, Graphics and Image Processing}, 63\penalty0
+  (2):\penalty0 314--325, 1996.
+
+\bibitem[Robert et~al.(1997)Robert, Zeller, Faugeras, and
+  H\'{e}bert]{robert1997}
+L.~Robert, C.~Zeller, O.~Faugeras, and M.~H\'{e}bert.
+\newblock Applications of non-metric vision to some visually guided robotics
+  tasks.
+\newblock In Y.~Aloimonos, editor, \emph{Visual Navigation: From Biological
+  Systems to Unmanned Ground Vehicles}, chapter~5, pages 89--134. Lawrence
+  Erlbaum Assoc., 1997.
+
+\end{thebibliography}

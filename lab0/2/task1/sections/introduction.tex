@@ -1,0 +1,11 @@
+\section{引言与动机}
+
+给定一个双目图像对，立体校正（rectification）为每个图像平面确定一个变换，使共轭对极线变为共线，并与图像的某一坐标轴（通常为水平轴）平行。校正图像可以看作由一个新的双目系统采集得到，该系统通过旋转原始相机获得。立体校正的重要优势在于，它使双目匹配\citeauthor{dhond1989}（\citeyear{dhond1989}）更加简单，因为匹配搜索可以沿校正图像的水平线进行。
+
+本文假设双目系统已经标定，即已知相机的内参数、相互位置和相互姿态。该假设并非严格必要，但能够带来更简单的技术。另一方面，在根据稠密双目视觉重建物体三维形状时，实际应用中标定是必不可少的；在许多情况下，可以通过多种算法完成标定，例如 \citeauthor{caprile1990}（\citeyear{caprile1990}）和 \citeauthor{robert1996}（\citeyear{robert1996}）所述的方法。
+
+据我们所知，立体校正虽然是双目视觉中的经典问题，但计算机视觉文献中可用的方法并不多。\citeauthor{ayache1991}（\citeyear{ayache1991}）提出了一种立体校正算法，其中满足若干约束的矩阵是手工构造的；然而，必要约束与任意约束之间的区别并不清楚。一些作者在严格限制的假设下讨论立体校正。例如，\citeauthor{papadimitriou1996}（\citeyear{papadimitriou1996}）假设相机参考系的竖直轴彼此平行，这是一种非常严格的几何约束。近期，\citeauthor{hartley1993}（\citeyear{hartley1993}）、\citeauthor{robert1997}（\citeyear{robert1997}）和 \citeauthor{hartley1999}（\citeyear{hartley1999}）提出了在弱标定双目系统上执行立体校正的算法，即对于这类系统，已知信息仅为两幅图像之间的点对应关系。
+
+在本文准备完成之后发表的最新工作包括 \citeauthor{loop1999}（\citeyear{loop1999}）、\citeauthor{isgro1999}（\citeyear{isgro1999}）以及 \citeauthor{pollefeys1999}（\citeyear{pollefeys1999}）的研究。其中一些工作还关注如何最小化校正图像的畸变。本文不讨论这一问题，部分原因在于，与弱标定情形相比，这里的畸变较小。
+
+本文提出一种新算法，用于校正几何无约束且安装有一般相机的已标定双目系统。本文工作改进并扩展了 \citeauthor{ayache1991}（\citeyear{ayache1991}）的方法。两者基本得到相同的结果，但本文方法更加紧凑、清晰。该算法简单而且描述完整。此外，考虑到易于复现、易于获取且表述清楚的算法仍然较为缺乏，本文已将代码发布到 Web 上。

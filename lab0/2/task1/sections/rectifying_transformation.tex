@@ -1,0 +1,47 @@
+% 本章使用的 BibTeX 键：hartleySturm1997。
+
+\section{校正变换}
+\label{sec:rectifying-transformation}
+
+为了校正左图像，需要计算一个变换，将 PPM
+$\widetilde{P}_{o1}=[Q_{o1}\mid\tilde{q}_{o1}]$ 的图像平面映射到
+$\widetilde{P}_{n1}=[Q_{n1}\mid\tilde{q}_{n1}]$ 的图像平面。下面将看到，所求变换是由
+$3\times3$ 矩阵
+\[
+  T_1=Q_{n1}Q_{o1}^{-1}
+\]
+给出的共线性变换。对右图像也有相同的结果。
+
+对于任意三维点 $w$，有
+
+\begin{equation}
+  \begin{cases}
+    \tilde{m}_{o1}\simeq\widetilde{P}_{o1}\tilde{w},\\
+    \tilde{m}_{n1}\simeq\widetilde{P}_{n1}\tilde{w}
+  \end{cases}
+  \label{eq:original-new-projection}
+\end{equation}
+
+根据式~(8)，光线方程如下（因为立体校正不移动光心）：
+
+\begin{equation}
+  \begin{cases}
+    w=c_1+\lambda_o Q_{o1}^{-1}\tilde{m}_{o1},\qquad \lambda_o\in\mathbb{R},\\
+    w=c_1+\lambda_n Q_{n1}^{-1}\tilde{m}_{n1},\qquad \lambda_n\in\mathbb{R}
+  \end{cases}
+  \label{eq:original-new-rays}
+\end{equation}
+
+因此，
+
+\begin{equation}
+  \tilde{m}_{n1}=\lambda Q_{n1}Q_{o1}^{-1}\tilde{m}_{o1},\qquad \lambda\in\mathbb{R}
+  \label{eq:rectifying-collinearity}
+\end{equation}
+
+随后将变换 $T_1$ 应用于原始左图像，以生成校正图像，如图~5 所示。注意，校正图像的
+像素（整数坐标位置）一般对应于原始图像平面中的非整数位置。因此，校正图像的灰度值
+通过双线性插值计算。
+
+可以直接使用 $P_{n1}$、$P_{n2}$，通过三角测量从校正图像重建三维点
+\citep{hartleySturm1997}。

@@ -1,0 +1,56 @@
+\documentclass[UTF8,a4paper,10pt,fontset=fandol]{ctexart}
+
+\usepackage[a4paper,left=2.0cm,right=2.0cm,top=2.0cm,bottom=2.0cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\linespread{1.05}
+\setlist{nosep}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    columns=fullflexible,
+    breaklines=true,
+    frame=single,
+    showstringspaces=false
+}
+
+\hypersetup{
+    pdftitle={手机相机内参标定实验报告},
+    pdfauthor={待填写},
+    pdfsubject={OpenCV 相机标定实验}
+}
+
+\title{\heiti 手机相机内参标定实验报告\\[-0.2em]
+\large 课程作业标题：待填写}
+\author{姓名：待填写\quad 学号：待填写\\课程/班级：待填写}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+    \fbox{\parbox{0.90\linewidth}{\centering
+    \textbf{数据状态声明：当前缺少手机照片，真实标定结果待采集后填入。}}}
+\end{center}
+
+\input{sections/purpose}
+\input{sections/principle}
+\input{sections/environment}
+\input{sections/data_collection}
+\input{sections/procedure}
+\input{sections/program_design}
+\input{sections/results}
+\input{sections/analysis}
+\input{sections/conclusion}
+
+\end{document}

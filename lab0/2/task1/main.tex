@@ -1,0 +1,97 @@
+% 中文译文论文主文件
+% 推荐在 task1/ 目录中使用 XeLaTeX 编译：
+%   xelatex main.tex
+%   bibtex main
+%   xelatex main.tex
+%   xelatex main.tex
+% 也可从项目根目录编译；下面的路径设置兼容两种工作目录。
+
+\documentclass[UTF8,a4paper,zihao=-4,fontset=fandol]{ctexart}
+
+% 数学、图表与交叉引用
+\usepackage{amsmath,amssymb,mathtools,bm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+% 简洁的中文会议论文版式；不在此处加入正文内容。
+\geometry{a4paper,left=2.5cm,right=2.5cm,top=2.4cm,bottom=2.4cm}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\linespread{1.05}
+
+% 第 5 节 MATLAB 代码的最小稳定样式。
+\lstset{
+  language=Matlab,
+  basicstyle=\ttfamily\footnotesize,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  numbers=none
+}
+
+% 允许从 task1/ 或项目根目录编译。
+\makeatletter
+\def\input@path{{}{task1/}}
+\makeatother
+\graphicspath{{figures/}{task1/figures/}}
+
+% 供各章节复用的少量数学记号。
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\PPM}{\widetilde{\mat{P}}}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+  pdftitle={双目立体图像校正的紧凑算法},
+  pdfauthor={Andrea Fusiello, Emanuele Trucco, Alessandro Verri}
+}
+
+\title{双目立体图像校正的紧凑算法}
+\author{Andrea Fusiello \and Emanuele Trucco \and Alessandro Verri}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% 原论文结构：摘要；1 引言；2 相机模型与对极几何（含 2.1、2.2）；
+% 3 相机矩阵校正；4 校正变换；5 校正算法概要；
+% 6 实验结果；7 结论；致谢。
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/camera_model_epipolar_geometry}
+\input{sections/rectification_camera_matrices}
+\input{sections/rectifying_transformation}
+\input{sections/rectification_algorithm}
+\input{sections/experimental_results}
+\input{sections/conclusion}
+\input{sections/acknowledgements}
+
+\bibliographystyle{plainnat}
+% 在 task1/ 中编译时使用 references.bib；从项目根目录编译时回退到
+% task1/references.bib。检查时暂时清空 input path，避免两种工作目录
+% 下的文件搜索路径相互遮蔽。该文件由参考文献 Worker 负责维护。
+\makeatletter
+\begingroup
+  \def\input@path{}
+  \IfFileExists{references.bib}
+    {\gdef\bibfilepath{references}}
+    {\gdef\bibfilepath{task1/references}}
+\endgroup
+\makeatother
+\bibliography{\bibfilepath}
+
+\end{document}

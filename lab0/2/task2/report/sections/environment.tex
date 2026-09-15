@@ -1,0 +1,35 @@
+\section{实验环境}
+
+\subsection{软件与硬件环境}
+
+实验在实测的 macOS 26.6.2（Darwin 25.6.0，arm64）环境中进行。程序使用项目内的虚拟环境运行，版本信息记录在程序生成的 \codepath{task2/results/params.json} 中，具体如下：
+
+\begin{table}[H]
+  \centering
+  \caption{实际运行环境}
+  \label{tab:environment}
+  \begin{tabular}{ll}
+    \toprule
+    项目 & 实测版本或说明 \\
+    \midrule
+    Python & 3.13.5 \\
+    OpenCV runtime & 5.0.0（pip 包 \texttt{opencv-python 5.0.0.93}） \\
+    NumPy & 2.5.3 \\
+    操作系统 & macOS 26.6.2，Darwin 25.6.0，arm64 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{实验数据}
+
+左右输入图像为 OpenCV 官方仓库 \texttt{opencv/opencv} 的 \texttt{4.x/samples/data} 中的 \texttt{aloeL.jpg} 和 \texttt{aloeR.jpg}，来源目录可由\href{https://github.com/opencv/opencv/tree/4.x/samples/data}{OpenCV 官方样例数据页}核对。两幅原始图像尺寸均为 $1282\times1110$，程序默认对左右图像同步执行一次 \texttt{pyrDown}，得到用于匹配的 $641\times555$ 图像。
+
+\subsection{实际运行命令}
+
+本次结果由以下命令生成，未使用 \texttt{--no-pyrdown}，也未额外调整匹配参数：
+
+\begin{lstlisting}[language=bash]
+task2/.venv/bin/python task2/src/stereo_depth.py --left task2/data/aloeL.jpg --right task2/data/aloeR.jpg --out-dir task2/results
+\end{lstlisting}
+
+实验没有将同一官方目录中的其他标定文件套用于 aloe 图像对，因为当前没有证据证明它们与本图像对和当前分辨率配套。

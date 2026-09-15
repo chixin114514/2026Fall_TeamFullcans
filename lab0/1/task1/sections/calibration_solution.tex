@@ -1,0 +1,167 @@
+% Translation worker B: Section 3 of the source paper.
+\section{相机标定求解}\label{sec:calibration-solution}
+
+本节详细介绍如何有效求解相机标定问题。首先给出解析解，随后介绍一种基于最大似然准则的非线性优化技术。最后考虑镜头畸变，从而给出解析解和非线性解。
+
+\subsection{闭式解}\label{subsec:closed-form}
+
+令
+\begin{equation}
+\begin{aligned}
+\mat{B} &= \mat{A}^{-\T}\mat{A}^{-1}
+\equiv
+\begin{bmatrix}
+B_{11} & B_{12} & B_{13}\\
+B_{12} & B_{22} & B_{23}\\
+B_{13} & B_{23} & B_{33}
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+\dfrac{1}{\alpha^2}
+&-\dfrac{c}{\alpha^2\beta}
+&\dfrac{cv_0-u_0\beta}{\alpha^2\beta}\\[0.6em]
+-\dfrac{c}{\alpha^2\beta}
+&\dfrac{c^2}{\alpha^2\beta^2}+\dfrac{1}{\beta^2}
+&-\dfrac{c(cv_0-u_0\beta)}{\alpha^2\beta^2}-\dfrac{v_0}{\beta^2}\\[0.6em]
+\dfrac{cv_0-u_0\beta}{\alpha^2\beta}
+&-\dfrac{c(cv_0-u_0\beta)}{\alpha^2\beta^2}-\dfrac{v_0}{\beta^2}
+&\dfrac{(cv_0-u_0\beta)^2}{\alpha^2\beta^2}+\dfrac{v_0^2}{\beta^2}+1
+\end{bmatrix} .
+\end{aligned}
+\label{eq:intrinsic-constraint-matrix}
+\end{equation}
+注意，$\mat{B}$ 是对称矩阵，可以由一个六维向量定义：
+\begin{equation}
+\vect{b}=\left[B_{11},B_{12},B_{22},B_{13},B_{23},B_{33}\right]^{\T} .
+\label{eq:intrinsic-constraint-vector}
+\end{equation}
+（实际上，它描述了绝对二次曲线在图像中的表示。）
+
+设 $\mat{H}$ 的第 $i$ 个列向量为
+\begin{equation*}
+\vect{h}_i=\left[h_{i1},h_{i2},h_{i3}\right]^{\T} .
+\end{equation*}
+则有
+\begin{equation}
+\vect{h}_i^{\T}\mat{B}\vect{h}_j=\vect{v}_{ij}^{\T}\vect{b},
+\label{eq:homography-constraint-vector}
+\end{equation}
+其中
+\begin{equation*}
+\vect{v}_{ij}=\left[
+h_{i1}h_{j1},\;
+h_{i1}h_{j2}+h_{i2}h_{j1},\;
+h_{i2}h_{j2},\;
+h_{i3}h_{j1}+h_{i1}h_{j3},\;
+h_{i3}h_{j2}+h_{i2}h_{j3},\;
+h_{i3}h_{j3}
+\right]^{\T} .
+\end{equation*}
+
+因此，由给定单应性得到的两个基本约束（式~\eqref{eq:orthogonality} 和式~\eqref{eq:equal-norm}）可以改写为关于 $\vect{b}$ 的两个齐次方程：
+\begin{equation}
+\begin{bmatrix}
+\vect{v}_{12}^{\T}\\
+(\vect{v}_{11}-\vect{v}_{22})^{\T}
+\end{bmatrix}\vect{b}=\vect{0} .
+\label{eq:stacked-homography-constraints}
+\end{equation}
+如果观测到模型平面的 $n$ 幅图像，将 $n$ 组如式~\eqref{eq:stacked-homography-constraints} 所示的方程叠加，可得
+\begin{equation}
+\mat{V}\vect{b}=\vect{0},
+\label{eq:calibration-linear-system}
+\end{equation}
+其中，$\mat{V}$ 是一个 $2n\times6$ 矩阵。当 $n\geq3$ 时，通常可以得到一个除尺度因子外唯一确定的解 $\vect{b}$。当 $n=2$ 时，可以施加无倾斜约束 $c=0$，即
+\begin{equation*}
+\left[0,1,0,0,0,0\right]\vect{b}=0,
+\end{equation*}
+并将其作为附加方程加入式~\eqref{eq:calibration-linear-system}。式~\eqref{eq:calibration-linear-system} 的解是与 $\mat{V}^{\T}\mat{V}$ 的最小特征值对应的特征向量（等价地，是与 $\mat{V}$ 的最小奇异值对应的右奇异向量）。
+
+得到 $\vect{b}$ 后，即可计算相机内参数矩阵 $\mat{A}$；具体细节见附录~B。已知 $\mat{A}$ 后，每幅图像的外参数也可直接计算。由式~\eqref{eq:homography} 有
+\begin{equation*}
+\vect{r}_1=\lambda\mat{A}^{-1}\vect{h}_1,\qquad
+\vect{r}_2=\lambda\mat{A}^{-1}\vect{h}_2,\qquad
+\vect{r}_3=\vect{r}_1\times\vect{r}_2,\qquad
+\vect{t}=\lambda\mat{A}^{-1}\vect{h}_3,
+\end{equation*}
+其中
+\begin{equation*}
+\lambda=\frac{1}{\norm{\mat{A}^{-1}\vect{h}_1}}
+=\frac{1}{\norm{\mat{A}^{-1}\vect{h}_2}} .
+\end{equation*}
+当然，由于数据中存在噪声，按此方式计算得到的矩阵
+ $\mat{R}=\left[\vect{r}_1,\vect{r}_2,\vect{r}_3\right]$
+通常不满足旋转矩阵的性质。附录~C 描述了如何从一般的 $3\times3$ 矩阵估计最佳旋转矩阵的方法。
+
+\subsection{最大似然估计}\label{subsec:maximum-likelihood}
+
+上述解是通过最小化一个不具有物理意义的代数距离得到的。可以利用最大似然估计对其进行细化。
+
+设给定模型平面的 $n$ 幅图像，模型平面上有 $m$ 个点。假设图像点受到独立同分布噪声的干扰。最大似然估计可以通过最小化下述泛函得到：
+\begin{equation}
+\sum_{i=1}^{n}\sum_{j=1}^{m}
+\norm{m_{ij}-\widehat{m}(\mat{A},\mat{R}_i,\vect{t}_i,M_j)}^2 .
+\label{eq:maximum-likelihood}
+\end{equation}
+其中，$\widehat{m}(\mat{A},\mat{R}_i,\vect{t}_i,M_j)$ 是根据式~\eqref{eq:homography} 将点 $M_j$ 投影到第 $i$ 幅图像上的结果。旋转 $\mat{R}$ 由一个三参数向量（记为 $\vect{r}$）参数化，该向量与旋转轴平行，其模长等于旋转角。$\mat{R}$ 与 $\vect{r}$ 通过 Rodrigues 公式相关联~\cite{faugeras1993three}。最小化式~\eqref{eq:maximum-likelihood} 是一个非线性最小化问题，使用 Minpack 中实现的 Levenberg--Marquardt 算法求解~\cite{more1977levenberg}。该算法需要 $\mat{A}$ 以及 $\{\mat{R}_i,\vect{t}_i\mid i=1..n\}$ 的初始估计，这些初始值可以通过上一小节所述的技术得到。
+
+\subsection{处理径向畸变}\label{subsec:radial-distortion}
+
+到目前为止，我们还没有考虑相机的镜头畸变。然而，桌面相机通常表现出显著的镜头畸变，尤其是径向畸变。本节仅考虑径向畸变的前两项。关于更复杂的模型，读者可参阅文献~\cite{slama1980manual,brown1971close,faig1975calibration,weng1992camera}。根据已有文献的报告~\cite{brown1971close,tsai1987versatile,wei1994implicit}，畸变函数很可能完全由径向分量主导，尤其由第一项主导。已有研究还发现，更复杂的建模不仅没有帮助（与传感器量化相比其影响可以忽略），还会导致数值不稳定~\cite{tsai1987versatile,wei1994implicit}。
+
+令 $(u,v)$ 表示理想的（不可观测的、无畸变的）像素图像坐标，$(\breve{u},\breve{v})$ 表示与之对应的实际观测图像坐标。类似地，$(x,y)$ 和 $(\breve{x},\breve{y})$ 分别表示理想的（无畸变的）和实际的（有畸变的）归一化图像坐标。有如下关系~\cite{brown1971close,wei1994implicit}
+\begin{align*}
+\breve{x}&=x+x\left[k_1(x^2+y^2)+k_2(x^2+y^2)^2\right],\\
+\breve{y}&=y+y\left[k_1(x^2+y^2)+k_2(x^2+y^2)^2\right],
+\end{align*}
+其中，$k_1$ 和 $k_2$ 是径向畸变系数。径向畸变的中心与主点相同。由
+\begin{equation*}
+\breve{u}=u_0+\alpha\breve{x}+c\breve{y},\qquad
+\breve{v}=v_0+\beta\breve{y}
+\end{equation*}
+可得
+\begin{align}
+\breve{u}&=u+(u-u_0)\left[k_1(x^2+y^2)+k_2(x^2+y^2)^2\right],
+\label{eq:radial-distortion-u}\\
+\breve{v}&=v+(v-v_0)\left[k_1(x^2+y^2)+k_2(x^2+y^2)^2\right].
+\label{eq:radial-distortion-v}
+\end{align}
+
+\paragraph{通过交替估计径向畸变。}
+由于径向畸变预计较小，因此可以预期，使用第~\ref{subsec:maximum-likelihood} 节所述技术、简单地忽略畸变，也能够较为合理地估计其他五个内参数。一种策略是在估计其他参数之后再估计 $k_1$ 和 $k_2$。由式~\eqref{eq:radial-distortion-u} 和式~\eqref{eq:radial-distortion-v}，每幅图像中的每个点均可得到两个方程：
+\begin{equation*}
+\begin{bmatrix}
+(u-u_0)(x^2+y^2) & (u-u_0)(x^2+y^2)^2\\
+(v-v_0)(x^2+y^2) & (v-v_0)(x^2+y^2)^2
+\end{bmatrix}
+\begin{bmatrix}k_1\\k_2\end{bmatrix}
+=
+\begin{bmatrix}\breve{u}-u\\\breve{v}-v\end{bmatrix} .
+\end{equation*}
+给定 $n$ 幅图像中的 $m$ 个点，将所有方程叠加后总共得到 $2mn$ 个方程，或写成矩阵形式 $\mat{D}k=d$，其中 $k=[k_1,k_2]^{\T}$。线性最小二乘解为
+\begin{equation}
+k=(\mat{D}^{\T}\mat{D})^{-1}\mat{D}^{\T}d .
+\label{eq:radial-linear-least-squares}
+\end{equation}
+得到 $k_1$ 和 $k_2$ 后，可以通过求解式~\eqref{eq:maximum-likelihood} 来细化其他参数，只需将其中的 $\widehat{m}(\mat{A},\mat{R}_i,\vect{t}_i,M_j)$ 替换为式~\eqref{eq:radial-distortion-u} 和式~\eqref{eq:radial-distortion-v} 所描述的投影。可以交替执行这两个过程，直到收敛。
+
+\paragraph{完整的最大似然估计。}
+通过实验发现，上述交替技术的收敛速度较慢。因此，对式~\eqref{eq:maximum-likelihood} 的自然扩展是通过最小化下述泛函来估计完整的参数集：
+\begin{equation}
+\sum_{i=1}^{n}\sum_{j=1}^{m}
+\norm{m_{ij}-\breve{m}(\mat{A},k_1,k_2,\mat{R}_i,\vect{t}_i,M_j)}^2 .
+\label{eq:complete-maximum-likelihood}
+\end{equation}
+其中，$\breve{m}(\mat{A},k_1,k_2,\mat{R}_i,\vect{t}_i,M_j)$ 是根据式~\eqref{eq:homography} 将点 $M_j$ 投影到第 $i$ 幅图像上、再依据式~\eqref{eq:radial-distortion-u} 和式~\eqref{eq:radial-distortion-v} 施加畸变后的结果。这是一个非线性最小化问题，使用 Minpack 中实现的 Levenberg--Marquardt 算法求解~\cite{more1977levenberg}。旋转仍然像第~\ref{subsec:maximum-likelihood} 节中一样由三维向量 $\vect{r}$ 参数化。$\mat{A}$ 以及 $\{\mat{R}_i,\vect{t}_i\mid i=1..n\}$ 的初始估计可以使用第~\ref{subsec:closed-form} 节或第~\ref{subsec:maximum-likelihood} 节所述技术获得。$k_1$ 和 $k_2$ 的初始估计可以使用上一段所述技术获得，也可以直接将其设为 $0$。
+
+\subsection{总结}\label{subsec:calibration-summary}
+
+推荐的相机标定流程如下：
+\begin{enumerate}
+    \item 打印一个模板，并将其粘贴到平面表面上；
+    \item 通过移动平面或相机，在不同方向下拍摄几幅模型平面的图像；
+    \item 检测图像中的特征点；
+    \item 使用第~\ref{subsec:closed-form} 节所述的闭式解，估计五个内参数和全部外参数；
+    \item 求解线性最小二乘问题~\eqref{eq:radial-linear-least-squares}，估计径向畸变系数；
+    \item 通过最小化式~\eqref{eq:complete-maximum-likelihood} 对全部参数进行细化。
+\end{enumerate}

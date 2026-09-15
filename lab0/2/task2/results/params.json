@@ -1,0 +1,64 @@
+{
+  "input": {
+    "left": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/data/aloeL.jpg",
+    "right": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/data/aloeR.jpg",
+    "original_size": {
+      "width": 1282,
+      "height": 1110
+    }
+  },
+  "preprocessing": {
+    "pyrdown": true,
+    "processed_size": {
+      "width": 641,
+      "height": 555
+    },
+    "grayscale_for_matching": true
+  },
+  "matcher": "StereoSGBM",
+  "matcher_parameters": {
+    "window_size": 3,
+    "min_disparity": 16,
+    "num_disparities": 96,
+    "block_size": 5,
+    "P1": 72,
+    "P2": 288,
+    "disp12MaxDiff": 1,
+    "uniquenessRatio": 10,
+    "speckleWindowSize": 100,
+    "speckleRange": 32
+  },
+  "disparity": {
+    "opencv_fixed_point_scale": 16.0,
+    "invalid_rule": "finite and disparity > 15",
+    "valid_pixel_ratio": 0.734713496647974,
+    "valid_min_pixels": 16.0,
+    "valid_max_pixels": 105.875,
+    "unit": "pixels"
+  },
+  "relative_depth": {
+    "formula": "1 / disparity",
+    "array_file": "depth_proxy.npy",
+    "scale": "arbitrary",
+    "unit": null,
+    "metric_depth_available": false,
+    "note": "No verified focal length, baseline, or Q matrix was supplied for aloe."
+  },
+  "runtime": {
+    "python": "3.13.5 (v3.13.5:6cb20a219a8, Jun 11 2025, 12:23:45) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "python_version": "3.13.5",
+    "opencv": "5.0.0",
+    "numpy": "2.5.3",
+    "command": "task2/src/stereo_depth.py --left task2/data/aloeL.jpg --right task2/data/aloeR.jpg --out-dir task2/results"
+  },
+  "outputs": {
+    "left": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/left.png",
+    "right": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/right.png",
+    "disparity_raw": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/disparity_raw.npy",
+    "disparity_visualisation": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/disparity.png",
+    "valid_mask": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/valid_mask.png",
+    "relative_depth": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/depth_proxy.npy",
+    "relative_depth_visualisation": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/depth_proxy.png",
+    "parameters": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/params.json"
+  }
+}

@@ -1,0 +1,74 @@
+\appendix
+\section{模型平面与图像之间单应性的估计}
+
+估计模型平面与其图像之间单应性的方法有很多。这里给出一种基于最大似然准则的技术。设 $\mathbf M_i$ 和 $\mathbf m_i$ 分别为模型点和图像点。理想情况下，它们应满足式~\eqref{eq:homography}。但在实际中，由于提取出的图像点含有噪声，这一关系并不严格成立。假设 $\mathbf m_i$ 受到均值为 0、协方差矩阵为 $\Lambda_{\mathbf m_i}$ 的高斯噪声干扰，则单应性矩阵 $\mathbf H$ 的最大似然估计通过最小化下列泛函得到：
+
+\begin{equation*}
+    \sum_i
+    (\mathbf m_i-\widehat{\mathbf m}_i)^{\T}
+    \Lambda_{\mathbf m_i}^{-1}
+    (\mathbf m_i-\widehat{\mathbf m}_i),
+\end{equation*}
+其中
+\begin{equation*}
+    \widehat{\mathbf m}_i
+    =\frac{1}{\overline{\mathbf h}_3^{\T}\widetilde{\mathbf M}_i}
+    \begin{bmatrix}
+        \overline{\mathbf h}_1^{\T}\widetilde{\mathbf M}_i\\
+        \overline{\mathbf h}_2^{\T}\widetilde{\mathbf M}_i
+    \end{bmatrix},
+\end{equation*}
+其中 $\overline{\mathbf h}_i$ 是 $\mathbf H$ 的第 $i$ 行。
+
+在实践中，我们简单地对所有 $i$ 假设 $\Lambda_{\mathbf m_i}=\sigma^2\mathbf I$。如果各点是按照相同的过程彼此独立地提取的，这一假设是合理的。在这种情况下，上述问题变为非线性最小二乘问题，即
+\begin{equation*}
+    \min_{\mathbf H}\sum_i
+    \left\lVert\mathbf m_i-\widehat{\mathbf m}_i\right\rVert^2.
+\end{equation*}
+非线性最小化采用 Minpack~\cite{more1977levenberg} 中实现的 Levenberg--Marquardt 算法完成。这需要一个初始猜测值，而该初始值可以如下获得。
+
+令
+\begin{equation*}
+    \mathbf x=
+    \begin{bmatrix}
+        \overline{\mathbf h}_1^{\T} &
+        \overline{\mathbf h}_2^{\T} &
+        \overline{\mathbf h}_3^{\T}
+    \end{bmatrix}^{\T}.
+\end{equation*}
+则式~\eqref{eq:homography} 可以改写为
+\begin{equation*}
+    \begin{bmatrix}
+        \widetilde{\mathbf M}^{\T} & \mathbf 0^{\T} & -u\widetilde{\mathbf M}^{\T}\\
+        \mathbf 0^{\T} & \widetilde{\mathbf M}^{\T} & -v\widetilde{\mathbf M}^{\T}
+    \end{bmatrix}\mathbf x=\mathbf 0.
+\end{equation*}
+当给定 $n$ 个点时，就有 $n$ 个上述方程，它们可以写成矩阵方程 $\mathbf L\mathbf x=\mathbf 0$，其中 $\mathbf L$ 是一个 $2n\times9$ 矩阵。由于 $\mathbf x$ 只定义到一个尺度因子，众所周知，其解是与最小奇异值对应的 $\mathbf L$ 的右奇异向量（或者等价地，是与最小特征值对应的 $\mathbf L^{\T}\mathbf L$ 的特征向量）。
+
+在 $\mathbf L$ 中，有些元素恒为 1，有些以像素为单位，有些以世界坐标为单位，还有一些是二者的乘积。这使得 $\mathbf L$ 在数值上条件很差。在执行上述过程之前进行简单的数据归一化（例如采用文献~\cite{hartley1995defence} 提出的方法），可以获得好得多的结果。
+
+\section{从矩阵 B 提取内参数}
+
+如第 3.1 节所述，矩阵 $\mathbf B$ 的估计只确定到一个尺度因子，即
+\begin{equation*}
+    \mathbf B=\lambda\mathbf A^{-\T}\mathbf A^{-1},
+\end{equation*}
+其中 $\lambda$ 是任意尺度因子。由矩阵 $\mathbf B$ 唯一地提取内参数并不困难。
+
+\begin{align*}
+    v_0
+    &=\frac{B_{12}B_{13}-B_{11}B_{23}}
+            {B_{11}B_{22}-B_{12}^{2}},\\
+    \lambda
+    &=B_{33}-\frac{B_{13}^{2}+v_0(B_{12}B_{13}-B_{11}B_{23})}
+                         {B_{11}},\\
+    \alpha&=\sqrt{\frac{\lambda}{B_{11}}},\\
+    \beta&=\sqrt{\frac{\lambda B_{11}}
+                         {B_{11}B_{22}-B_{12}^{2}}},\\
+    c&=-\frac{B_{12}\alpha^{2}\beta}{\lambda},\\
+    u_0&=\frac{cv_0}{\alpha}-\frac{B_{13}\alpha^{2}}{\lambda}.
+\end{align*}
+
+\section{用旋转矩阵逼近 3×3 矩阵}
+
+本节所讨论的问题是求解一个最佳旋转矩阵 $\mathbf R$，以逼近给定的 $3\times3$ 矩阵 $\mathbf Q$。这里的“最佳”是指使差值 $\mathbf R-\mathbf Q$ 的 Frobenius 范数最小。相关解法可参见我们的技术报告~\cite{zhang1998flexible}。
