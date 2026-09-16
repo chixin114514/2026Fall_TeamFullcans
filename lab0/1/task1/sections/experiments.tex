@@ -11,7 +11,7 @@
 \paragraph{噪声水平的影响}
 
 在该实验中，使用三个平面，其姿态和位置分别为
-\begin{equation}
+\begin{equation*}
 \begin{aligned}
 \mathbf r_1&=[20^\circ,0,0]^{\mathsf T},&
 \mathbf t_1&=[-9,-12.5,500]^{\mathsf T},\\
@@ -20,8 +20,7 @@
 \mathbf r_3&=\frac{1}{\sqrt{5}}[-30^\circ,-30^\circ,-15^\circ]^{\mathsf T},&
 \mathbf t_3&=[-10.5,-12.5,525]^{\mathsf T}.
 \end{aligned}
-\label{eq:simulation-poses}
-\end{equation}
+\end{equation*}
 在投影得到的图像点上加入均值为 \(0\)、标准差为 \(\sigma\) 的高斯噪声。将估计得到的相机参数与真实值进行比较：对 \(\alpha\) 和 \(\beta\) 测量相对误差，对 \(u_0\) 和 \(v_0\) 测量绝对误差。噪声水平从 \(0.1\) 像素变化到 \(1.5\) 像素；对每个噪声水平进行 \(100\) 次相互独立的试验，图中结果取平均值。
 
 \begin{figure}[htbp]
@@ -134,7 +133,7 @@
     \end{tabular}}
 \end{table}
 
-偏斜参数 \(c\) 与 \(0\) 的差异并不显著，因为其变异系数 \(0.086/0.1401=0.6\) 较大。事实上，\(c=0.1401\)、\(\alpha=832.85\) 对应于图像两轴夹角为 \(89.99^\circ\)，这与 \(90^\circ\) 非常接近。我们还计算了每个四幅图像组合的纵横比 \(\alpha/\beta\)。纵横比的均值为 \(0.99995\)，样本标准差为 \(0.00012\)，因此它非常接近 \(1\)，即像素近似为正方形。
+倾斜参数 \(c\) 与 \(0\) 的差异并不显著，因为其变异系数 \(0.086/0.1401=0.6\) 较大。事实上，\(c=0.1401\)、\(\alpha=832.85\) 对应于图像两轴夹角为 \(89.99^\circ\)，这与 \(90^\circ\) 非常接近。我们还计算了每个四幅图像组合的纵横比 \(\alpha/\beta\)。纵横比的均值为 \(0.99995\)，样本标准差为 \(0.00012\)，因此它非常接近 \(1\)，即像素近似为正方形。
 
 \paragraph{在基于图像的建模中的应用}
 
@@ -142,14 +141,14 @@
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.72\linewidth]{figure6_tea_tin_images}
+    \includegraphics[width=0.5\linewidth]{figure6_tea_tin_images}
     \caption{茶叶罐的两幅图像。}
     \label{fig:tea-tin-images}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.86\linewidth]{figure7_reconstructed_views}
+    \includegraphics[width=0.5\linewidth]{figure7_reconstructed_views}
     \caption{重建茶叶罐的三个渲染视图。}
     \label{fig:tea-tin-model}
 \end{figure}

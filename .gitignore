@@ -1,2 +1,7 @@
 *.DS_Store
-*__py_cache__
+*__pycache__*
+*.aux
+*.out
+*.bbl
+*.blg
+*.log

@@ -106,4 +106,17 @@ e_{\mathrm{RMS}}=
 \sqrt{\frac{1}{M}\sum_{j,i}e_{j,i}^{2}}.
 \label{eq:task2-reprojection-error}
 \end{equation}
-OpenCV 返回的 RMS 值和程序按式\ref{eq:task2-reprojection-error}计算的平均误差应在结果表中分别记录。误差越小通常说明模型对已检测角点的拟合越好，但仍需结合图像覆盖范围、角点质量和独立验证图像综合判断。
+对第 \(j\) 幅图像，程序还计算单幅 RMS 及其算术平均：
+\begin{equation}
+e_{j,\mathrm{RMS}}=
+\sqrt{\frac{1}{M_j}\sum_i e_{j,i}^{2}},\qquad
+\overline e_{\mathrm{view}}=
+\frac{1}{n}\sum_{j=1}^{n}e_{j,\mathrm{RMS}},
+\label{eq:task2-per-image-rms}
+\end{equation}
+其中 \(M_j\) 是第 \(j\) 幅图像的角点数，\(n\) 是有效图像数。
+\path{rms_error} 是 OpenCV 返回的全局 RMS。
+
+\path{mean_reprojection_error} 是式\ref{eq:task2-reprojection-error}中的点级平均欧氏距离。
+
+\path{mean_per_image_rms} 是式\ref{eq:task2-per-image-rms}中的逐图 RMS 算术平均。三者统计口径不同，不能互相替代。误差越小通常说明模型对已检测角点的拟合越好，但仍需结合图像覆盖范围、角点质量和独立验证图像综合判断。

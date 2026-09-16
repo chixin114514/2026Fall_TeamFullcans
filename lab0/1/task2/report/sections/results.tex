@@ -1,33 +1,78 @@
 \section{实验结果}\label{sec:task2-results}
 
-本节是实际运行结果的登记位置。当前文本不把待采集的照片、待核对的标定板尺寸或未运行程序得到的数字视为实验结果；完成采集和运行后，应直接依据程序输出和保存文件替换表\ref{tab:task2-results}中的占位。
+本次结果直接回读自 \texttt{task2/output/camera\_params.npz}，对应
+\texttt{task2/images\_jpg/*.jpg} 的 18 张真实 JPEG。程序实际配置为
+\texttt{checkerboard=8x5}、\texttt{square\_size=1.0}（每格相对单位）和
+\texttt{min\_images=3}。表\ref{tab:task2-results}中的数值不是估计或手抄占位。
+
+\begin{equation}
+\mathbf K=
+\begin{bmatrix}
+4082.15290893 & 0 & 2883.66417823\\
+0 & 4083.58657686 & 2107.20293734\\
+0 & 0 & 1
+\end{bmatrix}.
+\label{eq:task2-result-k}
+\end{equation}
+
+\begin{equation}
+\mathbf d=
+\left[
+0.20245123,\;-0.29420837,\;-0.00326679,\;0.00308671,\;-1.04554325
+\right],
+\label{eq:task2-result-distortion}
+\end{equation}
+其中 \(\mathbf d\) 按 OpenCV 的常见顺序表示
+\((k_1,k_2,p_1,p_2,k_3)\)。
 
 \begin{table}[htbp]
     \centering
-    \caption{手机相机标定结果}
+    \caption{手机相机标定结果（由唯一结果文件回读）}
     \label{tab:task2-results}
     \begin{tabular}{lll}
         \hline
         类别 & 指标 & 实际值 \\
         \hline
-        数据 & 原始图像总数 & 待实际运行填入 \\
-        数据 & 有效标定图像数 & 待实际运行填入 \\
-        数据 & 角点检测失败数 & 待实际运行填入 \\
-        数据 & 图像尺寸（宽 $\times$ 高） & 待实际运行填入 \\
-        内参 & 相机矩阵 \(\mathbf K\) & 待实际运行填入 \\
-        内参 & \(f_x\) & 待实际运行填入 \\
-        内参 & \(f_y\) & 待实际运行填入 \\
-        内参 & \(c_x\) & 待实际运行填入 \\
-        内参 & \(c_y\) & 待实际运行填入 \\
-        畸变 & \((k_1,k_2,p_1,p_2,k_3,\ldots)\) & 待实际运行填入 \\
-        误差 & OpenCV RMS（像素） & 待实际运行填入 \\
-        误差 & 平均重投影误差（像素） & 待实际运行填入 \\
+        数据 & 输入路径 & \texttt{task2/images\_jpg/*.jpg} \\
+        数据 & 候选图像总数 & 18 \\
+        数据 & 有效标定图像数 & 18 \\
+        数据 & 失败图像数 & 0（读取、角点、尺寸均为 0） \\
+        数据 & 图像尺寸（宽 $\times$ 高） & 5712$\times$4284 \\
+        配置 & 棋盘格内角点 & 8$\times$5 \\
+        配置 & \texttt{square\_size} & 1.0（每格相对单位） \\
+        内参 & 相机矩阵 \(\mathbf K\) & 见式\ref{eq:task2-result-k} \\
+        内参 & \(f_x\) & 4082.15290893 \\
+        内参 & \(f_y\) & 4083.58657686 \\
+        内参 & \(c_x\) & 2883.66417823 \\
+        内参 & \(c_y\) & 2107.20293734 \\
+        畸变 & \((k_1,k_2,p_1,p_2,k_3)\) & 见式\ref{eq:task2-result-distortion} \\
+        误差 & OpenCV RMS（像素） & 2.06424401 \\
+        误差 & 逐角点欧氏距离全局平均（像素） & 1.65696931 \\
+        误差 & 逐图 RMS 算术平均（像素） & 1.90750642 \\
+        外参 & 旋转/平移向量形状 & 18$\times$3$\times$1；平移尺度未定 \\
         \hline
     \end{tabular}
 \end{table}
 
-相机矩阵应按式\ref{eq:task2-intrinsic}的三阶矩阵形式抄录，畸变系数须注明 OpenCV 返回的完整长度和顺序。平均重投影误差的计算口径应与式\ref{eq:task2-reprojection-error}一致。若输出中包含每幅图像的误差，还应在附表中保留文件名、角点检测状态和单幅误差，便于定位异常照片。
+OpenCV RMS 是 \texttt{cv2.calibrateCamera} 返回的全局均方根误差。
 
-\subsection{结果图与文件记录}
+逐角点欧氏距离全局平均是 \path{mean_reprojection_error}，对全部
+\(18\times40=720\) 个有效角点求平均。逐图 RMS 算术平均是
+\path{mean_per_image_rms}，对 18 个单幅 RMS 求算术平均。
 
-若程序生成了角点绘制图或畸变校正图，应在最终集成时插入本节，并在正文中说明其输入文件和生成方式。没有实际生成的图像不得用示意图或网络图片代替实验结果。参数文件、运行日志和图像清单应与表中数值保持一一对应。
+三者定义不同，不能把 1.65696931、1.90750642 和 2.06424401 互相替代。
+逐图误差数组保存在 \path{per_image_reprojection_error} 字段中；旋转向量和平移向量分别保存在
+\path{rotation_vectors} 和 \path{translation_vectors} 字段中。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.47\linewidth]{task2-corners-IMG_5486.jpg}
+    \hfill
+    \includegraphics[width=0.47\linewidth]{task2-undistorted-IMG_5486.jpg}
+    \caption{代表性图像 \texttt{IMG\_5486.jpg} 的结果：左为程序生成的角点检测可视化，右为使用同一组标定参数生成的去畸变图像。图件来自临时可视化运行，参数数值仍以 \texttt{task2/output/camera\_params.npz} 为准。}
+    \label{fig:task2-visual-results}
+\end{figure}
+
+图\ref{fig:task2-visual-results}只展示 18 张有效图像中的 1 张，避免将重复图件全部塞入报告。左图用于核对角点检测是否覆盖
+8$\times$5 个内角点，右图用于观察畸变校正效果；两图均由
+\texttt{--save-corners --undistort} 实际生成。

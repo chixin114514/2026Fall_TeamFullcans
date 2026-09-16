@@ -43,6 +43,36 @@
 \begin{document}
 \maketitle
 
+% Pre-register the source paper's bibliography in its original [1]--[24]
+% order. This keeps numeric citation labels stable even when a later chapter
+% cites a higher-numbered source before an earlier-numbered source.
+\nocite{%
+  bougnoux1998projective,
+  brown1971close,
+  caprile1990vanishing,
+  faig1975calibration,
+  faugeras1993three,
+  faugeras1992self,
+  faugeras1986stereo,
+  ganapathy1984decomposition,
+  gennery1979stereo,
+  hartley1994rotating,
+  hartley1995defence,
+  hartley1994several,
+  liebowitz1998metric,
+  luong1997self,
+  maybank1992theory,
+  more1977levenberg,
+  slama1980manual,
+  stein1995accurate,
+  triggs1998autocalibration,
+  tsai1987versatile,
+  wei1993complete,
+  wei1994implicit,
+  weng1992camera,
+  zhang1998flexible%
+}
+
 % Keep the paper's original section order. Each chapter is maintained by a
 % separate translation worker; do not place substantive prose in this file.
 \input{sections/abstract}
@@ -54,7 +84,6 @@
 \input{sections/conclusion}
 \input{sections/appendices}
 
-\nocite{*}
 \bibliographystyle{IEEEtran}
 \bibliography{references}
 
