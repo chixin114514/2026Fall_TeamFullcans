@@ -1,0 +1,18 @@
+flowchart TD
+    A[读取 aloe 左图与右图] --> B[尺寸检查与输入校验]
+    B --> C[灰度转换与同步 pyrDown]
+    C --> D[配置并运行 StereoSGBM]
+    D --> E[除以 16 得到浮点视差]
+    E --> F[有效视差筛选 d 大于 15]
+    F --> G[视差可视化与有效掩码]
+    F --> H[1 除以 d 相对深度]
+    G --> I[保存数组与图片]
+    H --> I
+    I --> J[读取统计量并写入实验报告]
+
+    classDef io fill:#e8f1fb,stroke:#356aa0,stroke-width:1px;
+    classDef process fill:#eef7ed,stroke:#4d8449,stroke-width:1px;
+    classDef output fill:#fff4dc,stroke:#b98222,stroke-width:1px;
+    class A,B io;
+    class C,D,E,F,H process;
+    class G,I,J output;

@@ -1,42 +1,37 @@
-\section{实验数据采集}\label{sec:task2-data-collection}
+\section{Data Acquisition}\label{sec:task2-data-collection}
 
-\subsection{标定板与坐标约定}
+\subsection{Checkerboard and Coordinate Convention}
 
-使用具有规则黑白方格的平面棋盘格作为标定板。程序中的
-\texttt{--checkerboard} 表示每行和每列的内角点数，\texttt{--square-size} 表示相邻方格的边长；两项应与实物逐项核对。本次运行使用
-\(8\times5\) 个内角点和 \texttt{square\_size=1.0} 的相对单位，物理方格边长尚未实测。将左上角内角点设为
-\((0,0,0)\)，沿棋盘格两条边方向分别建立 \(X_w\) 和 \(Y_w\) 轴，所有标定板点的 \(Z_w\) 坐标取为零。这一约定与式\ref{eq:task2-homography}的平面模型一致。
+The calibration target is a planar black-and-white checkerboard. The option
+\texttt{--checkerboard} specifies the number of checkerboard inner-corner columns and rows, while
+\texttt{--square-size} specifies the physical side length of one square. The present run used \(8\times5\) inner corners and a 3 cm square size, with \texttt{square\_size=3.0}. The upper-left inner corner was set to \((0,0,0)\); the two board directions define \(X_w\) and \(Y_w\), and all board points have \(Z_w=0\). This convention is consistent with the planar model in Equation~\ref{eq:task2-homography}.
 
-\subsection{拍摄要求}
+\subsection{Acquisition Conditions}
 
-本次输入为 \texttt{task2/images\_jpg/*.jpg} 下的 18 张 JPEG，尺寸均为
-\(5712\times4284\)，JPEG EXIF 记录设备为 Apple iPhone 15 Pro。原始
-\texttt{task2/images/} 下的 HEIC 文件不作为本次 OpenCV 直接输入，因为当前
-\texttt{cv2.imread} 无法读取它们。前置或后置摄像头及具体镜头模式尚未由采集记录确认。
+The input set contains 18 JPEG files under \path{task2/images_jpg/}, each with resolution
+\(5712\times4284\). JPEG EXIF records an Apple iPhone 15 Pro, and the acquisition used its rear camera. The specific rear-lens focal length was not recorded and is not inferred. The original HEIC files under \path{task2/images/} were not used as direct OpenCV input because the current \texttt{cv2.imread} cannot read them.
 
-拍摄时应同时改变棋盘格相对于镜头的距离、平移位置和倾斜姿态，使其覆盖图像中央、四周及不同深度；不能只使用若干张几乎正对且姿态相同的照片。棋盘格应尽量完整、清晰，避免严重反光、运动模糊、遮挡和过曝。现有文件的姿态覆盖记录尚未整理，需在提交前依据原始照片补充。
+The board should be captured at different distances, translations, and tilt angles so that it covers the image center, edges, and different depths. A set consisting only of nearly frontal views with repeated poses is insufficient. The board should be complete and sharp, without severe reflection, motion blur, occlusion, or overexposure. A separate pose-coverage log remains to be organized from the original acquisition.
 
-程序实际读取 \texttt{task2/images\_jpg/}，保留原文件名，以便将 NPZ 中的
-\texttt{image\_paths} 与每幅图像的检测状态对应。采集和配置记录见表\ref{tab:task2-data-record}。
+The program reads \path{task2/images_jpg/} and preserves the original filenames, allowing the NPZ \path{image_paths} field to be matched to each detection result.
 
 \begin{table}[htbp]
     \centering
-    \caption{手机标定数据登记表}
+    \caption{Mobile-camera acquisition record}
     \label{tab:task2-data-record}
     \begin{tabular}{lll}
         \hline
-        项目 & 记录内容 & 当前状态 \\
+        Item & Recorded content & Status \\
         \hline
-        手机型号 & 制造商与型号 & Apple iPhone 15 Pro（JPEG EXIF） \\
-        摄像头 & 前置或后置及镜头模式 & 待人工确认 \\
-        图像分辨率 & 宽 $\times$ 高（像素） & 5712$\times$4284 \\
-        图像数量 & 输入 JPEG 总数 & 18 \\
-        棋盘格 & 每行、每列内角点数 & 8$\times$5 \\
-        方格尺寸 & 实际边长及单位 & 待实测；本次运行每格相对单位为 1.0 \\
-        拍摄姿态 & 位置、距离、倾角覆盖情况 & 待根据采集记录补充 \\
+        Phone & Manufacturer and model & Apple iPhone 15 Pro (JPEG EXIF) \\
+        Camera & Front/rear camera and lens mode & Rear camera; focal length not recorded \\
+        Image resolution & Width \(\times\) height (pixels) & \(5712\times4284\) \\
+        Image count & Input JPEG files & 18 \\
+        Checkerboard & Inner corners per row/column & \(8\times5\) \\
+        Square size & Physical side length & 3 cm; \texttt{square\_size=3.0} \\
+        Pose coverage & Position, distance, and tilt & Acquisition log to be organized \\
         \hline
     \end{tabular}
 \end{table}
 
-本次标定数值来自 18 张真实 JPEG 的实际运行；尚未确认的字段仅限于具体摄像头/镜头模式、方格物理边长和姿态覆盖记录。由于
-\texttt{square\_size=1.0} 只是统一相对尺度，内参和畸变的像素结果可以直接报告，但平移向量不能解释为米制长度。
+The calibration values come from the actual run on the 18 JPEG files. The rear-camera mode, checkerboard configuration, and 3 cm square size are fixed acquisition facts; only the exact rear-lens focal length and the detailed pose-coverage log remain undocumented.

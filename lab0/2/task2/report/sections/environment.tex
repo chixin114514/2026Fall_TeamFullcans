@@ -1,35 +1,50 @@
-\section{实验环境}
+\section{实验环境与数据}
 
-\subsection{软件与硬件环境}
+\subsection{官方数据来源}
 
-实验在实测的 macOS 26.6.2（Darwin 25.6.0，arm64）环境中进行。程序使用项目内的虚拟环境运行，版本信息记录在程序生成的 \codepath{task2/results/params.json} 中，具体如下：
+实验使用 OpenCV 官方仓库 \texttt{opencv/opencv} 的 \texttt{4.x/samples/data} 目录中的
+\texttt{aloeL.jpg} 和 \texttt{aloeR.jpg}。选择该图像对的原因是：它属于 OpenCV 官方样例，左右文件
+关系明确，官方 Python 立体匹配示例也针对 aloe 图像给出了可复现的 SGBM 处理思路，
+适合在不引入额外数据集的情况下完成课程实验。
+
+两幅 JPG 原始尺寸均为 $1282\times1110$，均为三通道图像。程序默认对左右图像同步执行
+一次 \texttt{pyrDown}，实际匹配尺寸为 $641\times555$。同一官方目录中的 \texttt{aloeGT.png} 是
+可选的视差参考图；本实验没有把它当作标定参数、深度尺度或误差真值。
 
 \begin{table}[H]
   \centering
-  \caption{实际运行环境}
+  \caption{实验数据与软件环境}
   \label{tab:environment}
   \begin{tabular}{ll}
     \toprule
     项目 & 实测版本或说明 \\
     \midrule
+    数据目录 & OpenCV 官方 \texttt{4.x/samples/data} \\
+    输入文件 & \texttt{aloeL.jpg}、\texttt{aloeR.jpg} \\
+    原始尺寸 & $1282\times1110$，三通道 \\
     Python & 3.13.5 \\
-    OpenCV runtime & 5.0.0（pip 包 \texttt{opencv-python 5.0.0.93}） \\
+    OpenCV runtime & 5.0.0 \\
     NumPy & 2.5.3 \\
-    操作系统 & macOS 26.6.2，Darwin 25.6.0，arm64 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{实验数据}
-
-左右输入图像为 OpenCV 官方仓库 \texttt{opencv/opencv} 的 \texttt{4.x/samples/data} 中的 \texttt{aloeL.jpg} 和 \texttt{aloeR.jpg}，来源目录可由\href{https://github.com/opencv/opencv/tree/4.x/samples/data}{OpenCV 官方样例数据页}核对。两幅原始图像尺寸均为 $1282\times1110$，程序默认对左右图像同步执行一次 \texttt{pyrDown}，得到用于匹配的 $641\times555$ 图像。
+版本信息、输入路径和运行参数来自程序生成的
+\codepath{task2/results/params.json}。输入文件的 SHA-256 与下载 URL 已记录在
+\codepath{task2/results/run_evidence.md}，便于在同一版本环境中复核，而不依赖报告中
+手工复制的图像统计。
 
 \subsection{实际运行命令}
 
-本次结果由以下命令生成，未使用 \texttt{--no-pyrdown}，也未额外调整匹配参数：
+本次结果由以下默认命令生成，未使用 \texttt{--no-pyrdown}，也未额外调整匹配参数：
 
 \begin{lstlisting}[language=bash]
-task2/.venv/bin/python task2/src/stereo_depth.py --left task2/data/aloeL.jpg --right task2/data/aloeR.jpg --out-dir task2/results
+task2/.venv/bin/python task2/src/stereo_depth.py \\
+  --left task2/data/aloeL.jpg \\
+  --right task2/data/aloeR.jpg \\
+  --out-dir task2/results
 \end{lstlisting}
 
-实验没有将同一官方目录中的其他标定文件套用于 aloe 图像对，因为当前没有证据证明它们与本图像对和当前分辨率配套。
+程序先检查左右图像均可读取且尺寸一致，再进行灰度转换、同步降采样、StereoSGBM
+匹配、视差筛选和相对深度计算。实验不使用其他图像对的标定文件，所有结果均来自
+上述命令对应的根目录输出。

@@ -1,13 +1,13 @@
-\section{实验目的}\label{sec:task2-purpose}
+\section{Objectives}\label{sec:task2-purpose}
 
-本实验面向手机相机，使用 Python 调用 OpenCV 完成基于平面棋盘格的相机标定。实验目的如下：
+This experiment uses Python and OpenCV to perform camera calibration for a mobile-camera image set captured with a planar checkerboard. Its objectives are:
 
 \begin{enumerate}
-    \item 理解世界坐标系、相机坐标系、图像坐标系和像素坐标系之间的关系，掌握针孔相机模型；
-    \item 区分相机内参数与外参数，理解主点、焦距和镜头畸变系数的物理含义；
-    \item 掌握棋盘格角点检测、亚像素优化和 \texttt{cv2.calibrateCamera} 的基本使用方法；
-    \item 输出相机内参矩阵、畸变系数和每幅有效图像对应的位姿，并用重投影误差评价标定结果；
-    \item 在真实采集数据落地后，分析标定板覆盖范围、拍摄姿态和角点检测质量对结果的影响。
+    \item to understand the relationships among the world, camera, image, and pixel coordinate systems and the pinhole camera model;
+    \item to distinguish intrinsic parameters from extrinsic parameters and understand the roles of focal length, principal point, and lens distortion coefficients;
+    \item to use checkerboard corner detection, subpixel refinement, and \texttt{cv2.calibrateCamera};
+    \item to obtain the camera matrix, distortion coefficients, and per-view poses, and to evaluate the fit using reprojection error;
+    \item to assess how checkerboard coverage, camera pose, and corner quality affect the calibration result.
 \end{enumerate}
 
-本报告只记录实验方法和真实结果的登记位置。手机型号、图像数据及标定数值必须由实际采集和程序运行产生，不以预设值替代实测结果。
+All numerical results in this report come from the recorded JPEG data and the official NPZ result file. No hardware or calibration value is inferred from a default configuration.

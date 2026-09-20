@@ -1,4 +1,4 @@
-\documentclass[UTF8,a4paper,10pt,fontset=fandol]{ctexart}
+\documentclass[a4paper,10pt]{article}
 
 \usepackage[a4paper,left=2.0cm,right=2.0cm,top=2.0cm,bottom=2.0cm]{geometry}
 \usepackage{amsmath,amssymb}
@@ -8,6 +8,7 @@
 \usepackage{enumitem}
 \usepackage{listings}
 \usepackage{xcolor}
+\usepackage{url}
 \usepackage[hidelinks]{hyperref}
 
 \graphicspath{{figures/}}
@@ -25,14 +26,14 @@
 }
 
 \hypersetup{
-    pdftitle={手机相机内参标定实验报告},
-    pdfauthor={待填写},
-    pdfsubject={OpenCV 相机标定实验}
+    pdftitle={Mobile Camera Intrinsic Calibration Report},
+    pdfauthor={Boyang Xie},
+    pdfsubject={OpenCV Camera Calibration Experiment}
 }
 
-\title{\heiti 手机相机内参标定实验报告\\[-0.2em]
-\large 课程作业标题：待填写}
-\author{姓名：待填写\quad 学号：待填写\\课程/班级：待填写}
+\title{\textbf{Mobile Camera Intrinsic Calibration Report}\\[-0.2em]
+\large LAB0-1: Camera Calibration Experiment}
+\author{Name: Boyang Xie\\Student ID: 24020036030\\Course/Class: F29XS}
 \date{}
 
 \begin{document}
@@ -40,7 +41,7 @@
 
 \begin{center}
     \fbox{\parbox{0.90\linewidth}{\centering
-    \textbf{数据状态声明：已使用 18 张真实手机 JPEG 完成一次 OpenCV 标定；具体摄像头模式和方格物理边长仍待确认。}}}
+    \textbf{Data status:} An OpenCV calibration was completed using 18 real JPEG images from an iPhone 15 Pro rear camera. The checkerboard has \(8\times5\) inner corners and 3 cm squares.}}
 \end{center}
 
 \input{sections/purpose}

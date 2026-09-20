@@ -6,13 +6,13 @@
 ## 当前真实数据
 
 项目中用于标定的是 `task2/images_jpg/*.jpg` 的 18 张 JPEG，图片尺寸为
-`5712x4284`；JPEG 的 EXIF 显示设备为 `Apple iPhone 15 Pro`。原始
+`5712x4284`；JPEG 的 EXIF 显示设备为 `Apple iPhone 15 Pro`，本次使用其后置摄像头。原始
 `task2/images/*.HEIC` 文件不能由当前 OpenCV 的 `cv2.imread` 直接读取，因此本次
 标定使用已转换的 JPEG，不把 HEIC 当作可直接输入格式。
 
-现有照片的棋盘格为 `8x5` 个内角点。方格的真实物理边长尚未由用户确认，真实运行
-采用 `--square-size 1.0`，表示“每格一个单位”；该设置只影响平移向量的尺度，不
-代表实测的米、厘米或毫米，不能写成 `0.03 m`。
+现有照片的棋盘格为 `8x5` 个内角点，单个方格实测边长为 `3 cm`。真实运行采用
+`--square-size 3.0`，因此输出的外参平移向量 `translation_vectors`（即 `tvec`）
+以 `cm` 计。该参数仍可通过命令行自定义，但数值单位必须保持一致。
 
 ## 运行
 
@@ -22,7 +22,7 @@
 python3 task2/calibrate_camera.py --help
 python3 task2/calibrate_camera.py \
   --checkerboard 8x5 \
-  --square-size 1.0 \
+  --square-size 3.0 \
   --images "task2/images_jpg/*.jpg" \
   --output-dir task2/output \
   --min-images 3
@@ -32,7 +32,7 @@ python3 task2/calibrate_camera.py \
 
 ```bash
 python3 task2/calibrate_camera.py \
-  --checkerboard 8x5 --square-size 1.0 \
+  --checkerboard 8x5 --square-size 3.0 \
   --images "task2/images_jpg/*" --output-dir task2/output
 ```
 
@@ -47,7 +47,7 @@ python3 -m pip install numpy opencv-python
 | 参数 | 含义 |
 | --- | --- |
 | `--checkerboard COLSxROWS` | 棋盘格内角点列数和行数，例如 `8x5`，不是方格数 |
-| `--square-size UNITS` | 一个方格的边长；采用 `1.0` 时表示每格一个相对单位，只影响外参尺度 |
+| `--square-size CM` | 一个方格的实际边长，单位为 cm；默认 `3.0`，外参 `tvec` 也以 cm 计 |
 | `--images PATH_OR_GLOB` | 图片目录、单个图片或 glob；本项目使用 `task2/images_jpg/*.jpg` |
 | `--output-dir DIR` | 输出目录，默认 `task2/output` |
 | `--min-images N` | 至少需要的有效视图数，默认 `3` |
@@ -71,14 +71,14 @@ python3 -m pip install numpy opencv-python
 | `camera_matrix` | 相机内参矩阵 `K`，包含 `fx`、`fy`、`cx`、`cy` |
 | `distortion_coefficients` | 畸变系数，通常为 `k1,k2,p1,p2,k3` |
 | `rotation_vectors` | 每个有效视图的旋转向量 |
-| `translation_vectors` | 每个有效视图的平移向量 |
+| `translation_vectors` | 每个有效视图的平移向量 `tvec`，单位为 cm |
 | `rms_error` | `cv2.calibrateCamera` 返回的 OpenCV RMS，单位 px |
 | `per_image_reprojection_error` | 每个有效视图的点距离 RMS，单位 px |
 | `mean_reprojection_error` | 所有有效角点欧氏距离的全局平均值，单位 px |
 | `mean_per_image_rms` | `per_image_reprojection_error` 的算术平均，单位 px |
 | `image_size` | `[width, height]` |
 | `checkerboard` | `[columns, rows]` 内角点配置 |
-| `square_size` | 运行时方格边长数值；本次为相对单位 `1.0` |
+| `square_size` | 运行时方格边长数值，单位为 cm；本次为 `3.0` |
 | `image_paths` | 本次发现的全部图片路径 |
 | `valid_image_paths` | 实际用于标定的图片路径 |
 | `failed_image_paths` | 被跳过或拒绝的图片路径 |

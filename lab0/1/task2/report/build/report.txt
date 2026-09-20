@@ -1,386 +1,428 @@
-                       手机相机内参标定实验报告
-                              课程作业标题：待填写
-
-                           姓名：待填写 学号：待填写
-                             课程/班级：待填写
-
-
-       数据状态声明：已使用 18 张真实手机 JPEG 完成一次 OpenCV 标定；具体摄像头模式和方格
-                           物理边长仍待确认。
-
-
-                                 1 实验目的
-      本实验面向手机相机，使用 Python 调用 OpenCV 完成基于平面棋盘格的相机标定。实验目的如下：
-  1. 理解世界坐标系、相机坐标系、图像坐标系和像素坐标系之间的关系，掌握针孔相机模型；
-  2. 区分相机内参数与外参数，理解主点、焦距和镜头畸变系数的物理含义；
-  3. 掌握棋盘格角点检测、亚像素优化和 cv2.calibrateCamera 的基本使用方法；
-  4. 输出相机内参矩阵、畸变系数和每幅有效图像对应的位姿，并用重投影误差评价标定结果；
-  5. 在真实采集数据落地后，分析标定板覆盖范围、拍摄姿态和角点检测质量对结果的影响。
-  本报告只记录实验方法和真实结果的登记位置。手机型号、图像数据及标定数值必须由实际采集和程序运
-行产生，不以预设值替代实测结果。
-
-
-                                 2 实验原理
-2.1    坐标系与针孔成像模型
-    世界坐标系用于描述标定板上点的三维位置，相机坐标系以相机光心为原点，图像坐标系通常在成像平面
-上描述连续坐标，像素坐标系则以图像左上角为参考描述离散像素位置。设世界坐标系中的空间点为 Xw =
-(Xw , Yw , Zw )T ，相机坐标系中的点为 Xc = (Xc , Yc , Zc )T 。相机外参数由旋转矩阵 R 和平移向量 t 给出：
-
-                                  Xc = RXw + t.                          (1)
-
-      在针孔模型下，令 x = Xc /Zc 、y = Yc /Zc 为归一化图像坐标，像素坐标与空间点的关系可写为
-                                            
-                                          Xw
-                              u           Yw 
-                           s v  = K R t      
-                                            Zw  , s ̸= 0,              (2)
-                              1
-                                              1
-
-其中 (u, v) 是像素坐标，K 是相机内参矩阵：
-                                                     
-                                   fx        γ     cx
-                                K=0         fy    cy  .                (3)
-                                    0        0      1
-
-这里 fx , fy 是以像素为单位的水平和竖直焦距，(cx ,cy ) 是主点，γ
-                                           是像素轴非正交时的倾斜参数。普通手机图
-                                       fx 0 c x
-像通常将 γ 视为零，因此程序输出的矩阵一般接近                0 fy c y    。
-                                        0 0 1
-
-
-
-2.2    镜头畸变模型
-      实际镜头会使理想针孔投影偏离观测像素。令 r2 = x2 + y 2 ，常用的径向畸变模型为
-                                                           
-                     xr = x 1 + k1 r 2 + k2 r 4 + k3 r 6 ,
-                                                                        (4)
-                     yr = y 1 + k 1 r 2 + k 2 r 4 + k 3 r 6 .
-
-                                         1
-3   实验环境                                                                       2
-
-
-其中 k1 , k2 , k3 为径向畸变系数。切向畸变由镜头与成像平面未完全平行等因素引起，可写为
-                                                         
-                          xd = xr + 2p1 xy + p2 r2 + 2x2 ,
-                                                                             (5)
-                           yd = yr + p1 r2 + 2y 2 + 2p2 xy.
-
-最终像素坐标由
-                         u = fx xd + γyd + cx ,     v = f y yd + c y          (6)
-得到。OpenCV 常见的五参数输出顺序为 (k1 , k2 , p1 , p2 , k3 )；若实际接口返回更多参数，报告应按程序输出的顺
-序和维数登记。
-
-
-2.3    平面标定与张正友法思想
-  将棋盘格所在平面定义为 Zw = 0，并以方格边长为单位建立标定板坐标。此时平面点到图像点的映射可由
-单应矩阵 H 表示：                  
-                    u         Xw                  
-                 s  v  = H  Yw  , H = K r1 r2 t , (7)
-                     1          1
-其中 r1 , r2 是旋转矩阵的前两列。对同一棋盘格拍摄多个不同姿态的图像，每幅图像都会产生一个平面单应约
-束。利用旋转列向量的正交性和单位长度约束，可以从多幅图像联合估计内参数，再恢复各幅图像的外参数。最
-后，以所有角点的观测像素与模型投影像素之间的差异为目标进行非线性优化，从而同时细化内参数、畸变参
-数和外参数。
-  程序中，棋盘格的三维点位于 Zw = 0 平面，角点检测得到二维像素点；cv2.calibrateCamera 根据这些
-对应点执行上述标定流程。标定板规格和方格实际边长必须与真实物体一致，否则 t 的尺度及由此得到的几何
-量会失去物理意义。
-
-
-2.4    重投影误差
-      设第 j 幅图像中第 i 个角点的观测像素为 qj,i ，由估计参数通过 cv2.projectPoints 投影得到的像素为
-b
-qj,i 。单点重投影误差定义为
-                           ej,i = ∥b
-                                   qj,i − qj,i ∥2 .                 (8)
-若总有效角点数为 M ，则平均重投影误差和全局均方根误差分别为
-                                        s
-                    1 X                   1 X 2
-                 e=       ej,i , eRMS =        e .                            (9)
-                    M j,i                 M j,i j,i
-
-对第 j 幅图像，程序还计算单幅 RMS 及其算术平均：
-                        s
-                          1 X 2                             1X
-                                                               n
-               ej,RMS =        e ,                eview =         ej,RMS ,   (10)
-                          Mj i j,i                          n j=1
-
-其中 Mj 是第 j 幅图像的角点数，n 是有效图像数。rms_error 是 OpenCV 返回的全局 RMS。
-      mean_reprojection_error 是式9中的点级平均欧氏距离。
-  mean_per_image_rms 是式10中的逐图 RMS 算术平均。三者统计口径不同，不能互相替代。误差越小通常
-说明模型对已检测角点的拟合越好，但仍需结合图像覆盖范围、角点质量和独立验证图像综合判断。
-
-
-                                    3 实验环境
-    软件环境取自本次工作区可直接检查到的运行环境。Python 解释器使用 /Users/jiaqiaosu/miniconda3/
-bin/python；该解释器能够导入 cv2，版本由命令 cv2.__version__ 确认。JPEG 文件的 EXIF 记录设备为
-Apple iPhone 15 Pro。具体摄像头模式仍按采集记录保留为待确认，不由手机型号推断。
-    表1中的软件版本、JPEG 设备信息、图像尺寸、内角点配置和图像统计已经由本机命令、EXIF 和 camera_
-params.npz 核实。程序本次以 square_size=1.0 运行，表示每格一个相对单位，不代表米、厘米或毫米的实
-测边长。统一缩放不改变以像素表示的相机内参和畸变系数，但会改变平移向量的尺度；因此平移向量的物理
-单位仍待方格边长实测后确定。
-4   实验数据采集                                                                 3
-
-
-
-                          表 1: 任务 2 实验环境与采集记录
-           类别      项目               记录值
-           操作系统    系统与架构            macOS 26.6.2，Darwin 25.6.0，arm64
-           软件      Python           3.13.12
-           软件      OpenCV           4.10.0（cv2）
-           软件      主要接口             findChessboardCorners、cornerSubPix
-           软件      主要接口             calibrateCamera、projectPoints
-           采集硬件    手机型号             Apple iPhone 15 Pro（JPEG EXIF）
-           采集硬件    使用摄像头/镜头模式 待确认（前置或后置及具体镜头模式）
-           图像      图像分辨率            5712×4284
-           标定板     内角点规格            8×5
-           标定板     方格物理边长           待实际测量
-           数据      输入图像总数           18 张 JPEG（task2/images_jpg/）
-           数据      有效/失败图像数         18 / 0
-
-
-                              4 实验数据采集
-4.1   标定板与坐标约定
-    使用具有规则黑白方格的平面棋盘格作为标定板。程序中的 --checkerboard 表示每行和每列的内角点数，
---square-size 表示相邻方格的边长；两项应与实物逐项核对。本次运行使用 8×5 个内角点和 square_size=1.0
-的相对单位，物理方格边长尚未实测。将左上角内角点设为 (0, 0, 0)，沿棋盘格两条边方向分别建立 Xw 和 Yw
-轴，所有标定板点的 Zw 坐标取为零。这一约定与式7的平面模型一致。
-
-
-4.2   拍摄要求
-    本次输入为 task2/images_jpg/*.jpg 下的 18 张 JPEG，尺寸均为 5712 × 4284，JPEG EXIF 记录设
-备为 Apple iPhone 15 Pro。原始 task2/images/ 下的 HEIC 文件不作为本次 OpenCV 直接输入，因为当前
-cv2.imread 无法读取它们。前置或后置摄像头及具体镜头模式尚未由采集记录确认。
-  拍摄时应同时改变棋盘格相对于镜头的距离、平移位置和倾斜姿态，使其覆盖图像中央、四周及不同深度；
-不能只使用若干张几乎正对且姿态相同的照片。棋盘格应尽量完整、清晰，避免严重反光、运动模糊、遮挡和过
-曝。现有文件的姿态覆盖记录尚未整理，需在提交前依据原始照片补充。
-  程序实际读取 task2/images_jpg/，保留原文件名，以便将 NPZ 中的 image_paths 与每幅图像的检测状
-态对应。采集和配置记录见表2。
-
-
-                            表 2: 手机标定数据登记表
-         项目        记录内容               当前状态
-         手机型号      制造商与型号             Apple iPhone 15 Pro（JPEG EXIF）
-         摄像头       前置或后置及镜头模式         待人工确认
-         图像分辨率     宽 × 高（像素）          5712×4284
-         图像数量      输入 JPEG 总数         18
-         棋盘格       每行、每列内角点数          8×5
-         方格尺寸      实际边长及单位            待实测；本次运行每格相对单位为 1.0
-         拍摄姿态      位置、距离、倾角覆盖情况 待根据采集记录补充
-
-  本次标定数值来自 18 张真实 JPEG 的实际运行；尚未确认的字段仅限于具体摄像头/镜头模式、方格物理
-边长和姿态覆盖记录。由于 square_size=1.0 只是统一相对尺度，内参和畸变的像素结果可以直接报告，但平
-移向量不能解释为米制长度。
-
-
-                                5 实验步骤
-    1. 准备平面棋盘格，实际测量方格边长，并记录每行、每列内角点数。
-    2. 使用手机在不同距离、平移位置和倾角下拍摄多幅清晰照片，记录手机型号、摄像头模式和图像分辨率。
-    3. 将照片放入输入目录，逐张读取并检查图像是否成功加载；读取失败的文件只记录为失败项，不应使其余
-       图像停止处理。
-6    程序设计                                                                   4
-
-
-     4. 使用 cv2.cvtColor 将彩色图像转换为灰度图，再使用 cv2.findChessboardCorners 检测棋盘格内角点。
-        检测成功的图像记录二维角点，检测失败的图像输出文件名和失败状态。
-     5. 对检测成功的角点调用 cv2.cornerSubPix 进行亚像素优化，并将优化终止条件和窗口设置保持为程序中
-        的明确配置。
-     6. 根据标定板内角点规格和方格边长生成 Zw = 0 的三维物点，将其与每幅图像的二维角点一一对应。点的
-        几何定义遵循式7。
-     7. 检查有效图像数量和图像尺寸一致性。若有效图像数量不足以稳定估计参数，则给出提示并要求补充采集；
-        不同尺寸的图像不能直接混合标定。
-     8. 调用 cv2.calibrateCamera 估计相机内参矩阵、畸变系数以及各幅图像的旋转向量和平移向量。内参矩
-        阵的含义见式3，畸变模型见式4和式5。
-     9. 对每幅有效图像使用 cv2.projectPoints 重投影三维物点，依据式8计算角点误差，并汇总平均重投影误
-        差和 RMS。
-    10. 将相机矩阵、畸变系数、RMS、平均重投影误差、有效图像数及每张图像的检测状态保存到输出结果中；
-        如程序启用校正功能，再使用 cv2.undistort 生成校正图像。
-    11. 将实际运行日志中的结果填入第7节，并按照第8节分析参数合理性和数据质量。
-
-
-                                          6 程序设计
-6.1    输入、配置与输出
-  程序以带 argparse 的 Python 脚本作为入口，从 task2/images_jpg/ 读取 JPEG。--checkerboard 设置
-内角点列数和行数，--square-size 设置每格边长数值。--images 设置目录、单张图片或 glob，--output-dir
-设置输出目录。--min-images 设定最少有效视图数。
-      本次真实运行的配置为 8 × 5、square_size=1.0 和 --min-images 3。
-   对每张输入图像，程序依次执行读取、灰度化、角点检测和亚像素优化。成功样本加入标定点列表，并输
-出 [OK] 文件名；读取失败、角点检测失败或分辨率不一致的样本输出 [FAILED] 文件名及原因，并汇总失败
-计数。当前运行的 18 张 JPEG 全部成功，因此读取失败、角点失败和尺寸不一致均为 0。task2/images/ 中的
-HEIC 文件虽会被识别为候选扩展名，但当前 cv2.imread 无法直接读取，不能与 JPEG 混用。程序在标定前
-拒绝有效图像不足和混合分辨率，并在需要时自动创建输出目录。
-
-
-6.2    核心计算
-    三维物点由棋盘格坐标生成，二维像点来自优化后的角点。调用 cv2.calibrateCamera 后，程序获得内
-参矩阵 K、畸变系数以及每幅有效图像的旋转向量和平移向量。调用时传入 objectPoints、imagePoints 和
-imageSize；其投影关系对应式2，畸变参数的登记顺序与 OpenCV 实际返回结果一致。
-   误差计算使用 cv2.projectPoints 将每幅图像的三维物点重投影到像素平面，然后与检测到的二维角点逐
-点相减。程序同时保存 OpenCV 返回的 rms_error、逐图 RMS 数组 per_image_reprojection_error、点级
-全局平均 mean_reprojection_error 和逐图 RMS 算术平均 mean_per_image_rms。三者的统计定义见式9和
-式10，不能将一个数值重复标为多个指标。
-
-
-6.3    可复制的运行命令
-  本机已验证以下解释器可导入 OpenCV 4.10.0。代码清单1中的第一条命令用于查看完整参数，第二条命令
-复现本次真实标定；第三条命令在隔离临时目录生成角点和去畸变图件。
-
-                                      Listing 1: 任务 2 程序命令
-/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py --help
-/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py \
-   --checkerboard 8x5 --square-size 1.0 \
-   --images "task2/images_jpg/*.jpg" \
-   --output-dir task2/output --min-images 3
-/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py \
-   --checkerboard 8x5 --square-size 1.0 \
-   --images "task2/images_jpg/*.jpg" \
-   --output-dir /private/tmp/task2-final-visual-run --min-images 3 \
-   --save-corners --undistort
-7   实验结果                                                                                  5
-
-
-    本次第三条命令产生的临时 camera_params.npz 仅用于复核和生成图件，不作为报告结果来源。camera_
-params.npz 中的 21 个字段与程序一致：
-    • 参数字段：camera_matrix、distortion_coefficients、rotation_vectors、translation_vectors；
-    • 误差字段：rms_error、per_image_reprojection_error、mean_reprojection_error、mean_per_image_
-      rms；
-    • 配置字段：image_size、checkerboard、square_size；
-    • 路径与统计字段：image_paths、valid_image_paths、failed_image_paths、failure_reasons、total_
-      image_count、valid_image_count、failed_image_count、read_failure_count、corner_detection_
-      failure_count、size_mismatch_count。
-
-
-6.4    结果持久化与可复核性
-  最终参数写入 task2/output/camera_params.npz，并在标准输出中打印矩阵、畸变系数、有效图像数、三
-类误差和内参分量。保存文件同时记录图像尺寸、棋盘格配置、平移/旋转向量、候选/有效/失败路径及失败原
-因，使表3中的数字可由唯一 NPZ 回读核对。程序不负责推断手机模式或方格物理边长；这些信息必须来自采
-集记录。
-
-
-                                         7 实验结果
-   本次结果直接回读自 task2/output/camera_params.npz，对应 task2/images_jpg/*.jpg 的 18 张真实
-JPEG。程序实际配置为 checkerboard=8x5、square_size=1.0（每格相对单位）和 min_images=3。表3中的
-数值不是估计或手抄占位。
-                                                                          
-                           4082.15290893           0         2883.66417823
-                       K=       0           4083.58657686   2107.20293734 .           (11)
-                                 0                 0               1
-
-                d = [0.20245123, −0.29420837, −0.00326679, 0.00308671, −1.04554325] ,   (12)
-其中 d 按 OpenCV 的常见顺序表示 (k1 , k2 , p1 , p2 , k3 )。
-
-
-                             表 3: 手机相机标定结果（由唯一结果文件回读）
-                 类别    指标                        实际值
-                 数据    输入路径                      task2/images_jpg/*.jpg
-                 数据    候选图像总数                    18
-                 数据    有效标定图像数                   18
-                 数据    失败图像数                     0（读取、角点、尺寸均为 0）
-                 数据    图像尺寸（宽 × 高）               5712×4284
-                 配置    棋盘格内角点                    8×5
-                 配置    square_size               1.0（每格相对单位）
-                 内参    相机矩阵 K                    见式11
-                 内参    fx                        4082.15290893
-                 内参    fy                        4083.58657686
-                 内参    cx                        2883.66417823
-                 内参    cy                        2107.20293734
-                 畸变    (k1 , k2 , p1 , p2 , k3 ) 见式12
-                 误差    OpenCV RMS（像素）            2.06424401
-                 误差    逐角点欧氏距离全局平均（像素） 1.65696931
-                 误差    逐图 RMS 算术平均（像素）           1.90750642
-                 外参    旋转/平移向量形状                 18×3×1；平移尺度未定
-
-      OpenCV RMS 是 cv2.calibrateCamera 返回的全局均方根误差。
-   逐角点欧氏距离全局平均是 mean_reprojection_error，对全部 18 × 40 = 720 个有效角点求平均。逐图
-RMS 算术平均是 mean_per_image_rms，对 18 个单幅 RMS 求算术平均。
-    三者定义不同，不能把 1.65696931、1.90750642 和 2.06424401 互相替代。逐图误差数组保存在 per_image_
-reprojection_error 字段中；旋转向量和平移向量分别保存在 rotation_vectors 和 translation_vectors
-字段中。
-8   结果分析                                                                          6
-
-
-
-
-图 1: 代表性图像 IMG_5486.jpg 的结果：左为程序生成的角点检测可视化，右为使用同一组标定参数生成的去
-畸变图像。图件来自临时可视化运行，参数数值仍以 task2/output/camera_params.npz 为准。
-
-
-  图1只展示 18 张有效图像中的 1 张，避免将重复图件全部塞入报告。左图用于核对角点检测是否覆盖 8×5
-个内角点，右图用于观察畸变校正效果；两图均由 --save-corners --undistort 实际生成。
-
-
-                                      8 结果分析
-     本次分析基于 18 张真实 JPEG、唯一结果文件和同一次实际运行日志。结论限定在当前 5712 × 4284 图像、
-8 × 5 内角点和相对方格尺度的模型范围内，不将像素误差直接解释为物理测量精度。
-
-
-8.1    内参合理性
-      首先检查 fx 、fy 、cx 和 cy 是否为有限的正数，并将其与图像尺寸和式3逐项核对。由实测内参得到
-
-                               |fx − fy |
-                       ρf =                = 0.0003511422 (0.035114%).
-                              (fx + fy )/2
-
-该值说明两方向焦距估计很接近，与当前图像的近似方形像素尺度相容，但不能据此确认具体镜头模式或排除
-图像裁剪。图像中心为 (W /2, H/2) = (2856, 2142)，主点偏移向量为
-
-                      (cx − W /2, cy − H/2) = (27.66418, −34.79706) px,
-
-其欧氏长度为 44.45382 px，分别约占图像宽度和高度的 0.7783% 与 1.0377%。因此主点处于图像中心附近，但
-仍应将该偏移作为实测结果保留，而不是强行置为中心。
-
-
-8.2    畸变与误差
-      按 OpenCV 的实际输出顺序，畸变向量为
-
-               (0.20245123, −0.29420837, −0.00326679, 0.00308671, −1.04554325).
-
-这说明本次模型中径向和切向修正项均未被设为零。系数的正负和大小不能单独证明校正效果，图1中的去畸变
-图应与原图的棋盘格边缘共同观察。
-    三种误差分别为 OpenCV RMS 2.06424401 px、逐角点欧氏距离全局平均 1.65696931 px 和逐图 RMS
-算术平均 1.90750642 px。三者不同是因为前者对所有角点的平方距离统一汇总，第二个对点距离取算术平均，
-第三个先对每幅图像求 RMS 再对 18 幅图像取平均，不能用数值大小直接判断程序矛盾。逐图 RMS 范围为
-0.850436–3.625463 px，较大的单幅误差应在需要时回看原图和角点覆盖。
-  对当前分辨率而言，OpenCV RMS 约为图像宽度的 0.03614%、高度的 0.04818%。这说明误差相对于像素
-尺寸的比例不大，但大分辨率会使相同的像素误差看起来具有更小的相对比例；该指标不能替代独立验证，也
-不能直接跨分辨率比较。
-9   实验结论                                                                7
-
-
-8.3   数据质量与姿态覆盖
-  本次 18 张候选 JPEG 全部通过读取、8 × 5 角点检测和分辨率检查，失败图像数为 0，且每幅图像均有 40
-个角点。因此当前结果在数据完整性和输入一致性上通过了程序检查。现有报告没有独立的拍摄姿态日志，仍
-不能仅凭“18/18 成功”断言棋盘格已经均匀覆盖图像中央、边缘、不同距离和倾角；提交前应补充姿态记录，
-并对逐图 RMS 较大的照片进行人工复核。
-  由于本次 square_size=1.0 只定义每格一个相对单位，旋转向量不受统一尺度影响，内参矩阵和以像素表
-示的畸变结果也不受统一尺度影响；平移向量与方格物理边长成比例，当前不能解释为米、厘米或毫米。
-
-
-                           表 4: 基于真实运行结果的分析摘要
-           检查项         实测证据                                谨慎结论
-           焦距一致性       ρf = 0.0003511422                   两方向估计接近
-           主点位置        偏移 44.45382 px                      相对中心有小幅偏移
-           畸变系数        完整五参数向量                             需结合校正图像解读
-           RMS 与平均误差   2.06424401/1.65696931/1.90750642 px 三种口径均已记录
-           数据完整性       18 候选，18 有效，0 失败                    通过程序输入检查
-           姿态覆盖        独立姿态日志未提供                           不能据此宣称覆盖充分
-           物理尺度        square_size=1.0                     平移向量物理单位未定
-
-  综合而言，本次数据足以在当前图像坐标模型下给出一组可复核的相机内参和畸变参数；但由于具体镜头
-模式、方格物理边长和完整姿态覆盖记录尚未确认，不能将该结果夸大为带物理尺度和全场景精度保证的相机
-模型。
-
-
-                                9 实验结论
-  本实验使用 18 张真实 iPhone 15 Pro JPEG 图像，在 8 × 5 个棋盘格内角点配置下完成了 OpenCV 手机
-相机内参标定。程序输出了相机内参矩阵、五个畸变系数、18 组旋转和平移向量，并记录了 OpenCV RMS、逐
-角点欧氏距离全局平均和逐图 RMS 算术平均。18 张候选图像全部有效，未出现读取失败、角点检测失败或尺
-寸不一致。
-  本次运行使用 square_size=1.0，表示每格一个相对单位；因此内参矩阵和像素畸变结果可以用于当前图
-像坐标模型，但平移向量的物理尺度尚未确定。JPEG EXIF 已确认设备为 Apple iPhone 15 Pro，具体前置/后
-置摄像头或镜头模式仍待人工确认，方格物理边长和完整姿态覆盖记录也应在正式提交前补齐。上述未决信息
-不影响本次像素级参数回读，但会限制对外参物理长度和跨设备复现的解释。
+            Mobile Camera Intrinsic Calibration Report
+                              LAB0-1: Camera Calibration Experiment
+
+                                           Name: Boyang Xie
+                                        Student ID: 24020036030
+                                          Course/Class: F29XS
+
+
+      Data status: An OpenCV calibration was completed using 18 real JPEG images from an iPhone
+             15 Pro rear camera. The checkerboard has 8 × 5 inner corners and 3 cm squares.
+
+
+1 Objectives
+This experiment uses Python and OpenCV to perform camera calibration for a mobile-camera image set captured
+with a planar checkerboard. Its objectives are:
+  1. to understand the relationships among the world, camera, image, and pixel coordinate systems and the
+     pinhole camera model;
+  2. to distinguish intrinsic parameters from extrinsic parameters and understand the roles of focal length,
+     principal point, and lens distortion coeﬀicients;
+  3. to use checkerboard corner detection, subpixel refinement, and cv2.calibrateCamera;
+  4. to obtain the camera matrix, distortion coeﬀicients, and per-view poses, and to evaluate the fit using
+     reprojection error;
+  5. to assess how checkerboard coverage, camera pose, and corner quality affect the calibration result.
+    All numerical results in this report come from the recorded JPEG data and the oﬀicial NPZ result file. No
+hardware or calibration value is inferred from a default configuration.
+
+
+2 Principles
+2.1 Coordinate Systems and the Pinhole Model
+The world coordinate system describes points on the calibration board. The camera coordinate system is
+centered at the optical center. The image coordinate system represents continuous image-plane coordinates,
+whereas the pixel coordinate system uses discrete image coordinates referenced to the upper-left image corner.
+Let Xw = (Xw , Yw , Zw )T be a point in world coordinates and Xc = (Xc , Yc , Zc )T the same point in camera
+coordinates. The extrinsic parameters are a rotation matrix R and a translation vector t:
+
+                                               Xc = RXw + t.                                                (1)
+
+     Under the pinhole model, let x = Xc /Zc and y = Yc /Zc be normalized image coordinates. The projection
+to pixel coordinates is                                
+                                                      Xw
+                                       u             Yw 
+                                    s v  = K R t        
+                                                       Zw  ,    s ̸= 0,                               (2)
+                                       1
+                                                         1
+where (u, v) are pixel coordinates and K is the camera matrix:
+                                                              
+                                                    fx γ c x
+                                             K =  0 fy c y  .                                             (3)
+                                                     0 0 1
+
+Here fx and fy are focal lengths in pixels, (cx , cy ) is the principal point, and γ is the skew parameter. For
+ordinary mobile-camera images, γ is commonly close to zero.
+
+
+                                                      1
+2.2 Lens Distortion Model
+Real lenses make the observed image deviate from ideal pinhole projection. Let r2 = x2 + y 2 . A common radial
+distortion model is                                                         
+                                     xr = x 1 + k1 r 2 + k 2 r 4 + k 3 r 6 ,
+                                                                                                          (4)
+                                      yr = y 1 + k 1 r 2 + k 2 r 4 + k 3 r 6 .
+The radial distortion coeﬀicients are k1 , k2 , k3 . Tangential distortion can be written as
+                                                                            
+                                        xd = xr + 2p1 xy + p2 r2 + 2x2 ,
+                                                                                                               (5)
+                                        yd = yr + p1 r2 + 2y 2 + 2p2 xy.
+
+The final pixel coordinates are
+                                     u = fx xd + γyd + cx ,       v = f y yd + c y .                            (6)
+OpenCV commonly returns five coeﬀicients in the order (k1 , k2 , p1 , p2 , k3 ). If an interface returns a different
+length, the report must preserve the returned order and length.
+
+
+2.3 Planar Calibration and the Zhang Method
+Set the checkerboard plane to Zw = 0 and define board coordinates using the square size. The mapping from a
+point on the plane to its image is a homography:
+                                             
+                                     u         Xw                       
+                                  s  v  = H  Yw  , H = K r1 r2 t ,                                  (7)
+                                      1          1
+
+where r1 and r2 are the first two columns of the rotation matrix. Multiple views of the same checkerboard
+provide homography constraints. The orthogonality and unit-length constraints of the rotation columns jointly
+estimate the intrinsic parameters and then the pose of each view. A nonlinear optimization finally refines the
+intrinsic parameters, distortion coeﬀicients, and extrinsic parameters by minimizing the discrepancy between
+observed and projected corners.
+     In the program, the checkerboard object points lie on Zw = 0, and the detected image points form the
+corresponding two-dimensional observations. The function cv2.calibrateCamera performs the calibration
+from these correspondences. The checkerboard configuration and square size must match the physical board;
+otherwise the translation-vector scale is not physically meaningful.
+
+
+2.4 Reprojection Error
+                                                                bj,i be the pixel obtained by projecting the
+Let qj,i be the observed pixel for corner i in image j, and let q
+estimated three-dimensional point with cv2.projectPoints. The pointwise reprojection error is
+
+                                                ej,i = ∥b
+                                                        qj,i − qj,i ∥2 .                                        (8)
+
+If M is the total number of valid corners, the mean pointwise reprojection error and global RMS are
+                                                              s
+                                        1 X                       1 X 2
+                                   e=          ej,i , eRMS =            e .                                     (9)
+                                       M j,i                     M j,i j,i
+
+For image j, the per-image RMS and its arithmetic mean are
+                                      s
+                                          1 X 2                 1X
+                                                                   n
+                             ej,RMS =           e ,     eview =       ej,RMS ,                                 (10)
+                                        Mj i j,i                n j=1
+
+where Mj is the number of corners in image j and n is the number of valid images. The NPZ fields rms_error,
+mean_reprojection_error, and mean_per_image_rms record these three distinct quantities.
+
+
+
+
+                                                           2
+                         Table 1: Experimental environment and acquisition record
+          Category           Item                       Recorded value
+          Operating system System and architecture      macOS 26.6.2, Darwin 25.6.0, arm64
+          Software           Python                     3.13.12
+          Software           OpenCV                     4.10.0 (cv2)
+          Software           Main APIs                  findChessboardCorners, cornerSubPix
+          Software           Main APIs                  calibrateCamera, projectPoints
+          Hardware           Phone model                Apple iPhone 15 Pro (JPEG EXIF)
+          Hardware           Camera mode                Rear camera; focal length not recorded
+          Image              Image resolution           5712 × 4284
+          Board              Inner-corner configuration 8 × 5
+          Board              Physical square size       3 cm
+          Data               Input images               18 JPEG files (task2/images_jpg/)
+          Data               Valid/failed images        18 / 0
+
+
+3 Experimental Environment
+The software environment was verified directly. The Python interpreter was /Users/jiaqiaosu/miniconda3/
+bin/python; it imports cv2. The JPEG EXIF records an Apple iPhone 15 Pro, and the data were captured
+with its rear camera. The specific rear-lens focal length was not recorded and is not inferred here.
+     The software versions, JPEG device information, image size, checkerboard configuration, 3 cm square size,
+and image counts were verified from local commands, EXIF, acquisition records, and camera_params.npz. The
+program was run with square_size=3.0, so the translation vectors are measured in cm. The specific rear-lens
+focal length was not recorded.
+
+
+4 Data Acquisition
+4.1 Checkerboard and Coordinate Convention
+The calibration target is a planar black-and-white checkerboard. The option --checkerboard specifies the
+number of checkerboard inner-corner columns and rows, while --square-size specifies the physical side length
+of one square. The present run used 8 × 5 inner corners and a 3 cm square size, with square_size=3.0. The
+upper-left inner corner was set to (0, 0, 0); the two board directions define Xw and Yw , and all board points
+have Zw = 0. This convention is consistent with the planar model in Equation 7.
+
+
+4.2 Acquisition Conditions
+The input set contains 18 JPEG files under task2/images_jpg/, each with resolution 5712×4284. JPEG EXIF
+records an Apple iPhone 15 Pro, and the acquisition used its rear camera. The specific rear-lens focal length
+was not recorded and is not inferred. The original HEIC files under task2/images/ were not used as direct
+OpenCV input because the current cv2.imread cannot read them.
+     The board should be captured at different distances, translations, and tilt angles so that it covers the
+image center, edges, and different depths. A set consisting only of nearly frontal views with repeated poses
+is insuﬀicient. The board should be complete and sharp, without severe reflection, motion blur, occlusion, or
+overexposure. A separate pose-coverage log remains to be organized from the original acquisition.
+    The program reads task2/images_jpg/ and preserves the original filenames, allowing the NPZ image_
+paths field to be matched to each detection result.
+     The calibration values come from the actual run on the 18 JPEG files. The rear-camera mode, checkerboard
+configuration, and 3 cm square size are fixed acquisition facts; only the exact rear-lens focal length and the
+detailed pose-coverage log remain undocumented.
+
+
+
+
+                                                      3
+                                   Table 2: Mobile-camera acquisition record
+        Item                Recorded content                  Status
+        Phone               Manufacturer and model            Apple iPhone 15 Pro (JPEG EXIF)
+        Camera              Front/rear camera and lens mode Rear camera; focal length not recorded
+        Image resolution    Width × height (pixels)           5712 × 4284
+        Image count         Input JPEG files                  18
+        Checkerboard        Inner corners per row/column      8×5
+        Square size         Physical side length              3 cm; square_size=3.0
+        Pose coverage       Position, distance, and tilt      Acquisition log to be organized
+
+
+5 Experimental Procedure
+  1. Prepare the planar checkerboard, measure the physical square size, and record the number of inner corners
+     in each direction.
+  2. Capture clear images at different distances, translations, and tilt angles. Record the phone model, rear-
+     camera use, image resolution, and acquisition settings.
+  3. Read each image and check whether it can be loaded. A read failure is recorded for that file and does not
+     stop processing of the remaining images.
+  4. Convert a color image to grayscale with cv2.cvtColor, then detect checkerboard inner corners with
+     cv2.findChessboardCorners. Record the two-dimensional corners for successful images and the filename
+     and reason for failures.
+  5. Refine detected corners to subpixel accuracy with cv2.cornerSubPix.
+  6. Generate planar three-dimensional object points from the checkerboard configuration and square size, and
+     pair them with the two-dimensional image points. The geometry follows Equation 7.
+  7. Check the number of valid images and the consistency of image sizes. Mixed resolutions and fewer valid
+     views than --min-images must be rejected.
+  8. Call cv2.calibrateCamera to estimate the camera matrix, distortion coeﬀicients, and the rotation and
+     translation vectors for each valid view. The camera matrix is defined in Equation 3; the distortion model
+     is given in Equations 4 and 5.
+  9. Reproject the three-dimensional points with cv2.projectPoints, compute pointwise errors using Equa-
+     tion 8, and summarize the three error definitions in Section 7.
+ 10. Save the camera matrix, distortion coeﬀicients, poses, error statistics, image counts, and detection status
+     to the NPZ result. If requested, use cv2.undistort to save corrected images.
+ 11. Use the recorded result and the criteria in Section 8 to assess parameter consistency and data quality.
+    The complete control flow implemented by the OpenCV program is summarized in Figure 1.
+
+
+6 Program Design
+6.1 Input, Configuration, and Output
+The Python entry point uses argparse and reads JPEG files from task2/images_jpg/.
+     The options --checkerboard and --square-size specify the checkerboard inner-corner configuration and
+square size. The options --images and --output-dir specify the input pattern and output directory. The
+option --min-images sets the minimum number of valid views.
+    The present run used 8 × 5 inner corners, square_size=3.0 cm, and --min-images 3. Each image was
+read, converted to grayscale, searched for corners, and refined to subpixel accuracy. Successful files print [OK];
+read failures, corner failures, and resolution mismatches print [FAILED] with a reason and are counted. All 18
+JPEG files succeeded in this run. HEIC files under task2/images/ are not directly readable by the current
+cv2.imread.
+
+
+6.2 Core Computation
+Three-dimensional board points are generated from the checkerboard geometry, while two-dimensional points
+are obtained from the refined corners. Calling cv2.calibrateCamera produces the camera matrix, distor-
+tion coeﬀicients, and a rotation and translation vector for each valid view. The call receives objectPoints,
+
+
+                                                        4
+                                         Start
+                             Configure 8x5 inner corners
+                                  Square size: 3 cm
+                                 Discover JPEG files
+                               task2/images_jpg/*.jpg
+       Yes
+                                  Read next image
+
+                                      Readable?
+                        No                     Yes
+ Record [FAILED]                      Resolution
+   read failure                       consistent?          No
+                                               Yes                Record [FAILED]
+                                   Grayscale image                 size mismatch
+                               findChessboardCorners
+                                       Corners
+                                       found?              No
+                                               Yes                Record [FAILED]
+                                   cornerSubPix                    corner failure
+                                 append point pairs
+                                         More
+                                       images?
+                                               No
+                        Summarize valid and failed counts
+
+                                      Valid views
+                        No          >= min-images?
+                                                 Yes
+     Abort                        calibrateCamera
+do not write NPZ              estimate K, d, rvec, tvec
+                                  projectPoints
+                               compute error metrics
+
+                              Save camera_params.npz
+                                    Optional outputs
+                   --save-corners     requested? --undistort
+ Save corner overlays                         none         Save undistorted images
+                                         End
+
+
+
+
+Figure 1: OpenCV camera-calibration workflow implemented in this experiment.
+
+
+
+
+                                          5
+imagePoints, and imageSize; the projection relation is given in Equation 2.
+     The program uses cv2.projectPoints to reproject every board point and compare it with the detected
+pixel. It stores OpenCV RMS in rms_error, the per-image RMS array in per_image_reprojection_error,
+the global pointwise mean in mean_reprojection_error, and the arithmetic mean of per-image RMS values
+in mean_per_image_rms. Their definitions are given in Equations 9 and 10.
+     The oﬀicial result is written to task2/output/camera_params.npz. The file records the image size, checker-
+board configuration, poses, candidate/valid/failed paths, failure reasons, and all three error statistics. The 3.0
+square-size value is in cm, so the translation vectors are in cm. Hardware mode and physical board measurements
+are acquisition facts, not values inferred by the program.
+
+
+7 Experimental Results
+The results below were read directly from task2/output/camera_params.npz for the 18 real JPEG files in
+task2/images_jpg/*.jpg. The run used an 8 × 5 checkerboard, a 3.0 cm square size, and --min-images 3.
+These values are recorded outputs, not estimates or placeholders.
+                                                                                
+                                4082.15290893              0       2883.66417823
+                            K=       0              4083.58657686 2107.20293734 .                          (11)
+                                      0                    0             1
+
+                   d = [0.20245123, −0.29420837, −0.00326679, 0.00308671, −1.04554325] ,                     (12)
+where d follows the common OpenCV order (k1 , k2 , p1 , p2 , k3 ).
+
+
+                   Table 3: Mobile-camera calibration results read from the oﬀicial NPZ file
+        Category        Metric                                        Recorded value
+        Data            Input pattern                                 task2/images_jpg/*.jpg
+        Data            Candidate images                              18
+        Data            Valid calibration images                      18
+        Data            Failed images                                 0 (read, corner, and size failures)
+        Data            Image size (width × height)                   5712 × 4284
+        Configuration Checkerboard inner corners                      8×5
+        Configuration square_size                                     3.0 cm
+        Intrinsics      Camera matrix K                               See Equation 11
+        Intrinsics      fx                                            4082.15290893
+        Intrinsics      fy                                            4083.58657686
+        Intrinsics      cx                                            2883.66417823
+        Intrinsics      cy                                            2107.20293734
+        Distortion      (k1 , k2 , p1 , p2 , k3 )                     See Equation 12
+        Error           OpenCV RMS (pixels)                           2.06424401
+        Error           Mean pointwise reprojection error (pixels) 1.65696931
+        Error           Mean per-image RMS (pixels)                   1.90750642
+        Extrinsics      Rotation/translation shape                    18 × 3 × 1; translations in cm
+
+     OpenCV RMS is the global root-mean-square error returned by cv2.calibrateCamera. The mean point-
+wise reprojection error is mean_reprojection_error, averaged over all 18 × 40 = 720 valid corners. The
+mean per-image RMS is mean_per_image_rms, the arithmetic mean of 18 per-image RMS values. These def-
+initions are distinct. The per-image array is stored in per_image_reprojection_error; poses are stored in
+rotation_vectors and translation_vectors.
+     Figure 2 shows one of the 18 valid views rather than repeating all outputs. The left image checks coverage
+of the 8 × 5 inner corners, while the right image illustrates the undistortion result. Both were generated with
+--save-corners --undistort.
+
+
+
+
+                                                         6
+Figure 2: Representative results for IMG_5486.jpg: the left image shows the detected corners, and the right
+image is the undistorted image produced with the same calibration. The figures come from the temporary
+visualization run; numerical results remain those in task2/output/camera_params.npz.
+
+
+8 Analysis
+This analysis is based on 18 real JPEG images, the oﬀicial result file, and the corresponding run. Conclusions
+are limited to the current 5712 × 4284 images, 8 × 5 checkerboard inner corners, and 3 cm square size; a pixel
+error is not treated as a direct guarantee of physical measurement accuracy.
+
+
+8.1 Intrinsic-Parameter Consistency
+The estimated fx , fy , cx , and cy are finite and positive. From the measured focal lengths,
+
+                                       |fx − fy |
+                               ρf =                = 0.0003511422   (0.035114%).
+                                      (fx + fy )/2
+
+The two focal-length estimates are therefore very close, which is compatible with nearly square pixel scaling
+in this image set. It does not identify the exact rear-lens focal length or rule out image cropping. The image
+center is (W/2, H/2) = (2856, 2142), while the principal-point offset is
+
+                               (cx − W/2, cy − H/2) = (27.66418, −34.79706) px.
+
+Its Euclidean length is 44.45382 px, approximately 0.7783% of the image width and 1.0377% of its height. The
+principal point is therefore near, but not identical to, the image center.
+
+
+8.2 Distortion and Error
+In the OpenCV order, the distortion vector is
+
+                      (0.20245123, −0.29420837, −0.00326679, 0.00308671, −1.04554325).
+
+The radial and tangential correction terms are nonzero in this model. Their signs and magnitudes alone do not
+prove correction quality; the corrected image in Figure 2 should be examined together with checkerboard edges
+in the original image.
+     The three error values are OpenCV RMS 2.06424401 px, mean pointwise reprojection error 1.65696931
+px, and mean per-image RMS 1.90750642 px. They differ because the first aggregates squared point distances
+globally, the second averages point distances, and the third averages per-image RMS values. The per-image
+RMS range is 0.850436–3.625463 px; views with larger errors should be inspected if a refined acquisition is
+needed.
+      At the current resolution, the OpenCV RMS is approximately 0.03614% of the image width and 0.04818%
+of its height. Thus the error is small relative to the image dimensions, but a high-resolution image also makes a
+fixed pixel error appear smaller in relative terms. This metric is not an independent validation and should not
+be compared directly across resolutions without accounting for scale and acquisition conditions.
+
+
+                                                        7
+8.3 Data Quality and Pose Coverage
+All 18 candidate JPEG files passed reading, 8 × 5 corner detection, and the resolution check. The failure count
+is zero, and every image contributes 40 corners. The run therefore passes the program-level data-integrity
+checks. A separate pose log is not available in the current report, so the successful detection count alone cannot
+prove uniform coverage of the image center, edges, distances, and tilt angles. The original acquisition should
+be reviewed, especially for views with larger per-image RMS.
+     Because square_size=3.0 is in cm, the rotation vectors are dimensionless and the camera matrix and
+distortion coeﬀicients remain pixel-coordinate quantities, while the translation vectors are measured in cm.
+
+
+                          Table 4: Analysis summary based on the measured result
+  Check                     Evidence                              Cautious interpretation
+  Focal-length consistency ρf = 0.0003511422                      The two estimates are close
+  Principal point           Offset 44.45382 px                    Small displacement from the center
+  Distortion                Complete five-coeﬀicient vector       Interpret with corrected image
+  Error metrics             2.06424401/1.65696931/1.90750642 px Three definitions are recorded
+  Data integrity            18 candidates, 18 valid, 0 failed     Program checks passed
+  Pose coverage             No independent pose log               Coverage cannot be claimed complete
+  Physical scale            square_size=3.0 cm                    Translation vectors are in cm
+
+    Overall, the data support a reproducible camera matrix and distortion model for the current image-
+coordinate setup, with translation vectors in centimeters. The exact rear-lens focal length and the detailed
+pose-coverage record remain undocumented, so the result should not be presented as a universal accuracy
+guarantee for every lens mode or scene.
+
+
+9 Conclusion
+This experiment completed OpenCV camera calibration using 18 real JPEG images from the rear camera of an
+iPhone 15 Pro. The calibration used an 8 × 5 checkerboard-inner-corner configuration and a 3 cm square size.
+The program produced the camera matrix, five distortion coeﬀicients, 18 rotation vectors, and 18 translation
+vectors, and recorded OpenCV RMS, mean pointwise reprojection error, and mean per-image RMS. All 18
+candidate images were valid; no image-read, corner-detection, or resolution failures occurred.
+     The run used square_size=3.0, so translation vectors are expressed in cm, while the camera matrix and
+pixel-coordinate distortion results describe the present image model. JPEG EXIF and the acquisition record
+identify the Apple iPhone 15 Pro rear camera. The exact rear-lens focal length was not recorded and is not
+inferred here. A detailed pose-coverage log should still be added before submission, but it does not affect the
+numerical readback of the oﬀicial NPZ result.
+
+
+
+
+                                                        8
 

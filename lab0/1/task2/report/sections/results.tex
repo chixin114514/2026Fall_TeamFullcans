@@ -1,9 +1,6 @@
-\section{实验结果}\label{sec:task2-results}
+\section{Experimental Results}\label{sec:task2-results}
 
-本次结果直接回读自 \texttt{task2/output/camera\_params.npz}，对应
-\texttt{task2/images\_jpg/*.jpg} 的 18 张真实 JPEG。程序实际配置为
-\texttt{checkerboard=8x5}、\texttt{square\_size=1.0}（每格相对单位）和
-\texttt{min\_images=3}。表\ref{tab:task2-results}中的数值不是估计或手抄占位。
+The results below were read directly from \path{task2/output/camera_params.npz} for the 18 real JPEG files in \path{task2/images_jpg/*.jpg}. The run used an \(8\times5\) checkerboard, a 3.0 cm square size, and \texttt{--min-images 3}. These values are recorded outputs, not estimates or placeholders.
 
 \begin{equation}
 \mathbf K=
@@ -22,57 +19,47 @@
 \right],
 \label{eq:task2-result-distortion}
 \end{equation}
-其中 \(\mathbf d\) 按 OpenCV 的常见顺序表示
-\((k_1,k_2,p_1,p_2,k_3)\)。
+where \(\mathbf d\) follows the common OpenCV order
+\((k_1,k_2,p_1,p_2,k_3)\).
 
 \begin{table}[htbp]
     \centering
-    \caption{手机相机标定结果（由唯一结果文件回读）}
+    \caption{Mobile-camera calibration results read from the official NPZ file}
     \label{tab:task2-results}
     \begin{tabular}{lll}
         \hline
-        类别 & 指标 & 实际值 \\
+        Category & Metric & Recorded value \\
         \hline
-        数据 & 输入路径 & \texttt{task2/images\_jpg/*.jpg} \\
-        数据 & 候选图像总数 & 18 \\
-        数据 & 有效标定图像数 & 18 \\
-        数据 & 失败图像数 & 0（读取、角点、尺寸均为 0） \\
-        数据 & 图像尺寸（宽 $\times$ 高） & 5712$\times$4284 \\
-        配置 & 棋盘格内角点 & 8$\times$5 \\
-        配置 & \texttt{square\_size} & 1.0（每格相对单位） \\
-        内参 & 相机矩阵 \(\mathbf K\) & 见式\ref{eq:task2-result-k} \\
-        内参 & \(f_x\) & 4082.15290893 \\
-        内参 & \(f_y\) & 4083.58657686 \\
-        内参 & \(c_x\) & 2883.66417823 \\
-        内参 & \(c_y\) & 2107.20293734 \\
-        畸变 & \((k_1,k_2,p_1,p_2,k_3)\) & 见式\ref{eq:task2-result-distortion} \\
-        误差 & OpenCV RMS（像素） & 2.06424401 \\
-        误差 & 逐角点欧氏距离全局平均（像素） & 1.65696931 \\
-        误差 & 逐图 RMS 算术平均（像素） & 1.90750642 \\
-        外参 & 旋转/平移向量形状 & 18$\times$3$\times$1；平移尺度未定 \\
+        Data & Input pattern & \path{task2/images_jpg/*.jpg} \\
+        Data & Candidate images & 18 \\
+        Data & Valid calibration images & 18 \\
+        Data & Failed images & 0 (read, corner, and size failures) \\
+        Data & Image size (width \(\times\) height) & \(5712\times4284\) \\
+        Configuration & Checkerboard inner corners & \(8\times5\) \\
+        Configuration & \path{square_size} & 3.0 cm \\
+        Intrinsics & Camera matrix \(\mathbf K\) & See Equation~\ref{eq:task2-result-k} \\
+        Intrinsics & \(f_x\) & 4082.15290893 \\
+        Intrinsics & \(f_y\) & 4083.58657686 \\
+        Intrinsics & \(c_x\) & 2883.66417823 \\
+        Intrinsics & \(c_y\) & 2107.20293734 \\
+        Distortion & \((k_1,k_2,p_1,p_2,k_3)\) & See Equation~\ref{eq:task2-result-distortion} \\
+        Error & OpenCV RMS (pixels) & 2.06424401 \\
+        Error & Mean pointwise reprojection error (pixels) & 1.65696931 \\
+        Error & Mean per-image RMS (pixels) & 1.90750642 \\
+        Extrinsics & Rotation/translation shape & \(18\times3\times1\); translations in cm \\
         \hline
     \end{tabular}
 \end{table}
 
-OpenCV RMS 是 \texttt{cv2.calibrateCamera} 返回的全局均方根误差。
-
-逐角点欧氏距离全局平均是 \path{mean_reprojection_error}，对全部
-\(18\times40=720\) 个有效角点求平均。逐图 RMS 算术平均是
-\path{mean_per_image_rms}，对 18 个单幅 RMS 求算术平均。
-
-三者定义不同，不能把 1.65696931、1.90750642 和 2.06424401 互相替代。
-逐图误差数组保存在 \path{per_image_reprojection_error} 字段中；旋转向量和平移向量分别保存在
-\path{rotation_vectors} 和 \path{translation_vectors} 字段中。
+OpenCV RMS is the global root-mean-square error returned by \texttt{cv2.calibrateCamera}. The mean pointwise reprojection error is \path{mean_reprojection_error}, averaged over all \(18\times40=720\) valid corners. The mean per-image RMS is \path{mean_per_image_rms}, the arithmetic mean of 18 per-image RMS values. These definitions are distinct. The per-image array is stored in \path{per_image_reprojection_error}; poses are stored in \path{rotation_vectors} and \path{translation_vectors}.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.47\linewidth]{task2-corners-IMG_5486.jpg}
     \hfill
     \includegraphics[width=0.47\linewidth]{task2-undistorted-IMG_5486.jpg}
-    \caption{代表性图像 \texttt{IMG\_5486.jpg} 的结果：左为程序生成的角点检测可视化，右为使用同一组标定参数生成的去畸变图像。图件来自临时可视化运行，参数数值仍以 \texttt{task2/output/camera\_params.npz} 为准。}
+    \caption{Representative results for \texttt{IMG\_5486.jpg}: the left image shows the detected corners, and the right image is the undistorted image produced with the same calibration. The figures come from the temporary visualization run; numerical results remain those in \texttt{task2/output/camera\_params.npz}.}
     \label{fig:task2-visual-results}
 \end{figure}
 
-图\ref{fig:task2-visual-results}只展示 18 张有效图像中的 1 张，避免将重复图件全部塞入报告。左图用于核对角点检测是否覆盖
-8$\times$5 个内角点，右图用于观察畸变校正效果；两图均由
-\texttt{--save-corners --undistort} 实际生成。
+Figure~\ref{fig:task2-visual-results} shows one of the 18 valid views rather than repeating all outputs. The left image checks coverage of the \(8\times5\) inner corners, while the right image illustrates the undistortion result. Both were generated with \texttt{--save-corners --undistort}.

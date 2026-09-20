@@ -1,5 +1,5 @@
-\section{实验结论}\label{sec:task2-conclusion}
+\section{Conclusion}\label{sec:task2-conclusion}
 
-本实验使用 18 张真实 iPhone 15 Pro JPEG 图像，在 \(8\times5\) 个棋盘格内角点配置下完成了 OpenCV 手机相机内参标定。程序输出了相机内参矩阵、五个畸变系数、18 组旋转和平移向量，并记录了 OpenCV RMS、逐角点欧氏距离全局平均和逐图 RMS 算术平均。18 张候选图像全部有效，未出现读取失败、角点检测失败或尺寸不一致。
+This experiment completed OpenCV camera calibration using 18 real JPEG images from the rear camera of an iPhone 15 Pro. The calibration used an \(8\times5\) checkerboard-inner-corner configuration and a 3 cm square size. The program produced the camera matrix, five distortion coefficients, 18 rotation vectors, and 18 translation vectors, and recorded OpenCV RMS, mean pointwise reprojection error, and mean per-image RMS. All 18 candidate images were valid; no image-read, corner-detection, or resolution failures occurred.
 
-本次运行使用 \texttt{square\_size=1.0}，表示每格一个相对单位；因此内参矩阵和像素畸变结果可以用于当前图像坐标模型，但平移向量的物理尺度尚未确定。JPEG EXIF 已确认设备为 Apple iPhone 15 Pro，具体前置/后置摄像头或镜头模式仍待人工确认，方格物理边长和完整姿态覆盖记录也应在正式提交前补齐。上述未决信息不影响本次像素级参数回读，但会限制对外参物理长度和跨设备复现的解释。
+The run used \texttt{square\_size=3.0}, so translation vectors are expressed in cm, while the camera matrix and pixel-coordinate distortion results describe the present image model. JPEG EXIF and the acquisition record identify the Apple iPhone 15 Pro rear camera. The exact rear-lens focal length was not recorded and is not inferred here. A detailed pose-coverage log should still be added before submission, but it does not affect the numerical readback of the official NPZ result.

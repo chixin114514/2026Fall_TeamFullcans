@@ -1,33 +1,30 @@
-\section{实验环境}\label{sec:task2-environment}
+\section{Experimental Environment}\label{sec:task2-environment}
 
-软件环境取自本次工作区可直接检查到的运行环境。Python 解释器使用
-\path{/Users/jiaqiaosu/miniconda3/bin/python}；该解释器能够导入
-\texttt{cv2}，版本由命令 \texttt{cv2.\_\_version\_\_} 确认。JPEG 文件的 EXIF
-记录设备为 Apple iPhone 15 Pro。具体摄像头模式仍按采集记录保留为待确认，不由手机型号推断。
+The software environment was verified directly. The Python interpreter was
+\path{/Users/jiaqiaosu/miniconda3/bin/python}; it imports \texttt{cv2}. The JPEG EXIF records an Apple iPhone 15 Pro, and the data were captured with its rear camera. The specific rear-lens focal length was not recorded and is not inferred here.
 
 \begin{table}[htbp]
     \centering
-    \caption{任务 2 实验环境与采集记录}
+    \caption{Experimental environment and acquisition record}
     \label{tab:task2-environment}
     \begin{tabular}{lll}
         \hline
-        类别 & 项目 & 记录值 \\
+        Category & Item & Recorded value \\
         \hline
-        操作系统 & 系统与架构 & macOS 26.6.2，Darwin 25.6.0，arm64 \\
-        软件 & Python & 3.13.12 \\
-        软件 & OpenCV & 4.10.0（\texttt{cv2}） \\
-        软件 & 主要接口 & \texttt{findChessboardCorners}、\texttt{cornerSubPix} \\
-        软件 & 主要接口 & \texttt{calibrateCamera}、\texttt{projectPoints} \\
-        采集硬件 & 手机型号 & Apple iPhone 15 Pro（JPEG EXIF） \\
-        采集硬件 & 使用摄像头/镜头模式 & 待确认（前置或后置及具体镜头模式） \\
-        图像 & 图像分辨率 & 5712$\times$4284 \\
-        标定板 & 内角点规格 & 8$\times$5 \\
-        标定板 & 方格物理边长 & 待实际测量 \\
-        数据 & 输入图像总数 & 18 张 JPEG（\texttt{task2/images\_jpg/}） \\
-        数据 & 有效/失败图像数 & 18 / 0 \\
+        Operating system & System and architecture & macOS 26.6.2, Darwin 25.6.0, arm64 \\
+        Software & Python & 3.13.12 \\
+        Software & OpenCV & 4.10.0 (\texttt{cv2}) \\
+        Software & Main APIs & \texttt{findChessboardCorners}, \texttt{cornerSubPix} \\
+        Software & Main APIs & \texttt{calibrateCamera}, \texttt{projectPoints} \\
+        Hardware & Phone model & Apple iPhone 15 Pro (JPEG EXIF) \\
+        Hardware & Camera mode & Rear camera; focal length not recorded \\
+        Image & Image resolution & \(5712\times4284\) \\
+        Board & Inner-corner configuration & \(8\times5\) \\
+        Board & Physical square size & 3 cm \\
+        Data & Input images & 18 JPEG files (\path{task2/images_jpg/}) \\
+        Data & Valid/failed images & 18 / 0 \\
         \hline
     \end{tabular}
 \end{table}
 
-表\ref{tab:task2-environment}中的软件版本、JPEG 设备信息、图像尺寸、内角点配置和图像统计已经由本机命令、EXIF 和
-\path{camera_params.npz} 核实。程序本次以 \texttt{square\_size=1.0} 运行，表示每格一个相对单位，不代表米、厘米或毫米的实测边长。统一缩放不改变以像素表示的相机内参和畸变系数，但会改变平移向量的尺度；因此平移向量的物理单位仍待方格边长实测后确定。
+The software versions, JPEG device information, image size, checkerboard configuration, 3 cm square size, and image counts were verified from local commands, EXIF, acquisition records, and \path{camera_params.npz}. The program was run with \texttt{square\_size=3.0}, so the translation vectors are measured in cm. The specific rear-lens focal length was not recorded.

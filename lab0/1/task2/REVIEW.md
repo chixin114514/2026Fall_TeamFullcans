@@ -1,89 +1,118 @@
-# Task 2 Re-review
+# Task 2 快速独立复验
 
-复验日期：2026-09-15
+复验日期：2026-09-19
 
-范围：仅复验当前 live 的 `task2`，并仅更新本文件。未修改程序、README、报告源文件、PDF、图片或 `task2/output/`；所有临时输出和合成测试图均放在 `/tmp`。
+本次只更新本文件，未修改程序、README、NPZ、报告源文件或 PDF。
 
 ## 结论
 
-上轮 B1--B5 及重要项均已修复，没有发现新的阻塞项或重要正确性问题。程序、README、唯一 NPZ 和报告结果目前相互一致，真实 18 图标定可复现，PDF 可编译且可读。
+当前版本的配置、结果文件和报告已统一为真实棋盘格边长 `3.0 cm`。程序默认配置为 `8x5`、`square_size=3.0`，README 明确为 iPhone 15 Pro 后置摄像头和 3 cm 方格，官方 NPZ 和报告均已同步。
 
-除提交身份字段和方格物理尺寸/镜头模式待用户确认外，可提交。
+没有发现新的阻塞项；Task 2 可提交。报告中的课程标题、姓名、学号和班级仍需提交者自行填写。
 
-## 程序复验
+## 配置与官方 NPZ
 
-使用 `/Users/jiaqiaosu/miniconda3/bin/python`，并将 pycache 和输出隔离到 `/tmp`：
-
-| 检查 | 结果 | 证据 |
-| --- | --- | --- |
-| `py_compile` | 通过 | 退出码 0 |
-| `--help` | 通过 | 退出码 0，显示 `--checkerboard`、`--square-size`、`--images`、`--output-dir`、`--min-images`、`--save-corners`、`--undistort` |
-| 无图片 | 通过 | 退出码 1，输出 `[ERROR] 未找到可读取的图片`，未生成参数文件 |
-| 仅 1 张图、`--min-images 3` | 通过 | 退出码 1，明确报告有效图像不足，未生成参数文件 |
-| 混合分辨率 | 通过 | 退出码 1，报告期望 `5712x4284`、实际 `2856x2142`，未生成参数文件 |
-| 读取失败/角点失败 | 通过 | `/tmp` 中 1 张真实图、1 张空 JPG、1 张空白 JPG：有效 1、失败 2，分别计入读取失败和角点失败 |
-| README 目录命令 | 通过 | `--images "task2/images_jpg/*"` 的完整标定退出码 0，生成 1 个临时 NPZ |
-| 18 图完整标定 | 通过 | `8x5`、`square-size 1.0`、18 张 JPEG 全部 `[OK]`，退出码 0 |
-
-当前源代码关键位置：OpenCV 接口在 `task2/calibrate_camera.py:274-298,331-337,352-360`；数量/尺寸拒绝在 `249-324`；唯一 NPZ 写入在 `384-413`；无 GUI 调用。读取失败和角点失败会继续处理其他图片并汇总计数。
-
-## 18 图结果与官方 NPZ
-
-`find task2 -name '*.npz'` 只发现 `task2/output/camera_params.npz`；旧的
-`camera_calibration.npz` 和 `calibration_result.txt` 已不存在。当前官方文件 SHA-256 为：
+- `task2/calibrate_camera.py:4-5,21-25,77-81`：默认棋盘格为 `8x5`，默认 `square_size=3.0`，单位为 cm，输出 `tvec` 单位为 cm。
+- `task2/README.md:8-15,22-28,49-50`：明确记录 18 张 iPhone 15 Pro 后置摄像头 JPEG、8x5 内角点、3 cm 方格和 `--square-size 3.0`。
+- `task2/output/camera_params.npz` 是 `task2` 下唯一 NPZ 文件；回读得到 `square_size=3.0`、`checkerboard=[8,5]`、`image_size=[5712,4284]`、18 张候选/18 张有效/0 张失败，平移向量形状为 `18x3x1`。
+- 官方 NPZ SHA-256：
 
 ```text
-60a0d3d657c0c155d80badc8f98745ce87c11bb239226e201e11bb18b4dcc295
+7415ebecd6df926e770caaf92e909a47b40b0bf18f50f38e22224e5546ab012f
 ```
 
-官方 NPZ 回读得到 21 个字段。将 18 图完整重跑结果与官方文件比较，字段顺序、字段集合和全部 21 个字段均完全相等，关键值为：
+本次未发现旧的 `square_size=1.0`、相对单位或旧 NPZ 输出契约。
 
-- `camera_matrix`：
-  `[[4082.152908930645, 0, 2883.66417822517], [0, 4083.586576856829, 2107.202937340385], [0, 0, 1]]`
-- `distortion_coefficients`：
-  `[0.202451229180696, -0.294208365368304, -0.003266786122390, 0.003086706055211, -1.045543248781]`
-- `rms_error = 2.0642440068812222 px`
-- `mean_reprojection_error = 1.6569693071302027 px`
-- `mean_per_image_rms = 1.9075064228640661 px`
-- `image_size = [5712, 4284]`，`checkerboard = [8, 5]`，`square_size = 1.0`
-- `total_image_count = 18`，`valid_image_count = 18`，`failed_image_count = 0`；读取、角点、尺寸失败计数均为 0
-- `rotation_vectors`、`translation_vectors` 形状均为 `18x3x1`，逐图误差数组长度为 18，路径数组为 18/18/0。
+## 最小运行复验
 
-## 上轮问题逐条复验
+使用 `/Users/jiaqiaosu/miniconda3/bin/python`：
 
-| 上轮问题 | 当前状态 | 复验依据 |
-| --- | --- | --- |
-| B1：CLI 与 README/报告命令不一致 | 已修复 | `calibrate_camera.py:64-112,219-228` 已使用 `argparse`；README `:19-37` 命令实际运行成功 |
-| B2：有效图像不足/混合分辨率仍标定 | 已修复 | `calibrate_camera.py:249-324` 先统计并拒绝；少图和混合尺寸测试均非零退出且无输出 |
-| B3：NPZ 名称、字段和结果信息不一致 | 已修复 | `:384-413` 写入唯一 `camera_params.npz`，21 字段与 README `:61-104` 和重跑完全一致 |
-| B4：报告没有真实结果 | 已修复 | `results.tex:3-78` 已写入 18/18、K、五参数畸变、三类误差、图像和图件；`environment.tex:16-27` 已写入软件和图像事实 |
-| B5：平均重投影误差口径不一致 | 已修复 | `calibrate_camera.py:342-367` 分别计算点级平均、逐图 RMS 平均和 OpenCV RMS；`principle.tex:102-122` 明确三种定义 |
-| 配置、输入格式和 GUI 不一致 | 已修复 | 程序/README/报告统一使用 `8x5`、JPEG glob、`square_size=1.0`；源码无 `imshow/waitKey`，HEIC 不可读限制已明确说明 |
-| 失败状态和失败计数缺失 | 已修复 | 程序输出 `[FAILED]`、总计和分类计数，并将路径/原因写入 NPZ |
+| 检查 | 结果 |
+| --- | --- |
+| `PYTHONPYCACHEPREFIX=/tmp/... python -m py_compile task2/calibrate_camera.py` | 退出码 0 |
+| `python task2/calibrate_camera.py --help` | 退出码 0；帮助显示默认 `3.0`，单位 cm |
+| 前一轮中文版 XeLaTeX 第一遍/第二遍 | 均退出码 0；第二遍无错误或未定义引用，输出 7 页；当前英文版复验见下 |
 
-## 报告复验
+前一轮中文版编译临时产物的 `pdfinfo` 为 7 页 A4；`pdftotext` 语义扫描确认没有以下陈旧文本：`square_size=1.0`、`相对单位`、`待确认`、`待实际测量`、`待人工确认`。当前英文版的独立 8 页验收见下文。数字畸变系数中的 `1.045...` 不属于旧尺度文本。
 
-报告内容已落地以下真实数据：
+## 报告内容核对
 
-- `task2/report/sections/results.tex:36-52`：18 张候选、18 张有效、0 失败，分辨率 `5712x4284`，棋盘格 `8x5`；
-- `results.tex:9-26`：相机矩阵和完整五参数畸变系数；
-- `results.tex:49-65`：OpenCV RMS、逐角点全局平均和逐图 RMS 平均，以及 NPZ 字段说明；
-- `environment.tex:16-27`：macOS/Python/OpenCV、Apple iPhone 15 Pro EXIF、图像和有效统计；
-- `data_collection.tex:30-36`、`conclusion.tex:3-5`：明确保留尚未确认的方格物理边长、前/后置及具体镜头模式，并不伪造这些信息；
-- `results.tex:67-78` 和 `report/figures/`：真实图像的角点可视化和去畸变图件。
+`task2/report/report.pdf` 与最新源文件一致，且包含：
 
-报告仍有 `main.tex:28-35` 的课程作业标题、姓名、学号、班级待填写；方格物理边长在 `environment.tex:25`、镜头模式在 `environment.tex:22` 待人工确认。姿态覆盖记录的限制已在 `data_collection.tex:17,36` 和 `analysis.tex:34-36,53` 明确披露，报告没有把它夸大为已验证事实；不影响当前程序和像素级结果验收。
+- iPhone 15 Pro 后置摄像头；
+- `8×5` 内角点；
+- 方格边长 `3 cm`；
+- `square_size=3.0`；
+- 相机矩阵、五参数畸变系数、OpenCV RMS、逐角点平均误差、逐图 RMS 平均；
+- 外参平移向量单位为 cm。
 
-## PDF 验收
+对应源文件位置：`main.tex:43`、`environment.tex:5-6,21-34`、`data_collection.tex:7,13-15,30-42`、`results.tex:3-65`、`analysis.tex:3-4,29-38,54-59`、`conclusion.tex:3-5`。
 
-对 `task2/report/main.tex` 在临时目录执行完整 XeLaTeX 两遍：两遍退出码均为 0，第二遍无未定义引用或致命错误，输出 7 页。当前 `task2/report/report.pdf` 与 `task2/report/build/report.pdf` SHA-256 相同：
+报告仍说明具体后置镜头焦段和姿态覆盖记录未进一步细分；这不是旧的“前/后置待确认”或 1.0 相对尺度陈述，也不影响本次官方 NPZ 与像素级标定结果验收。
+
+## 提交前剩余动作
+
+只需填写 `task2/report/main.tex:28-35` 的课程作业标题、姓名、学号和课程/班级；其余 Task 2 核心成果可提交。
+
+## English Report Review (2026-09-19)
+
+本次独立检查只读核对英文版 `main.tex`、`sections/*.tex`、`terminology_en.md` 和编译后 PDF；未修改报告、程序或数据。
+
+### Language and structure
+
+- `main.tex`、9 个 `sections/*.tex` 和 `terminology_en.md` 的 CJK 扫描结果为 0；编译后 `pdftotext` 的 CJK 扫描结果也为 0。
+- 九章均存在且标题为英文：Objectives、Principles、Experimental Environment、Data Acquisition、Experimental Procedure、Program Design、Experimental Results、Analysis、Conclusion。
+- 表格标题/表头、图题、公式相关文字和代码清单标题均为英文；公式、交叉引用和 `Listing 1` 均正常。
+- 未发现会改变技术含义的明显误译或语法错误。结果与分析使用了谨慎表述：明确说明后置镜头焦段和详细姿态记录未知，没有把 18/18 检测成功夸大为完整姿态覆盖或通用精度保证。
+
+### Facts and numerical consistency
+
+英文报告与 README、官方 NPZ 及现有采集记录一致：
+
+- Apple iPhone 15 Pro rear camera；18 candidate / 18 valid / 0 failed；image size `5712x4284`；checkerboard `8x5`；square size `3 cm`；translation vectors in cm；
+- 完整相机矩阵：
+  `[[4082.15290893, 0, 2883.66417823], [0, 4083.58657686, 2107.20293734], [0, 0, 1]]`；
+- 五项畸变：`[0.20245123, -0.29420837, -0.00326679, 0.00308671, -1.04554325]`；
+- OpenCV RMS `2.06424401` px；mean pointwise reprojection error `1.65696931` px；mean per-image RMS `1.90750642` px。
+
+数值与官方 `task2/output/camera_params.npz` 回读值一致；官方 NPZ SHA-256 为：
 
 ```text
-5b8637372cd2bfa2c52a48cd40116fbb38a47433d5a39d4efa6934a963232287
+7415ebecd6df926e770caaf92e909a47b40b0bf18f50f38e22224e5546ab012f
 ```
 
-`pdfinfo`：7 页、A4、未加密；`pdftotext` 可提取完整正文并核对 18/18、K、畸变、三类误差、`8x5`、`5712x4284`、`待确认` 字段。对最终 `report.pdf` 的 7 页 PNG 全页渲染检查未发现文字截断、表格越界、图片缺失、重叠或不可读关键内容；轻微留白不构成问题。
+### Independent PDF verification
 
-## 真实数据说明
+- 独立 XeLaTeX 第一遍和第二遍均退出码 0；第二遍无错误、未定义引用或致命警告。
+- `pdfinfo`：8 页、A4、未加密；`pdftotext` 可读，CJK 数量为 0。
+- 8 页 PNG 已全部渲染并目视检查；未发现文字截断、表格/公式越界、图片缺失、重叠或不可读关键内容。第 8 页结论页留白较多，但不影响阅读或提交。
 
-当前不是“缺少真实手机照片”：`task2/images_jpg/` 有 18 张带 Apple iPhone 15 Pro EXIF 的真实 JPEG，且 18 图完整运行与官方 NPZ 完全一致。原始 HEIC 不能被当前 OpenCV 直接读取，README、程序和报告均已明确本次使用 JPEG 转换件；这不是当前阻塞项。
+### English review conclusion
+
+英文正文本身未发现阻塞项或重要技术问题；此前发现的 Mermaid 流程图语义阻塞已在本次复验中关闭。剩余身份占位仍需提交前填写。
+
+## Mermaid Workflow Re-review (2026-09-20)
+
+### Source and integration checks
+
+- `task2/report/figures/calibration_workflow.mmd:1-31` 使用标准 `flowchart TD`、节点、判定、带标签箭头和 `<br/>` 文本语法；静态语法检查未发现非法 Mermaid 构造。
+- 本机没有 `mmdc`/Mermaid CLI，因此无法执行 Mermaid 原生解析器；`.mmd` 保留为可编辑源，语法结论来自标准语法静态检查。
+- `task2/report/sections/procedure.tex:17-24` 的正文引用、英文 caption、`fig:calibration-workflow` label 和 `calibration_workflow.pdf` 路径均正确；独立 XeLaTeX 两遍通过。
+- 当前报告最终为 8 页，流程图实际排在第 5 页；第 5 页渲染目视检查显示文字可读、节点和主要箭头未裁切或重叠。
+
+### Previous blocking source/render mismatch (resolved)
+
+`calibration_workflow.mmd:24-30` 的真实程序流程是两个连续判定：
+
+1. `--save-corners?`：Yes 后保存角点覆盖图，再进入第二个 `--undistort?` 判定；No 直接进入第二个判定。
+2. `--undistort?`：Yes 保存去畸变图，No 结束。因此两个选项可以同时为 Yes；报告中的实际命令 `program_design.tex:29-33` 也同时传入 `--save-corners --undistort`。
+
+当前重新生成的 `calibration_workflow.pdf` 已显示两个独立菱形：先是 `--save-corners?`，其 Yes 分支进入角点覆盖图并继续进入 `--undistort?`，No 分支也进入第二个判定；第二个判定的 Yes 分支保存去畸变图、No 分支结束。因此 `--save-corners --undistort` 两项同时启用的路径已在图中保留。PDF 文本回读也同时包含两个判定，且 Abort 节点有明确箭头连接到 End。
+
+此前 fallback 的语义阻塞已关闭。当前图件仍未单独画出 `cv2.calibrateCamera` 异常返回分支，但 `.mmd` 原始流程也未声明该异常分支；不影响本次与源文件的一致性验收。
+
+### Facts and language after workflow integration
+
+独立编译后的 PDF CJK 扫描仍为 0；报告关键事实和数值未漂移：iPhone 15 Pro rear camera、18/18、`5712x4284`、`8x5`、3 cm、tvec cm、完整 K、五项畸变、OpenCV RMS `2.06424401`、pointwise mean `1.65696931`、mean per-image RMS `1.90750642` 均保留。
+
+流程图语义阻塞已关闭；除身份占位外，当前英文报告和 Mermaid 图件可提交。

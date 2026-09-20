@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """使用 OpenCV 棋盘格照片完成手机相机内参标定。
 
-默认配置对应本项目已有的 18 张 JPEG：8x5 个内角点、每格 1.0 个单位。
-方格的真实物理边长尚未确认，因此 1.0 只用于建立相对尺度，不应解释为实测米制值。
+默认配置对应本项目已有的 18 张 JPEG：8x5 个内角点、每格 3.0 cm。
+因此标定得到的外参平移向量 ``tvec`` 以 cm 计。
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import numpy as np
 
 
 DEFAULT_CHECKERBOARD = (8, 5)
-DEFAULT_SQUARE_SIZE = 1.0
+DEFAULT_SQUARE_SIZE = 3.0
 DEFAULT_IMAGES = "task2/images_jpg/*.jpg"
 DEFAULT_OUTPUT_DIR = "task2/output"
 DEFAULT_MIN_IMAGES = 3
@@ -77,8 +77,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--square-size",
         type=parse_positive_float,
         default=DEFAULT_SQUARE_SIZE,
-        metavar="UNITS",
-        help="单个方格边长；只决定外参尺度，1.0 表示每格一个单位",
+        metavar="CM",
+        help="单个方格实际边长，单位 cm；外参 tvec 也以 cm 计",
     )
     parser.add_argument(
         "--images",
@@ -325,7 +325,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     print(
         f"标定配置：checkerboard={checkerboard[0]}x{checkerboard[1]}，"
-        f"square_size={square_size:g}（每格单位）"
+        f"square_size={square_size:g} cm（外参平移向量单位为 cm）"
     )
     try:
         rms_error, camera_matrix, distortion_coefficients, rotation_vectors, translation_vectors = cv2.calibrateCamera(

@@ -1,59 +1,57 @@
-\section{结果分析}\label{sec:task2-analysis}
+\section{Analysis}\label{sec:task2-analysis}
 
-本次分析基于 18 张真实 JPEG、唯一结果文件和同一次实际运行日志。结论限定在当前
-\(5712\times4284\) 图像、\(8\times5\) 内角点和相对方格尺度的模型范围内，不将像素误差直接解释为物理测量精度。
+This analysis is based on 18 real JPEG images, the official result file, and the corresponding run. Conclusions are limited to the current \(5712\times4284\) images, \(8\times5\) checkerboard inner corners, and 3 cm square size; a pixel error is not treated as a direct guarantee of physical measurement accuracy.
 
-\subsection{内参合理性}
+\subsection{Intrinsic-Parameter Consistency}
 
-首先检查 \(f_x\)、\(f_y\)、\(c_x\) 和 \(c_y\) 是否为有限的正数，并将其与图像尺寸和式\ref{eq:task2-intrinsic}逐项核对。由实测内参得到
+The estimated \(f_x\), \(f_y\), \(c_x\), and \(c_y\) are finite and positive. From the measured focal lengths,
 \[
 \rho_f=\frac{\lvert f_x-f_y\rvert}{(f_x+f_y)/2}
 =0.0003511422\quad(0.035114\%).
 \]
-该值说明两方向焦距估计很接近，与当前图像的近似方形像素尺度相容，但不能据此确认具体镜头模式或排除图像裁剪。图像中心为
-\((W/2,H/2)=(2856,2142)\)，主点偏移向量为
+The two focal-length estimates are therefore very close, which is compatible with nearly square pixel scaling in this image set. It does not identify the exact rear-lens focal length or rule out image cropping. The image center is
+\((W/2,H/2)=(2856,2142)\), while the principal-point offset is
 \[
 \left(c_x-W/2,c_y-H/2\right)
-=(27.66418,-34.79706)\ {\rm px},
+=(27.66418,-34.79706)\ {\rm px}.
 \]
-其欧氏长度为 \(44.45382\) px，分别约占图像宽度和高度的 \(0.7783\%\) 与 \(1.0377\%\)。因此主点处于图像中心附近，但仍应将该偏移作为实测结果保留，而不是强行置为中心。
+Its Euclidean length is \(44.45382\) px, approximately \(0.7783\%\) of the image width and \(1.0377\%\) of its height. The principal point is therefore near, but not identical to, the image center.
 
-\subsection{畸变与误差}
+\subsection{Distortion and Error}
 
-按 OpenCV 的实际输出顺序，畸变向量为
+In the OpenCV order, the distortion vector is
 \[
 (0.20245123,-0.29420837,-0.00326679,0.00308671,-1.04554325).
 \]
-这说明本次模型中径向和切向修正项均未被设为零。系数的正负和大小不能单独证明校正效果，图\ref{fig:task2-visual-results}中的去畸变图应与原图的棋盘格边缘共同观察。
+The radial and tangential correction terms are nonzero in this model. Their signs and magnitudes alone do not prove correction quality; the corrected image in Figure~\ref{fig:task2-visual-results} should be examined together with checkerboard edges in the original image.
 
-三种误差分别为 OpenCV RMS \(2.06424401\) px、逐角点欧氏距离全局平均
-\(1.65696931\) px 和逐图 RMS 算术平均 \(1.90750642\) px。三者不同是因为前者对所有角点的平方距离统一汇总，第二个对点距离取算术平均，第三个先对每幅图像求 RMS 再对 18 幅图像取平均，不能用数值大小直接判断程序矛盾。逐图 RMS 范围为 \(0.850436\)--\(3.625463\) px，较大的单幅误差应在需要时回看原图和角点覆盖。
+The three error values are OpenCV RMS \(2.06424401\) px, mean pointwise reprojection error \(1.65696931\) px, and mean per-image RMS \(1.90750642\) px. They differ because the first aggregates squared point distances globally, the second averages point distances, and the third averages per-image RMS values. The per-image RMS range is \(0.850436\)--\(3.625463\) px; views with larger errors should be inspected if a refined acquisition is needed.
 
-对当前分辨率而言，OpenCV RMS 约为图像宽度的 \(0.03614\%\)、高度的 \(0.04818\%\)。这说明误差相对于像素尺寸的比例不大，但大分辨率会使相同的像素误差看起来具有更小的相对比例；该指标不能替代独立验证，也不能直接跨分辨率比较。
+At the current resolution, the OpenCV RMS is approximately \(0.03614\%\) of the image width and \(0.04818\%\) of its height. Thus the error is small relative to the image dimensions, but a high-resolution image also makes a fixed pixel error appear smaller in relative terms. This metric is not an independent validation and should not be compared directly across resolutions without accounting for scale and acquisition conditions.
 
-\subsection{数据质量与姿态覆盖}
+\subsection{Data Quality and Pose Coverage}
 
-本次 18 张候选 JPEG 全部通过读取、\(8\times5\) 角点检测和分辨率检查，失败图像数为 0，且每幅图像均有 40 个角点。因此当前结果在数据完整性和输入一致性上通过了程序检查。现有报告没有独立的拍摄姿态日志，仍不能仅凭“18/18 成功”断言棋盘格已经均匀覆盖图像中央、边缘、不同距离和倾角；提交前应补充姿态记录，并对逐图 RMS 较大的照片进行人工复核。
+All 18 candidate JPEG files passed reading, \(8\times5\) corner detection, and the resolution check. The failure count is zero, and every image contributes 40 corners. The run therefore passes the program-level data-integrity checks. A separate pose log is not available in the current report, so the successful detection count alone cannot prove uniform coverage of the image center, edges, distances, and tilt angles. The original acquisition should be reviewed, especially for views with larger per-image RMS.
 
-由于本次 \texttt{square\_size=1.0} 只定义每格一个相对单位，旋转向量不受统一尺度影响，内参矩阵和以像素表示的畸变结果也不受统一尺度影响；平移向量与方格物理边长成比例，当前不能解释为米、厘米或毫米。
+Because \texttt{square\_size=3.0} is in cm, the rotation vectors are dimensionless and the camera matrix and distortion coefficients remain pixel-coordinate quantities, while the translation vectors are measured in cm.
 
 \begin{table}[htbp]
     \centering
-    \caption{基于真实运行结果的分析摘要}
+    \caption{Analysis summary based on the measured result}
     \label{tab:task2-analysis}
     \begin{tabular}{lll}
         \hline
-        检查项 & 实测证据 & 谨慎结论 \\
+        Check & Evidence & Cautious interpretation \\
         \hline
-        焦距一致性 & \(\rho_f=0.0003511422\) & 两方向估计接近 \\
-        主点位置 & 偏移 \(44.45382\) px & 相对中心有小幅偏移 \\
-        畸变系数 & 完整五参数向量 & 需结合校正图像解读 \\
-        RMS 与平均误差 & \(2.06424401/1.65696931/1.90750642\) px & 三种口径均已记录 \\
-        数据完整性 & 18 候选，18 有效，0 失败 & 通过程序输入检查 \\
-        姿态覆盖 & 独立姿态日志未提供 & 不能据此宣称覆盖充分 \\
-        物理尺度 & \texttt{square\_size=1.0} & 平移向量物理单位未定 \\
+        Focal-length consistency & \(\rho_f=0.0003511422\) & The two estimates are close \\
+        Principal point & Offset \(44.45382\) px & Small displacement from the center \\
+        Distortion & Complete five-coefficient vector & Interpret with corrected image \\
+        Error metrics & \(2.06424401/1.65696931/1.90750642\) px & Three definitions are recorded \\
+        Data integrity & 18 candidates, 18 valid, 0 failed & Program checks passed \\
+        Pose coverage & No independent pose log & Coverage cannot be claimed complete \\
+        Physical scale & \path{square_size=3.0} cm & Translation vectors are in cm \\
         \hline
     \end{tabular}
 \end{table}
 
-综合而言，本次数据足以在当前图像坐标模型下给出一组可复核的相机内参和畸变参数；但由于具体镜头模式、方格物理边长和完整姿态覆盖记录尚未确认，不能将该结果夸大为带物理尺度和全场景精度保证的相机模型。
+Overall, the data support a reproducible camera matrix and distortion model for the current image-coordinate setup, with translation vectors in centimeters. The exact rear-lens focal length and the detailed pose-coverage record remain undocumented, so the result should not be presented as a universal accuracy guarantee for every lens mode or scene.

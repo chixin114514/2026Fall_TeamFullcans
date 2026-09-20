@@ -1,15 +1,24 @@
-\section{实验步骤}\label{sec:task2-procedure}
+\section{Experimental Procedure}\label{sec:task2-procedure}
 
 \begin{enumerate}
-    \item 准备平面棋盘格，实际测量方格边长，并记录每行、每列内角点数。
-    \item 使用手机在不同距离、平移位置和倾角下拍摄多幅清晰照片，记录手机型号、摄像头模式和图像分辨率。
-    \item 将照片放入输入目录，逐张读取并检查图像是否成功加载；读取失败的文件只记录为失败项，不应使其余图像停止处理。
-    \item 使用 \texttt{cv2.cvtColor} 将彩色图像转换为灰度图，再使用 \texttt{cv2.findChessboardCorners} 检测棋盘格内角点。检测成功的图像记录二维角点，检测失败的图像输出文件名和失败状态。
-    \item 对检测成功的角点调用 \texttt{cv2.cornerSubPix} 进行亚像素优化，并将优化终止条件和窗口设置保持为程序中的明确配置。
-    \item 根据标定板内角点规格和方格边长生成 \(Z_w=0\) 的三维物点，将其与每幅图像的二维角点一一对应。点的几何定义遵循式\ref{eq:task2-homography}。
-    \item 检查有效图像数量和图像尺寸一致性。若有效图像数量不足以稳定估计参数，则给出提示并要求补充采集；不同尺寸的图像不能直接混合标定。
-    \item 调用 \texttt{cv2.calibrateCamera} 估计相机内参矩阵、畸变系数以及各幅图像的旋转向量和平移向量。内参矩阵的含义见式\ref{eq:task2-intrinsic}，畸变模型见式\ref{eq:task2-radial-distortion}和式\ref{eq:task2-tangential-distortion}。
-    \item 对每幅有效图像使用 \texttt{cv2.projectPoints} 重投影三维物点，依据式\ref{eq:task2-point-reprojection}计算角点误差，并汇总平均重投影误差和 RMS。
-    \item 将相机矩阵、畸变系数、RMS、平均重投影误差、有效图像数及每张图像的检测状态保存到输出结果中；如程序启用校正功能，再使用 \texttt{cv2.undistort}生成校正图像。
-    \item 将实际运行日志中的结果填入第\ref{sec:task2-results}节，并按照第\ref{sec:task2-analysis}节分析参数合理性和数据质量。
+    \item Prepare the planar checkerboard, measure the physical square size, and record the number of inner corners in each direction.
+    \item Capture clear images at different distances, translations, and tilt angles. Record the phone model, rear-camera use, image resolution, and acquisition settings.
+    \item Read each image and check whether it can be loaded. A read failure is recorded for that file and does not stop processing of the remaining images.
+    \item Convert a color image to grayscale with \texttt{cv2.cvtColor}, then detect checkerboard inner corners with \texttt{cv2.findChessboardCorners}. Record the two-dimensional corners for successful images and the filename and reason for failures.
+    \item Refine detected corners to subpixel accuracy with \texttt{cv2.cornerSubPix}.
+    \item Generate planar three-dimensional object points from the checkerboard configuration and square size, and pair them with the two-dimensional image points. The geometry follows Equation~\ref{eq:task2-homography}.
+    \item Check the number of valid images and the consistency of image sizes. Mixed resolutions and fewer valid views than \texttt{--min-images} must be rejected.
+    \item Call \texttt{cv2.calibrateCamera} to estimate the camera matrix, distortion coefficients, and the rotation and translation vectors for each valid view. The camera matrix is defined in Equation~\ref{eq:task2-intrinsic}; the distortion model is given in Equations~\ref{eq:task2-radial-distortion} and~\ref{eq:task2-tangential-distortion}.
+    \item Reproject the three-dimensional points with \texttt{cv2.projectPoints}, compute pointwise errors using Equation~\ref{eq:task2-point-reprojection}, and summarize the three error definitions in Section~\ref{sec:task2-results}.
+    \item Save the camera matrix, distortion coefficients, poses, error statistics, image counts, and detection status to the NPZ result. If requested, use \texttt{cv2.undistort} to save corrected images.
+    \item Use the recorded result and the criteria in Section~\ref{sec:task2-analysis} to assess parameter consistency and data quality.
 \end{enumerate}
+
+The complete control flow implemented by the OpenCV program is summarized in Figure~\ref{fig:calibration-workflow}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.96\linewidth]{calibration_workflow.pdf}
+    \caption{OpenCV camera-calibration workflow implemented in this experiment.}
+    \label{fig:calibration-workflow}
+\end{figure}

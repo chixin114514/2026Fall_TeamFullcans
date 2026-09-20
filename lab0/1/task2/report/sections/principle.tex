@@ -1,16 +1,16 @@
-\section{实验原理}\label{sec:task2-principle}
+\section{Principles}\label{sec:task2-principle}
 
-\subsection{坐标系与针孔成像模型}\label{sec:task2-coordinate-system}
+\subsection{Coordinate Systems and the Pinhole Model}\label{sec:task2-coordinate-system}
 
-世界坐标系用于描述标定板上点的三维位置，相机坐标系以相机光心为原点，图像坐标系通常在成像平面上描述连续坐标，像素坐标系则以图像左上角为参考描述离散像素位置。设世界坐标系中的空间点为
-\(\mathbf{X}_{w}=(X_{w},Y_{w},Z_{w})^{\mathsf T}\)，相机坐标系中的点为
-\(\mathbf{X}_{c}=(X_{c},Y_{c},Z_{c})^{\mathsf T}\)。相机外参数由旋转矩阵 \(\mathbf{R}\) 和平移向量 \(\mathbf{t}\) 给出：
+The world coordinate system describes points on the calibration board. The camera coordinate system is centered at the optical center. The image coordinate system represents continuous image-plane coordinates, whereas the pixel coordinate system uses discrete image coordinates referenced to the upper-left image corner. Let
+\(\mathbf{X}_{w}=(X_{w},Y_{w},Z_{w})^{\mathsf T}\) be a point in world coordinates and
+\(\mathbf{X}_{c}=(X_{c},Y_{c},Z_{c})^{\mathsf T}\) the same point in camera coordinates. The extrinsic parameters are a rotation matrix \(\mathbf{R}\) and a translation vector \(\mathbf{t}\):
 \begin{equation}
 \mathbf{X}_{c}=\mathbf{R}\mathbf{X}_{w}+\mathbf{t}.
 \label{eq:task2-extrinsic}
 \end{equation}
 
-在针孔模型下，令 \(x=X_{c}/Z_{c}\)、\(y=Y_{c}/Z_{c}\) 为归一化图像坐标，像素坐标与空间点的关系可写为
+Under the pinhole model, let \(x=X_{c}/Z_{c}\) and \(y=Y_{c}/Z_{c}\) be normalized image coordinates. The projection to pixel coordinates is
 \begin{equation}
 s
 \begin{bmatrix}
@@ -27,7 +27,7 @@ X_{w}\\Y_{w}\\Z_{w}\\1
 \qquad s\ne0,
 \label{eq:task2-projection}
 \end{equation}
-其中 \((u,v)\) 是像素坐标，\(\mathbf{K}\) 是相机内参矩阵：
+where \((u,v)\) are pixel coordinates and \(\mathbf{K}\) is the camera matrix:
 \begin{equation}
 \mathbf{K}=
 \begin{bmatrix}
@@ -37,13 +37,11 @@ f_{x}&\gamma&c_{x}\\
 \end{bmatrix}.
 \label{eq:task2-intrinsic}
 \end{equation}
-这里 \(f_x,f_y\) 是以像素为单位的水平和竖直焦距，\((c_x,c_y)\) 是主点，\(\gamma\) 是像素轴非正交时的倾斜参数。普通手机图像通常将 \(\gamma\) 视为零，因此程序输出的矩阵一般接近
-\(\left[\begin{smallmatrix}f_x&0&c_x\\0&f_y&c_y\\0&0&1\end{smallmatrix}\right]\)。
+Here \(f_x\) and \(f_y\) are focal lengths in pixels, \((c_x,c_y)\) is the principal point, and \(\gamma\) is the skew parameter. For ordinary mobile-camera images, \(\gamma\) is commonly close to zero.
 
-\subsection{镜头畸变模型}\label{sec:task2-distortion}
+\subsection{Lens Distortion Model}\label{sec:task2-distortion}
 
-实际镜头会使理想针孔投影偏离观测像素。令
-\(r^{2}=x^{2}+y^{2}\)，常用的径向畸变模型为
+Real lenses make the observed image deviate from ideal pinhole projection. Let \(r^{2}=x^{2}+y^{2}\). A common radial distortion model is
 \begin{equation}
 \begin{aligned}
 x_{\mathrm r}&=x\left(1+k_{1}r^{2}+k_{2}r^{4}+k_{3}r^{6}\right),\\
@@ -51,7 +49,7 @@ y_{\mathrm r}&=y\left(1+k_{1}r^{2}+k_{2}r^{4}+k_{3}r^{6}\right).
 \end{aligned}
 \label{eq:task2-radial-distortion}
 \end{equation}
-其中 \(k_1,k_2,k_3\) 为径向畸变系数。切向畸变由镜头与成像平面未完全平行等因素引起，可写为
+The radial distortion coefficients are \(k_1,k_2,k_3\). Tangential distortion can be written as
 \begin{equation}
 \begin{aligned}
 x_{\mathrm d}&=x_{\mathrm r}+2p_{1}xy+p_{2}\left(r^{2}+2x^{2}\right),\\
@@ -59,18 +57,18 @@ y_{\mathrm d}&=y_{\mathrm r}+p_{1}\left(r^{2}+2y^{2}\right)+2p_{2}xy.
 \end{aligned}
 \label{eq:task2-tangential-distortion}
 \end{equation}
-最终像素坐标由
+The final pixel coordinates are
 \begin{equation}
 u=f_xx_{\mathrm d}+\gamma y_{\mathrm d}+c_x,\qquad
-v=f_yy_{\mathrm d}+c_y
+v=f_yy_{\mathrm d}+c_y.
 \label{eq:task2-distorted-pixel}
 \end{equation}
-得到。OpenCV 常见的五参数输出顺序为
-\((k_1,k_2,p_1,p_2,k_3)\)；若实际接口返回更多参数，报告应按程序输出的顺序和维数登记。
+OpenCV commonly returns five coefficients in the order
+\((k_1,k_2,p_1,p_2,k_3)\). If an interface returns a different length, the report must preserve the returned order and length.
 
-\subsection{平面标定与张正友法思想}\label{sec:task2-zhang}
+\subsection{Planar Calibration and the Zhang Method}\label{sec:task2-zhang}
 
-将棋盘格所在平面定义为 \(Z_w=0\)，并以方格边长为单位建立标定板坐标。此时平面点到图像点的映射可由单应矩阵 \(\mathbf{H}\) 表示：
+Set the checkerboard plane to \(Z_w=0\) and define board coordinates using the square size. The mapping from a point on the plane to its image is a homography:
 \begin{equation}
 s
 \begin{bmatrix}
@@ -88,25 +86,26 @@ X_w\\Y_w\\1
 \end{bmatrix},
 \label{eq:task2-homography}
 \end{equation}
-其中 \(\mathbf r_1,\mathbf r_2\) 是旋转矩阵的前两列。对同一棋盘格拍摄多个不同姿态的图像，每幅图像都会产生一个平面单应约束。利用旋转列向量的正交性和单位长度约束，可以从多幅图像联合估计内参数，再恢复各幅图像的外参数。最后，以所有角点的观测像素与模型投影像素之间的差异为目标进行非线性优化，从而同时细化内参数、畸变参数和外参数。
+where \(\mathbf r_1\) and \(\mathbf r_2\) are the first two columns of the rotation matrix. Multiple views of the same checkerboard provide homography constraints. The orthogonality and unit-length constraints of the rotation columns jointly estimate the intrinsic parameters and then the pose of each view. A nonlinear optimization finally refines the intrinsic parameters, distortion coefficients, and extrinsic parameters by minimizing the discrepancy between observed and projected corners.
 
-程序中，棋盘格的三维点位于 \(Z_w=0\) 平面，角点检测得到二维像素点；\texttt{cv2.calibrateCamera} 根据这些对应点执行上述标定流程。标定板规格和方格实际边长必须与真实物体一致，否则 \(\mathbf{t}\) 的尺度及由此得到的几何量会失去物理意义。
+In the program, the checkerboard object points lie on \(Z_w=0\), and the detected image points form the corresponding two-dimensional observations. The function \texttt{cv2.calibrateCamera} performs the calibration from these correspondences. The checkerboard configuration and square size must match the physical board; otherwise the translation-vector scale is not physically meaningful.
 
-\subsection{重投影误差}\label{sec:task2-reprojection}
+\subsection{Reprojection Error}\label{sec:task2-reprojection}
 
-设第 \(j\) 幅图像中第 \(i\) 个角点的观测像素为 \(\mathbf q_{j,i}\)，由估计参数通过 \texttt{cv2.projectPoints} 投影得到的像素为 \(\widehat{\mathbf q}_{j,i}\)。单点重投影误差定义为
+Let \(\mathbf q_{j,i}\) be the observed pixel for corner \(i\) in image \(j\), and let
+\(\widehat{\mathbf q}_{j,i}\) be the pixel obtained by projecting the estimated three-dimensional point with \texttt{cv2.projectPoints}. The pointwise reprojection error is
 \begin{equation}
 e_{j,i}=\left\lVert\widehat{\mathbf q}_{j,i}-\mathbf q_{j,i}\right\rVert_{2}.
 \label{eq:task2-point-reprojection}
 \end{equation}
-若总有效角点数为 \(M\)，则平均重投影误差和全局均方根误差分别为
+If \(M\) is the total number of valid corners, the mean pointwise reprojection error and global RMS are
 \begin{equation}
 \overline e=\frac{1}{M}\sum_{j,i}e_{j,i},\qquad
 e_{\mathrm{RMS}}=
 \sqrt{\frac{1}{M}\sum_{j,i}e_{j,i}^{2}}.
 \label{eq:task2-reprojection-error}
 \end{equation}
-对第 \(j\) 幅图像，程序还计算单幅 RMS 及其算术平均：
+For image \(j\), the per-image RMS and its arithmetic mean are
 \begin{equation}
 e_{j,\mathrm{RMS}}=
 \sqrt{\frac{1}{M_j}\sum_i e_{j,i}^{2}},\qquad
@@ -114,9 +113,4 @@ e_{j,\mathrm{RMS}}=
 \frac{1}{n}\sum_{j=1}^{n}e_{j,\mathrm{RMS}},
 \label{eq:task2-per-image-rms}
 \end{equation}
-其中 \(M_j\) 是第 \(j\) 幅图像的角点数，\(n\) 是有效图像数。
-\path{rms_error} 是 OpenCV 返回的全局 RMS。
-
-\path{mean_reprojection_error} 是式\ref{eq:task2-reprojection-error}中的点级平均欧氏距离。
-
-\path{mean_per_image_rms} 是式\ref{eq:task2-per-image-rms}中的逐图 RMS 算术平均。三者统计口径不同，不能互相替代。误差越小通常说明模型对已检测角点的拟合越好，但仍需结合图像覆盖范围、角点质量和独立验证图像综合判断。
+where \(M_j\) is the number of corners in image \(j\) and \(n\) is the number of valid images. The NPZ fields \path{rms_error}, \path{mean_reprojection_error}, and \path{mean_per_image_rms} record these three distinct quantities.

@@ -1,0 +1,28 @@
+{
+  "records": [
+    {
+      "source": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/IMG_5572.HEIC",
+      "source_sha256": "40055e4a3863605bbf89af8aa823305337953ba58d9cf80c9416b561144b1abc",
+      "decoded": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/data/user_capture/decoded/left.png",
+      "decoded_sha256": "c853df0a368a7be89739ea1e76ed160786033699ba52e1ad2ffc1ce48514d2ba",
+      "width": 1600,
+      "height": 1200,
+      "channels": 3,
+      "nonzero_pixels": 5725210,
+      "method": "macOS qlmanage -t Quick Look thumbnail",
+      "quicklook_size": 1600
+    },
+    {
+      "source": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/results/IMG_5573.HEIC",
+      "source_sha256": "69ee5b95239565ce46aa9f1706b8e0c35719924f5303910aa5a2ba5e376521d2",
+      "decoded": "/Users/jiaqiaosu/Desktop/作业/2026秋季学期/IntegratedProject/lab0/2/task2/data/user_capture/decoded/right.png",
+      "decoded_sha256": "4db56511644bdfe6c6e9de922b6dd09807460e9315a45f179901441f1e754c1a",
+      "width": 1600,
+      "height": 1200,
+      "channels": 3,
+      "nonzero_pixels": 5735170,
+      "method": "macOS qlmanage -t Quick Look thumbnail",
+      "quicklook_size": 1600
+    }
+  ]
+}

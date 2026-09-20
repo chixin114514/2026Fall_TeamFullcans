@@ -1,35 +1,65 @@
 \section{实验原理}
 
-\subsection{双目视觉与对极约束}
+\subsection{针孔双目模型}
 
-双目视觉使用两个具有固定相对位置的相机观察同一场景。空间点在左右图像中的投影位置不同，这个水平位置差提供了深度信息。对于左、右图像中的对应齐次像素坐标 $\mathbf{x}_L$ 和 $\mathbf{x}_R$，对极几何可表示为
+设左右相机光心在水平方向相距基线 $B$，两相机具有相同焦距 $f$。对空间点
+$(X,Y,Z)$，在平行相机模型下，其水平投影可写为
 \begin{equation}
-  \mathbf{x}_R^{\mathsf{T}}\mathbf{F}\mathbf{x}_L=0,
+  x_L=\frac{fX}{Z},\qquad
+  x_R=\frac{f(X-B)}{Z}.
 \end{equation}
-其中 $\mathbf{F}$ 为基础矩阵。该约束说明一个图像中的点在另一幅图像中的对应点必须落在相应的对极线上，从而将二维搜索限制在一维对极线上。
-
-当左右图像已经校正，使对应点位于同一水平扫描线上时，对应点只需沿水平方向匹配。在本实验的视差约定下，视差定义为
+两式相减得到视差与深度关系
 \begin{equation}
-  d=x_L-x_R,
-\end{equation}
-其中 $x_L$ 和 $x_R$ 分别是对应点的水平坐标。视差较大的点通常离相机更近，视差较小的点通常离相机更远。
-
-\subsection{视差与深度}
-
-在平行双目模型中，若相机焦距为 $f$、左右相机基线长度为 $B$，空间点的物理深度 $Z$ 与视差满足
-\begin{equation}
+  d=x_L-x_R=\frac{fB}{Z},\qquad
   Z=\frac{fB}{d}.
   \label{eq:metric-depth}
 \end{equation}
-因此，计算米制深度必须知道与当前图像对相匹配的焦距、基线以及必要的校正参数。视差匹配本身只给出像素位移，不能单独确定 $Z$ 的物理尺度。
+因此，较大的视差通常对应较近的场景点；较小的视差对应较远的场景点。式~\eqref{eq:metric-depth}
+还说明，像素视差本身不能决定深度的物理尺度，必须同时知道与当前相机系统匹配的
+焦距和基线。
 
-本实验使用 OpenCV 的半全局块匹配器 \texttt{StereoSGBM} 估计视差。匹配器返回的是带有固定缩放因子的整数结果，程序按 OpenCV 约定除以 $16$ 得到浮点视差（单位为像素）。对有效视差 $d$，程序进一步计算
+\subsection{对极约束与水平搜索}
+
+双目图像中的对应点满足基础矩阵给出的对极约束
 \begin{equation}
-  \text{depth\_proxy}=\frac{1}{d}.
+  \mathbf{x}_R^{\mathsf{T}}\mathbf{F}\mathbf{x}_L=0,
+\end{equation}
+其中 $\mathbf{x}_L$、$\mathbf{x}_R$ 为对应齐次像素坐标，$\mathbf{F}$ 为基础矩阵。
+该关系把右图中的候选点限制在左图点对应的对极线上。经过可靠的立体校正后，对极线
+近似变为水平扫描线，因此匹配器只需在同一行内搜索不同的水平位移。
+
+本实验沿用 OpenCV aloe 官方样例的直接匹配流程，不重新估计校正变换。报告中的视差
+约定为 $d=x_L-x_R$；程序输出的有效视差规则是有限值且 $d>15$。
+
+\subsection{StereoBM 与 StereoSGBM}
+
+\textbf{StereoBM} 在局部窗口内比较左右图像块，结构简单、速度较快，但在纹理不足、
+遮挡边界和重复纹理处容易出现空洞或错误匹配。\textbf{StereoSGBM} 在多个方向上累积
+匹配代价，使用半全局的路径优化在局部一致性和全局平滑之间折中，通常能得到更连续
+的视差结果。本实验选择 StereoSGBM，以便在官方 aloe 图像上获得可解释的课程演示结果。
+
+对像素 $p$ 和候选视差 $d$，可将匹配代价抽象为 $C(p,d)$。沿某条路径的递推会惩罚
+相邻像素的视差变化：视差变化较小时使用惩罚 $P_1$，发生更大跳变时使用惩罚 $P_2$。
+本实验使用 $P_2>P_1$，鼓励大多数区域保持平滑，同时允许物体边界出现视差突变。实际
+配置还包含以下约束：
+
+\begin{itemize}
+  \item \texttt{minDisparity} 与 \texttt{numDisparities} 定义搜索起点和搜索范围；本次为 $16$ 与 $96$；
+  \item \texttt{blockSize} 决定局部匹配窗口，本次为 $5$；窗口越大通常越稳定，但会损失边界细节；
+  \item \texttt{uniquenessRatio} 要求最佳匹配明显优于次佳匹配，降低歧义点被保留的概率；
+  \item \texttt{disp12MaxDiff} 用于左右一致性检查；
+  \item \texttt{speckleWindowSize} 与 \texttt{speckleRange} 去除小面积、视差变化异常的散斑区域。
+\end{itemize}
+
+\subsection{相对深度与标定边界}
+
+OpenCV 匹配器返回带固定缩放的整数结果，程序除以 $16$ 得到像素单位的浮点视差。
+对有效视差计算
+\begin{equation}
+  \mathrm{depth\_proxy}=\frac{1}{d},\qquad d>15.
   \label{eq:proxy-depth}
 \end{equation}
-这个量保留了前后关系，但不包含 $fB$，因此仅表示任意尺度的相对深度；其数值越大表示相对越远。
-
-\subsection{本实验的标定边界}
-
-本实验使用的 \texttt{aloeL.jpg} 与 \texttt{aloeR.jpg} 来自 OpenCV 官方 \texttt{4.x/samples/data}。现有材料没有提供明确配套的焦距 $f$、基线 $B$、\texttt{doffs} 或 $\mathbf{Q}$ 矩阵。因而式~\eqref{eq:metric-depth} 只作为理论关系说明，实验不计算米制绝对深度，也不生成带物理尺度的三维点云。目录中的 \texttt{aloeGT.png} 若被使用，也只能作为视差参考图，不能作为相机标定或米制深度真值。
+该量保留视差反映的前后顺序，但不包含式~\eqref{eq:metric-depth} 中的 $fB$。
+当前官方 aloe 样例没有明确配套的 $f$、$B$、\texttt{doffs} 或 $\mathbf{Q}$，因此不调用带猜测
+参数的 \texttt{reprojectImageTo3D}，也不生成带物理尺度的三维点云。\texttt{aloeGT.png} 如被使用，
+只能作为视差参考图，不能作为米制深度真值。

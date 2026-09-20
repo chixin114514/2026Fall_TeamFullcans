@@ -1,66 +1,19 @@
-\section{程序设计}\label{sec:task2-program-design}
+\section{Program Design}\label{sec:task2-program-design}
 
-\subsection{输入、配置与输出}
+\subsection{Input, Configuration, and Output}
 
-程序以带 \texttt{argparse} 的 Python 脚本作为入口，从
-\path{task2/images_jpg/}读取 JPEG。
-\texttt{--checkerboard} 设置内角点列数和行数，\texttt{--square-size} 设置每格边长数值。
-\texttt{--images} 设置目录、单张图片或 glob，\texttt{--output-dir} 设置输出目录。
-\texttt{--min-images} 设定最少有效视图数。
+The Python entry point uses \texttt{argparse} and reads JPEG files from
+\path{task2/images_jpg/}.
 
-本次真实运行的配置为 \(8\times5\)、\texttt{square\_size=1.0} 和
-\texttt{--min-images 3}。
+The options \texttt{--checkerboard} and \texttt{--square-size} specify the checkerboard inner-corner configuration and square size. The options \texttt{--images} and \texttt{--output-dir} specify the input pattern and output directory. The option \texttt{--min-images} sets the minimum number of valid views.
 
-对每张输入图像，程序依次执行读取、灰度化、角点检测和亚像素优化。成功样本加入标定点列表，并输出
-\texttt{[OK] 文件名}；读取失败、角点检测失败或分辨率不一致的样本输出
-\texttt{[FAILED] 文件名}及原因，并汇总失败计数。当前运行的 18 张 JPEG 全部成功，因此读取失败、角点失败和尺寸不一致均为 0。
-\path{task2/images/}中的 HEIC 文件虽会被识别为候选扩展名，但当前
-\texttt{cv2.imread}无法直接读取，不能与 JPEG 混用。程序在标定前拒绝有效图像不足和混合分辨率，并在需要时自动创建输出目录。
+The present run used \(8\times5\) inner corners, \texttt{square\_size=3.0} cm, and
+\texttt{--min-images 3}. Each image was read, converted to grayscale, searched for corners, and refined to subpixel accuracy. Successful files print \texttt{[OK]}; read failures, corner failures, and resolution mismatches print \texttt{[FAILED]} with a reason and are counted. All 18 JPEG files succeeded in this run. HEIC files under \path{task2/images/} are not directly readable by the current \texttt{cv2.imread}.
 
-\subsection{核心计算}
+\subsection{Core Computation}
 
-三维物点由棋盘格坐标生成，二维像点来自优化后的角点。调用
-\texttt{cv2.calibrateCamera} 后，程序获得内参矩阵 \(\mathbf K\)、畸变系数以及每幅有效图像的旋转向量和平移向量。
-调用时传入 \texttt{objectPoints}、\texttt{imagePoints} 和 \texttt{imageSize}；其投影关系对应式\ref{eq:task2-projection}，
-畸变参数的登记顺序与 OpenCV 实际返回结果一致。
+Three-dimensional board points are generated from the checkerboard geometry, while two-dimensional points are obtained from the refined corners. Calling \texttt{cv2.calibrateCamera} produces the camera matrix, distortion coefficients, and a rotation and translation vector for each valid view. The call receives \texttt{objectPoints}, \texttt{imagePoints}, and \texttt{imageSize}; the projection relation is given in Equation~\ref{eq:task2-projection}.
 
-误差计算使用 \texttt{cv2.projectPoints} 将每幅图像的三维物点重投影到像素平面，然后与检测到的二维角点逐点相减。程序同时保存 OpenCV 返回的
-\path{rms_error}、逐图 RMS 数组 \path{per_image_reprojection_error}、点级全局平均
-\path{mean_reprojection_error} 和逐图 RMS 算术平均 \path{mean_per_image_rms}。
-三者的统计定义见式\ref{eq:task2-reprojection-error}和式\ref{eq:task2-per-image-rms}，不能将一个数值重复标为多个指标。
+The program uses \texttt{cv2.projectPoints} to reproject every board point and compare it with the detected pixel. It stores OpenCV RMS in \path{rms_error}, the per-image RMS array in \path{per_image_reprojection_error}, the global pointwise mean in \path{mean_reprojection_error}, and the arithmetic mean of per-image RMS values in \path{mean_per_image_rms}. Their definitions are given in Equations~\ref{eq:task2-reprojection-error} and~\ref{eq:task2-per-image-rms}.
 
-\subsection{可复制的运行命令}\label{sec:task2-command}
-
-本机已验证以下解释器可导入 OpenCV 4.10.0。代码清单\ref{lst:task2-command}中的第一条命令用于查看完整参数，第二条命令复现本次真实标定；第三条命令在隔离临时目录生成角点和去畸变图件。
-
-\begin{lstlisting}[language=bash,caption={任务 2 程序命令},label={lst:task2-command}]
-/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py --help
-/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py \
-    --checkerboard 8x5 --square-size 1.0 \
-    --images "task2/images_jpg/*.jpg" \
-    --output-dir task2/output --min-images 3
-/Users/jiaqiaosu/miniconda3/bin/python task2/calibrate_camera.py \
-    --checkerboard 8x5 --square-size 1.0 \
-    --images "task2/images_jpg/*.jpg" \
-    --output-dir /private/tmp/task2-final-visual-run --min-images 3 \
-    --save-corners --undistort
-\end{lstlisting}
-
-本次第三条命令产生的临时 \path{camera_params.npz} 仅用于复核和生成图件，不作为报告结果来源。
-\path{camera_params.npz}中的 21 个字段与程序一致：
-\begin{itemize}
-    \item 参数字段：\path{camera_matrix}、\path{distortion_coefficients}、
-    \path{rotation_vectors}、\path{translation_vectors}；
-    \item 误差字段：\path{rms_error}、\path{per_image_reprojection_error}、
-    \path{mean_reprojection_error}、\path{mean_per_image_rms}；
-    \item 配置字段：\path{image_size}、\path{checkerboard}、\path{square_size}；
-    \item 路径与统计字段：\path{image_paths}、\path{valid_image_paths}、
-    \path{failed_image_paths}、\path{failure_reasons}、\path{total_image_count}、
-    \path{valid_image_count}、\path{failed_image_count}、
-    \path{read_failure_count}、\path{corner_detection_failure_count}、
-    \path{size_mismatch_count}。
-\end{itemize}
-
-\subsection{结果持久化与可复核性}
-
-最终参数写入 \texttt{task2/output/camera\_params.npz}，并在标准输出中打印矩阵、畸变系数、有效图像数、三类误差和内参分量。保存文件同时记录图像尺寸、棋盘格配置、平移/旋转向量、候选/有效/失败路径及失败原因，使表\ref{tab:task2-results}中的数字可由唯一 NPZ 回读核对。程序不负责推断手机模式或方格物理边长；这些信息必须来自采集记录。
+The official result is written to \path{task2/output/camera_params.npz}. The file records the image size, checkerboard configuration, poses, candidate/valid/failed paths, failure reasons, and all three error statistics. The 3.0 square-size value is in cm, so the translation vectors are in cm. Hardware mode and physical board measurements are acquisition facts, not values inferred by the program.
