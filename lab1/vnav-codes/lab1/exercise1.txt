@@ -1,0 +1,3 @@
+lines: 19567
+words: 97676
+non-blank lines: 14338
