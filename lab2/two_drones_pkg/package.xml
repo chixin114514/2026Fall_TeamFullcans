@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>two_drones_pkg</name>
+  <version>0.1.0</version>
+  <description>ROS Noetic VNAV Lab 2: TF trajectories of two drones.</description>
+
+  <maintainer email="student@example.com">Lab 2 student</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>visualization_msgs</depend>
+
+  <export>
+  </export>
+</package>
