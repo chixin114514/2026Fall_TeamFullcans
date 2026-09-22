@@ -1,0 +1,1051 @@
+            Mobile Camera Intrinsic Calibration Report
+                              LAB0-1: Camera Calibration Experiment
+
+                                           Name: Boyang Xie
+                                        Student ID: 24020036030
+                                          Course/Class: F29XS
+
+
+      Data status: An OpenCV calibration was completed using 18 real JPEG images from an iPhone
+             15 Pro rear camera. The checkerboard has 8 × 5 inner corners and 3 cm squares.
+
+
+1 Objectives
+This experiment uses Python and OpenCV to perform camera calibration for a mobile-camera image set captured
+with a planar checkerboard. Its objectives are:
+  1. to understand the relationships among the world, camera, image, and pixel coordinate systems and the
+     pinhole camera model;
+  2. to distinguish intrinsic parameters from extrinsic parameters and understand the roles of focal length,
+     principal point, and lens distortion coeﬀicients;
+  3. to use checkerboard corner detection, subpixel refinement, and cv2.calibrateCamera;
+  4. to obtain the camera matrix, distortion coeﬀicients, and per-view poses, and to evaluate the fit using
+     reprojection error;
+  5. to assess how checkerboard coverage, camera pose, and corner quality affect the calibration result.
+    All numerical results in this report come from the recorded JPEG data and the oﬀicial NPZ result file. No
+hardware or calibration value is inferred from a default configuration.
+
+
+2 Principles
+2.1 Coordinate Systems and the Pinhole Model
+The world coordinate system describes points on the calibration board. The camera coordinate system is
+centered at the optical center. The image coordinate system represents continuous image-plane coordinates,
+whereas the pixel coordinate system uses discrete image coordinates referenced to the upper-left image corner.
+Let Xw = (Xw , Yw , Zw )T be a point in world coordinates and Xc = (Xc , Yc , Zc )T the same point in camera
+coordinates. The extrinsic parameters are a rotation matrix R and a translation vector t:
+
+                                               Xc = RXw + t.                                                (1)
+
+     Under the pinhole model, let x = Xc /Zc and y = Yc /Zc be normalized image coordinates. The projection
+to pixel coordinates is                                
+                                                      Xw
+                                       u             Yw 
+                                    s v  = K R t        
+                                                       Zw  ,    s ̸= 0,                               (2)
+                                       1
+                                                         1
+where (u, v) are pixel coordinates and K is the camera matrix:
+                                                              
+                                                    fx γ c x
+                                             K =  0 fy c y  .                                             (3)
+                                                     0 0 1
+
+Here fx and fy are focal lengths in pixels, (cx , cy ) is the principal point, and γ is the skew parameter. For
+ordinary mobile-camera images, γ is commonly close to zero.
+
+
+                                                      1
+2.2 Lens Distortion Model
+Real lenses make the observed image deviate from ideal pinhole projection. Let r2 = x2 + y 2 . A common radial
+distortion model is                                                         
+                                     xr = x 1 + k1 r 2 + k 2 r 4 + k 3 r 6 ,
+                                                                                                          (4)
+                                      yr = y 1 + k 1 r 2 + k 2 r 4 + k 3 r 6 .
+The radial distortion coeﬀicients are k1 , k2 , k3 . Tangential distortion can be written as
+                                                                            
+                                        xd = xr + 2p1 xy + p2 r2 + 2x2 ,
+                                                                                                               (5)
+                                        yd = yr + p1 r2 + 2y 2 + 2p2 xy.
+
+The final pixel coordinates are
+                                     u = fx xd + γyd + cx ,       v = f y yd + c y .                            (6)
+OpenCV commonly returns five coeﬀicients in the order (k1 , k2 , p1 , p2 , k3 ). If an interface returns a different
+length, the report must preserve the returned order and length.
+
+
+2.3 Planar Calibration and the Zhang Method
+Set the checkerboard plane to Zw = 0 and define board coordinates using the square size. The mapping from a
+point on the plane to its image is a homography:
+                                             
+                                     u         Xw                       
+                                  s  v  = H  Yw  , H = K r1 r2 t ,                                  (7)
+                                      1          1
+
+where r1 and r2 are the first two columns of the rotation matrix. Multiple views of the same checkerboard
+provide homography constraints. The orthogonality and unit-length constraints of the rotation columns jointly
+estimate the intrinsic parameters and then the pose of each view. A nonlinear optimization finally refines the
+intrinsic parameters, distortion coeﬀicients, and extrinsic parameters by minimizing the discrepancy between
+observed and projected corners.
+     In the program, the checkerboard object points lie on Zw = 0, and the detected image points form the
+corresponding two-dimensional observations. The function cv2.calibrateCamera performs the calibration
+from these correspondences. The checkerboard configuration and square size must match the physical board;
+otherwise the translation-vector scale is not physically meaningful.
+
+
+2.4 Reprojection Error
+                                                                bj,i be the pixel obtained by projecting the
+Let qj,i be the observed pixel for corner i in image j, and let q
+estimated three-dimensional point with cv2.projectPoints. The pointwise reprojection error is
+
+                                                ej,i = ∥b
+                                                        qj,i − qj,i ∥2 .                                        (8)
+
+If M is the total number of valid corners, the mean pointwise reprojection error and global RMS are
+                                                              s
+                                        1 X                       1 X 2
+                                   e=          ej,i , eRMS =            e .                                     (9)
+                                       M j,i                     M j,i j,i
+
+For image j, the per-image RMS and its arithmetic mean are
+                                      s
+                                          1 X 2                 1X
+                                                                   n
+                             ej,RMS =           e ,     eview =       ej,RMS ,                                 (10)
+                                        Mj i j,i                n j=1
+
+where Mj is the number of corners in image j and n is the number of valid images. The NPZ fields rms_error,
+mean_reprojection_error, and mean_per_image_rms record these three distinct quantities.
+
+
+
+
+                                                           2
+                         Table 1: Experimental environment and acquisition record
+          Category           Item                       Recorded value
+          Operating system System and architecture      macOS 26.6.2, Darwin 25.6.0, arm64
+          Software           Python                     3.13.12
+          Software           OpenCV                     4.10.0 (cv2)
+          Software           Main APIs                  findChessboardCorners, cornerSubPix
+          Software           Main APIs                  calibrateCamera, projectPoints
+          Hardware           Phone model                Apple iPhone 15 Pro (JPEG EXIF)
+          Hardware           Camera mode                Rear camera; focal length not recorded
+          Image              Image resolution           5712 × 4284
+          Board              Inner-corner configuration 8 × 5
+          Board              Physical square size       3 cm
+          Data               Input images               18 JPEG files (task2/images_jpg/)
+          Data               Valid/failed images        18 / 0
+
+
+3 Experimental Environment
+The software environment was verified directly. The Python interpreter was /Users/jiaqiaosu/miniconda3/
+bin/python; it imports cv2. The JPEG EXIF records an Apple iPhone 15 Pro, and the data were captured
+with its rear camera. The specific rear-lens focal length was not recorded and is not inferred here.
+     The software versions, JPEG device information, image size, checkerboard configuration, 3 cm square size,
+and image counts were verified from local commands, EXIF, acquisition records, and camera_params.npz. The
+program was run with square_size=3.0, so the translation vectors are measured in cm. The specific rear-lens
+focal length was not recorded.
+
+
+4 Data Acquisition
+4.1 Checkerboard and Coordinate Convention
+The calibration target is a planar black-and-white checkerboard. The option --checkerboard specifies the
+number of checkerboard inner-corner columns and rows, while --square-size specifies the physical side length
+of one square. The present run used 8 × 5 inner corners and a 3 cm square size, with square_size=3.0. The
+upper-left inner corner was set to (0, 0, 0); the two board directions define Xw and Yw , and all board points
+have Zw = 0. This convention is consistent with the planar model in Equation 7.
+
+
+4.2 Acquisition Conditions
+The input set contains 18 JPEG files under task2/images_jpg/, each with resolution 5712×4284. JPEG EXIF
+records an Apple iPhone 15 Pro, and the acquisition used its rear camera. The specific rear-lens focal length
+was not recorded and is not inferred. The original HEIC files under task2/images/ were not used as direct
+OpenCV input because the current cv2.imread cannot read them.
+     The board should be captured at different distances, translations, and tilt angles so that it covers the
+image center, edges, and different depths. A set consisting only of nearly frontal views with repeated poses
+is insuﬀicient. The board should be complete and sharp, without severe reflection, motion blur, occlusion, or
+overexposure. A separate pose-coverage log remains to be organized from the original acquisition.
+    The program reads task2/images_jpg/ and preserves the original filenames, allowing the NPZ image_
+paths field to be matched to each detection result.
+     The calibration values come from the actual run on the 18 JPEG files. The rear-camera mode, checkerboard
+configuration, and 3 cm square size are fixed acquisition facts; only the exact rear-lens focal length and the
+detailed pose-coverage log remain undocumented.
+
+
+
+
+                                                      3
+                                   Table 2: Mobile-camera acquisition record
+        Item                Recorded content                  Status
+        Phone               Manufacturer and model            Apple iPhone 15 Pro (JPEG EXIF)
+        Camera              Front/rear camera and lens mode Rear camera; focal length not recorded
+        Image resolution    Width × height (pixels)           5712 × 4284
+        Image count         Input JPEG files                  18
+        Checkerboard        Inner corners per row/column      8×5
+        Square size         Physical side length              3 cm; square_size=3.0
+        Pose coverage       Position, distance, and tilt      Acquisition log to be organized
+
+
+5 Experimental Procedure
+  1. Prepare the planar checkerboard, measure the physical square size, and record the number of inner corners
+     in each direction.
+  2. Capture clear images at different distances, translations, and tilt angles. Record the phone model, rear-
+     camera use, image resolution, and acquisition settings.
+  3. Read each image and check whether it can be loaded. A read failure is recorded for that file and does not
+     stop processing of the remaining images.
+  4. Convert a color image to grayscale with cv2.cvtColor, then detect checkerboard inner corners with
+     cv2.findChessboardCorners. Record the two-dimensional corners for successful images and the filename
+     and reason for failures.
+  5. Refine detected corners to subpixel accuracy with cv2.cornerSubPix.
+  6. Generate planar three-dimensional object points from the checkerboard configuration and square size, and
+     pair them with the two-dimensional image points. The geometry follows Equation 7.
+  7. Check the number of valid images and the consistency of image sizes. Mixed resolutions and fewer valid
+     views than --min-images must be rejected.
+  8. Call cv2.calibrateCamera to estimate the camera matrix, distortion coeﬀicients, and the rotation and
+     translation vectors for each valid view. The camera matrix is defined in Equation 3; the distortion model
+     is given in Equations 4 and 5.
+  9. Reproject the three-dimensional points with cv2.projectPoints, compute pointwise errors using Equa-
+     tion 8, and summarize the three error definitions in Section 7.
+ 10. Save the camera matrix, distortion coeﬀicients, poses, error statistics, image counts, and detection status
+     to the NPZ result. If requested, use cv2.undistort to save corrected images.
+ 11. Use the recorded result and the criteria in Section 8 to assess parameter consistency and data quality.
+    The complete control flow implemented by the OpenCV program is summarized in Figure 1.
+
+
+6 Program Design
+6.1 Input, Configuration, and Output
+The Python entry point uses argparse and reads JPEG files from task2/images_jpg/.
+     The options --checkerboard and --square-size specify the checkerboard inner-corner configuration and
+square size. The options --images and --output-dir specify the input pattern and output directory. The
+option --min-images sets the minimum number of valid views.
+    The present run used 8 × 5 inner corners, square_size=3.0 cm, and --min-images 3. Each image was
+read, converted to grayscale, searched for corners, and refined to subpixel accuracy. Successful files print [OK];
+read failures, corner failures, and resolution mismatches print [FAILED] with a reason and are counted. All 18
+JPEG files succeeded in this run. HEIC files under task2/images/ are not directly readable by the current
+cv2.imread.
+
+
+6.2 Core Computation
+Three-dimensional board points are generated from the checkerboard geometry, while two-dimensional points
+are obtained from the refined corners. Calling cv2.calibrateCamera produces the camera matrix, distor-
+tion coeﬀicients, and a rotation and translation vector for each valid view. The call receives objectPoints,
+
+
+                                                        4
+                                      Start
+                           Configure 8x5 inner corners
+                                Square size: 3 cm
+                               Discover JPEG files
+                             task2/images_jpg/*.jpg
+       Yes
+                                Read next image
+                                       Readable?
+                     No                         Yes
+ Record [FAILED]                      Resolution
+   read failure                       consistent?              No
+                                                Yes                  Record [FAILED]
+                                    Grayscale image                   size mismatch
+                                findChessboardCorners
+                                        Corners
+                                        found?                 No
+                                              Yes                    Record [FAILED]
+                                     cornerSubPix                     corner failure
+                                   append point pairs
+                                          More
+                                        images?
+                                                No
+                     Summarize valid and failed counts
+                                      Valid views
+                     No             >= min-images?
+     Abort                                      Yes
+do not write NPZ                    calibrateCamera
+                                estimate K, d, rvec, tvec
+                                    projectPoints
+                                 compute error metrics
+                            Save camera_params.npz
+
+                          Yes       --save-corners?
+                                                No
+   Save corner overlays               --undistort?       Yes
+                                                No          Save undistorted images
+                                          End
+
+
+
+
+Figure 1: OpenCV camera-calibration workflow implemented in this experiment.
+
+
+
+
+                                           5
+imagePoints, and imageSize; the projection relation is given in Equation 2.
+     The program uses cv2.projectPoints to reproject every board point and compare it with the detected
+pixel. It stores OpenCV RMS in rms_error, the per-image RMS array in per_image_reprojection_error,
+the global pointwise mean in mean_reprojection_error, and the arithmetic mean of per-image RMS values
+in mean_per_image_rms. Their definitions are given in Equations 9 and 10.
+     The oﬀicial result is written to task2/output/camera_params.npz. The file records the image size, checker-
+board configuration, poses, candidate/valid/failed paths, failure reasons, and all three error statistics. The 3.0
+square-size value is in cm, so the translation vectors are in cm. Hardware mode and physical board measurements
+are acquisition facts, not values inferred by the program.
+
+
+7 Experimental Results
+The results below were read directly from task2/output/camera_params.npz for the 18 real JPEG files in
+task2/images_jpg/*.jpg. The run used an 8 × 5 checkerboard, a 3.0 cm square size, and --min-images 3.
+These values are recorded outputs, not estimates or placeholders. The image order used in the per-view figures
+is the order of valid_image_paths in the NPZ file.
+
+
+7.1 Recovered calibration quantities
+The recovered camera matrix is
+                                                                                  
+                                   4082.15290893             0       2883.66417823
+                               K=       0             4083.58657686 2107.20293734 .                        (11)
+                                         0                   0             1
+
+     The five-coeﬀicient OpenCV distortion vector is
+
+                      d = [0.20245123; −0.29420837; −0.00326679; 0.00308671; −1.04554325] ,                  (12)
+
+where d follows the order (k1 , k2 , p1 , p2 , k3 ).
+
+
+                    Table 3: Mobile-camera calibration results read from the oﬀicial NPZ file
+         Category        Metric                                        Recorded value
+         Data            Input pattern                                 task2/images_jpg/*.jpg
+         Data            Candidate images                              18
+         Data            Valid calibration images                      18
+         Data            Failed images                                 0 (read, corner, and size failures)
+         Data            Image size (width × height)                   5712 × 4284
+         Configuration Checkerboard inner corners                      8×5
+         Configuration square_size                                     3.0 cm
+         Intrinsics      Camera matrix K                               See Equation 11
+         Intrinsics      fx                                            4082.15290893
+         Intrinsics      fy                                            4083.58657686
+         Intrinsics      cx                                            2883.66417823
+         Intrinsics      cy                                            2107.20293734
+         Distortion      (k1 , k2 , p1 , p2 , k3 )                     See Equation 12
+         Error           OpenCV RMS (pixels)                           2.06424401
+         Error           Mean pointwise reprojection error (pixels) 1.65696931
+         Error           Mean per-image RMS (pixels)                   1.90750642
+         Extrinsics      Rotation/translation shape                    18 × 3 × 1; translations in cm
+
+     OpenCV RMS is the global root-mean-square error returned by cv2.calibrateCamera. The mean point-
+wise reprojection error is mean_reprojection_error, averaged over all 18 × 40 = 720 valid corners. The
+mean per-image RMS is mean_per_image_rms, the arithmetic mean of 18 per-image RMS values. These def-
+initions are distinct. The per-image array is stored in per_image_reprojection_error; poses are stored in
+rotation_vectors and translation_vectors.
+
+
+
+                                                           6
+7.2 Per-view and geometric diagnostics
+The global intrinsic matrix and distortion vector are each one joint estimate from all 18 views. They are
+not 18 independent estimates. Therefore, the additional plots below show quantities that genuinely vary by
+view: reprojection residuals, checkerboard pose, detected-corner coverage, and the response of the single fitted
+distortion model. This distinction prevents visual fluctuation plots from incorrectly treating one global K or d
+as if it had been refitted independently to every image.
+
+                                                                              Reprojection error varies across the 18 valid views
+                                                            Median: 1.810 px                                                                                   min=0.850 px
+                                                                                                                                                               max=3.625 px
+                                                            Global OpenCV RMS: 2.064 px
+                                                3.2
+              RMS reprojection error (pixels)
+
+
+
+
+                                                            Mean per-image RMS: 1.908 px
+
+
+
+                                                2.4
+
+
+
+
+                                                1.6
+
+
+
+
+                                                0.8
+
+
+
+
+                                                0.0
+                                                       86
+
+                                                             95
+
+                                                                   01
+
+                                                                         02
+
+                                                                               03
+
+                                                                                     04
+
+                                                                                           05
+
+                                                                                                  06
+
+                                                                                                        07
+
+                                                                                                                 08
+
+                                                                                                                       09
+
+                                                                                                                             10
+
+                                                                                                                                   11
+
+                                                                                                                                         12
+
+                                                                                                                                               13
+
+                                                                                                                                                     14
+
+                                                                                                                                                           15
+
+                                                                                                                                                                  16
+                                                      54
+
+                                                            54
+
+                                                                  55
+
+                                                                        55
+
+                                                                              55
+
+                                                                                    55
+
+                                                                                          55
+
+                                                                                                55
+
+                                                                                                       55
+
+                                                                                                                55
+
+                                                                                                                      55
+
+                                                                                                                            55
+
+                                                                                                                                  55
+
+                                                                                                                                        55
+
+                                                                                                                                              55
+
+                                                                                                                                                    55
+
+                                                                                                                                                          55
+
+                                                                                                                                                                55
+                                                                                               Valid image (filename suffix)
+
+
+
+Figure 2: Per-image RMS reprojection error for the 18 valid views. The bars are calculated from the 40 detected
+corners in each image using cv2.projectPoints. The horizontal lines show the median, the arithmetic mean
+of per-image RMS values, and the global OpenCV RMS. These bars are per-view residual diagnostics, not 18
+separate intrinsic-parameter fits.
+
+     The per-image RMS values range from 0.850436 px (IMG_5505) to 3.625463 px (IMG_5513), with a median
+of 1.810399 px and an interquartile range of 1.223223–2.360739 px. Eight of the 18 views exceed 2 px, and
+four exceed 2.5 px. These views remain valid detections, but their larger residuals make them useful candidates
+for visual inspection or for a future refined acquisition. The plot also shows why the arithmetic mean of the
+per-image RMS values (1.907506 px) is not identical to the global OpenCV RMS (2.064244 px).
+     The detected corners occupy normalized coordinates approximately from (0.191, 0.182) to (0.814, 0.792),
+so the union of the observed board corners covers about 62.3% of the image width and 61.1% of the image
+height. This is useful central coverage, but it does not reach the outer image border. The fitted distortion
+coeﬀicients are consequently less directly constrained at the extreme corners than in the central region, which
+is an important limitation when interpreting the distortion-response plot below.
+    The checkerboard-origin depth tz varies from 24.705 to 90.828 cm, and the board-origin distance ∥t∥ varies
+from 27.559 to 91.815 cm. The lateral components span −17.256 to 7.327 cm in x and −12.834 to 10.166 cm in
+y. Thus the dataset contains both distance and lateral-position changes rather than a repeated single pose.
+     The Rodrigues-vector norm ranges from 2.688◦ to 173.651◦ , while the board-normal tilt ranges from 2.683◦
+to 62.936◦ . The two angles answer different questions: the norm describes the axis-angle representation of the
+full board-to-camera rotation, whereas the board-normal tilt isolates the departure of the board plane from
+a fronto-parallel view. The large norm in IMG_5516 should therefore be interpreted together with the other
+components and the original image, not automatically labeled as a calibration failure.
+     The distortion plot gives an interpretable view of the coeﬀicient signs and magnitudes beyond listing five
+numbers. At the largest normalized radius corresponding to the image corners, the radial scale factor predicted
+by the polynomial is approximately 0.476, while the tangential displacement remains on the order of 10−2 nor-
+malized coordinate units and depends on angular direction. This strong high-radius response should be treated
+cautiously because the observed-corner coverage does not reach the sensor border. It is a model extrapola-
+tion that should be checked against additional edge-of-frame calibration views before using the parameters for
+precision measurements.
+     Figure 7 shows one of the 18 valid views rather than repeating all outputs. The corner overlay checks that
+the expected 8 × 5 inner-corner pattern was found, while the corrected image provides a qualitative check on
+the fitted distortion model. A single visual example cannot validate all views, so the quantitative per-view plots
+
+
+                                                                                                            7
+                                                                                                       Detected corner coverage (18 views, 720 corners)
+                                                                                       0.0
+                                                                                                                                                                                     Image center
+
+
+
+
+                                                                                       0.2
+                                                       Normalized image y coordinate
+
+
+
+
+                                                                                       0.4
+
+
+
+
+                                                                                       0.6
+
+
+
+
+                                                                                       0.8
+
+
+
+
+                                                                                       1.0
+                                                                                             0.0                       0.2                   0.4                  0.6                0.8                1.0
+                                                                                                                              Normalized image x coordinate
+
+
+Figure 3: Coverage of the 720 refined checkerboard corners in normalized image coordinates. The points were
+regenerated with the same findChessboardCorners flags and cornerSubPix criteria used by the calibration
+program. The plot summarizes where observations were actually made; it is not a claim that the entire sensor
+area was sampled uniformly.
+
+
+                                                                                                                        Estimated checkerboard pose changes across views
+                                                                                        tx             ty         tz
+             Translation component (cm)
+
+
+
+
+                                                 80
+
+
+                                                 60
+
+
+                                                 40
+
+
+                                                 20
+
+
+                                                  0
+
+
+                                                 -20
+
+                                                 90                                     ||t||
+                    Board-origin distance (cm)
+
+
+
+
+                                                 80
+
+                                                 70
+
+                                                 60
+
+                                                 50
+
+                                                 40
+
+                                                 30
+                                                                         86
+
+
+                                                                                             95
+
+
+                                                                                                   01
+
+
+                                                                                                             02
+
+
+                                                                                                                   03
+
+
+                                                                                                                             04
+
+
+                                                                                                                                   05
+
+
+                                                                                                                                         06
+
+
+                                                                                                                                               07
+
+
+                                                                                                                                                        08
+
+
+                                                                                                                                                              09
+
+
+                                                                                                                                                                    10
+
+
+                                                                                                                                                                          11
+
+
+                                                                                                                                                                                12
+
+
+                                                                                                                                                                                       13
+
+
+                                                                                                                                                                                             14
+
+
+                                                                                                                                                                                                   15
+
+
+                                                                                                                                                                                                         16
+                                                             54
+
+
+                                                                                        54
+
+
+                                                                                                  55
+
+
+                                                                                                            55
+
+
+                                                                                                                  55
+
+
+                                                                                                                         55
+
+
+                                                                                                                                  55
+
+
+                                                                                                                                        55
+
+
+                                                                                                                                              55
+
+
+                                                                                                                                                       55
+
+
+                                                                                                                                                             55
+
+
+                                                                                                                                                                   55
+
+
+                                                                                                                                                                         55
+
+
+                                                                                                                                                                               55
+
+
+                                                                                                                                                                                      55
+
+
+                                                                                                                                                                                            55
+
+
+                                                                                                                                                                                                  55
+
+
+                                                                                                                                                                                                        55
+
+
+
+
+                                                                                                                                        Valid image (filename suffix)
+
+
+
+Figure 4: Translation-vector variation across views. OpenCV uses t to map the checkerboard origin from board
+coordinates to camera coordinates; because the object-point square size is 3 cm, the plotted components and
+∥t∥ are in centimeters. The tz curve is the depth of the board origin, while the lower panel gives its Euclidean
+distance from the camera origin.
+
+
+                                                                                                                                                   8
+                                                                                                                                     Orientation estimates and board tilt
+                                                                                            rx             ry          rz
+                                            0.5
+
+
+
+
+              Rodrigues component (rad)
+                                            0.0
+
+                                          -0.5
+
+                                          -1.0
+
+                                          -1.5
+
+                                          -2.0
+
+                                          -2.5
+
+                                          -3.0
+
+                                          175
+                                                                                            ||r|| (axis-angle norm)
+                                          150                                               Board-normal tilt
+              Angle (degrees)
+
+
+
+
+                                          125
+
+                                          100
+
+                                               75
+
+                                               50
+
+                                               25
+
+                                                     0
+                                                                                      86
+
+
+                                                                                                 95
+
+
+                                                                                                         01
+
+
+                                                                                                                 02
+
+
+                                                                                                                       03
+
+
+                                                                                                                              04
+
+
+                                                                                                                                     05
+
+
+                                                                                                                                           06
+
+
+                                                                                                                                                 07
+
+
+                                                                                                                                                           08
+
+
+                                                                                                                                                                 09
+
+
+                                                                                                                                                                       10
+
+
+                                                                                                                                                                             11
+
+
+                                                                                                                                                                                   12
+
+
+                                                                                                                                                                                         13
+
+
+                                                                                                                                                                                               14
+
+
+                                                                                                                                                                                                         15
+
+
+                                                                                                                                                                                                               16
+                                                                      54
+
+
+                                                                                            54
+
+
+                                                                                                      55
+
+
+                                                                                                                55
+
+
+                                                                                                                      55
+
+
+                                                                                                                            55
+
+
+                                                                                                                                    55
+
+
+                                                                                                                                          55
+
+
+                                                                                                                                                55
+
+
+                                                                                                                                                         55
+
+
+                                                                                                                                                                55
+
+
+                                                                                                                                                                      55
+
+
+                                                                                                                                                                            55
+
+
+                                                                                                                                                                                  55
+
+
+                                                                                                                                                                                        55
+
+
+                                                                                                                                                                                              55
+
+
+                                                                                                                                                                                                     55
+
+
+                                                                                                                                                                                                              55
+                                                                                                                                          Valid image (filename suffix)
+
+
+
+Figure 5: Rotation-vector and board-tilt diagnostics. The upper panel reports the three OpenCV Rodrigues-
+vector components in radians. The lower panel reports the Rodrigues-vector norm in degrees and the angle
+between the transformed board normal and the camera optical axis. The latter is a direct board-tilt diagnostic
+and should not be confused with camera roll.
+
+                                                                                                                        Distortion response computed from the global OpenCV model
+
+                                                                                      1.0
+
+
+                                                                                      0.9
+                                                                Radial scale factor
+
+
+
+
+                                                                                      0.8
+
+
+                                                                                      0.7
+
+
+                                                                                      0.6
+
+
+                                                                                      0.5
+
+
+
+                                                                       0.010                            10th-90th percentile over angle
+                                                                                                        Median tangential displacement
+                                          Tangential displacement
+
+
+
+
+                                                                       0.008
+                                             (normalized units)
+
+
+
+
+                                                                       0.006
+
+
+                                                                       0.004
+
+
+                                                                       0.002
+
+
+                                                                       0.000
+
+                                                                                                  0.0                        0.2                     0.4                    0.6                    0.8
+                                                                                                                                                Normalized radius r
+
+
+
+Figure 6: Response of the fitted distortion model over normalized radius. The upper curve is the radial scale
+factor 1 + k1 r2 + k2 r4 + k3 r6 . The lower curve is the tangential displacement induced by (p1 , p2 ), summarized
+over angular direction. Both panels are deterministic calculations from the one global coeﬀicient vector in
+Equation 12; they are not per-image measurements.
+
+
+                    Table 4: Additional measured ranges used in the diagnostic analysis
+        Quantity             Measured summary                  Meaning
+        Per-image RMS        0.850–3.625 px; median 1.810 px View-dependent residual quality
+        Board depth tz       24.705–90.828 cm                  Distance variation along optical axis
+        Board distance ∥t∥ 27.559–91.815 cm                    Distance from camera origin
+        Board-normal tilt    2.683–62.936◦                     Plane-orientation variation
+        Corner union         62.3% width, 61.1% height         Observed image-area span
+
+
+                                                                                                                                                     9
+Figure 7: Representative results for IMG_5486.jpg: the left image shows the detected corners, and the right
+image is the undistorted image produced with the same calibration. The figures come from the temporary
+visualization run; numerical results remain those in task2/output/camera_params.npz.
+
+
+and the coverage plot are retained as complementary checks.
+
+
+8 Analysis
+This analysis is based on the 18 real JPEG images, the oﬀicial result file, and the corresponding OpenCV run.
+Conclusions are limited to the current 5712 × 4284 image-coordinate setup, 8 × 5 checkerboard inner corners,
+and 3 cm square size. A pixel reprojection error is not treated as a direct guarantee of physical measurement
+accuracy.
+
+
+8.1 Scope of the plotted variation
+The camera matrix K and distortion vector d are fitted jointly from all valid views, so this experiment produces
+one global estimate of fx , fy , cx , cy and (k1 , k2 , p1 , p2 , k3 ). It would be methodologically incorrect to draw 18
+apparent intrinsic-parameter trajectories by copying the same global values or by fitting a single planar view
+independently without reporting a separate uncertainty protocol. The additional figures therefore use quantities
+that really have one value per image: reprojection RMS, rotation and translation vectors, detected-corner
+locations, and the response of the fitted distortion model over normalized radius. This gives more diagnostic
+information without fabricating parameter fluctuations.
+
+
+8.2 Intrinsic-parameter consistency
+The estimated fx , fy , cx , and cy are finite and positive. From the measured focal lengths,
+                                         |fx − fy |
+                                 ρf =                = 0.0003511422      (0.035114%).
+                                        (fx + fy )/2
+The two focal-length estimates are therefore very close, which is compatible with nearly equal horizontal and
+vertical pixel scales in this image set. It does not identify the exact physical focal length of the iPhone lens,
+and it does not rule out digital cropping, resizing, or other image-processing operations.
+     The image center is
+                                             (W/2, H/2) = (2856, 2142),
+whereas the principal-point offset is
+
+                                 (cx − W/2, cy − H/2) = (27.66418, −34.79706) px.
+
+Its Euclidean length is 44.45382 px, approximately 0.7783% of the image width and 1.0377% of its height. The
+principal point is thus near, but not identical to, the image center. This is a reasonable result for a calibrated
+image coordinate system, but the offset should not be interpreted as a hardware defect without controlling the
+phone’s crop and image pipeline.
+
+
+                                                           10
+8.3 Per-view reprojection error
+The global OpenCV RMS is 2.06424401 px, the global mean pointwise distance is 1.65696931 px, and the
+arithmetic mean of the 18 per-image RMS values is 1.90750642 px. The per-image distribution in Figure 2 has
+minimum 0.850436 px, first quartile 1.223223 px, median 1.810399 px, third quartile 2.360739 px, maximum
+3.625463 px, and sample standard deviation 0.811881 px. The largest residuals occur in IMG_5513 (3.625463
+px), IMG_5514 (3.115401 px), IMG_5516 (2.684612 px), and IMG_5509 (2.665750 px).
+     These values indicate that corner localization quality is not identical across views, even though all images
+passed the program’s validity checks. A higher residual can result from blur, glare, partial perspective com-
+pression, printing or board flatness, or local corner ambiguity; the residual alone cannot identify which cause
+occurred. The per-view errors have an exploratory Pearson correlation of approximately r = 0.38 with board-
+normal tilt and r = −0.32 with board-origin distance. With only 18 observations, these weak correlations are
+not evidence of a causal trend, but they suggest that strongly tilted views deserve visual inspection. Removing
+such a view without rerunning calibration and documenting the effect would also be premature.
+     At the current resolution, the OpenCV RMS is approximately 0.03614% of the image width and 0.04818%
+of its height. Thus the error is small relative to the full image dimensions, but a high-resolution image makes
+a fixed pixel error appear smaller in relative terms. The RMS is an internal fit residual, not an independent
+validation measurement, and comparisons across resolutions should account for image scale and acquisition
+conditions.
+
+
+8.4 Pose diversity and calibration geometry
+The translation plot in Figure 4 shows meaningful geometric variation. The checkerboard-origin depth tz ranges
+from 24.705 to 90.828 cm, while ∥t∥ ranges from 27.559 to 91.815 cm. The lateral components span 24.583
+cm in x and 23.001 cm in y. The board was therefore not observed at one fixed distance and one fixed lateral
+location.
+     The orientation plot in Figure 5 gives a complementary view. The Rodrigues-vector norm ranges from
+2.688◦ to 173.651◦ , and the board-normal tilt ranges from 2.683◦ to 62.936◦ , with a median tilt of 29.703◦ .
+The Rodrigues vector is an axis-angle representation of the board-to-camera rotation; its component values and
+norm are not three independent physical tilt angles. The board-normal tilt is easier to interpret as the angle
+between the board plane normal and the camera optical axis. The near-180◦ norm in IMG_5516 may reflect the
+rotation representation and the board’s in-plane orientation, so it should be checked against the image rather
+than automatically treated as a bad calibration pose.
+
+
+8.5 Corner coverage and distortion extrapolation
+All 18 candidate JPEG files passed image reading, 8 × 5 corner detection, and the resolution check. Every valid
+image contributes 40 refined corners, giving 720 observations. Figure 3 shows that the union of those corners
+extends from approximately x = 0.191 to 0.814 and y = 0.182 to 0.792 in normalized image coordinates. In
+physical pixels, the board observations therefore occupy a central region rather than the full 5712 × 4284 sensor
+frame.
+     This coverage is suﬀicient for a working calibration run, but it limits the evidence available for the outer-
+most distortion behavior. Figure 6 is computed from the global coeﬀicient vector, not from measured corner
+displacements at every radius. At the image-corner radius in the current camera model, the radial scale factor
+is approximately 0.476, while the tangential displacement is approximately 0.004–0.011 normalized coordinate
+units over viewing angle. The radial polynomial’s strong high-radius response may be real, but the present
+dataset does not densely observe that region. Additional views placing the checkerboard near the left, right,
+top, bottom, and four corner regions would be the most valuable next experiment.
+
+
+8.6 Distortion interpretation
+In OpenCV order, the distortion vector is
+
+            (k1 , k2 , p1 , p2 , k3 ) = (0.20245123, −0.29420837, −0.00326679, 0.00308671, −1.04554325).
+
+The nonzero p1 and p2 terms indicate that the fitted model includes tangential distortion, while the alternating
+signs of the radial terms make the radial response nonlinear rather than a simple monotonic correction. The
+
+
+                                                        11
+numerical size of a distortion coeﬀicient is scale-dependent because it is applied to normalized coordinates;
+it should not be compared with coeﬀicients obtained under a different resolution or coordinate normalization
+without checking the model definition.
+     The undistorted example in Figure 7 is a qualitative check only. A stronger validation would hold out
+several images, estimate parameters on the remaining views, and compare reprojection errors on the held-out
+corners. That uncertainty or cross-validation analysis was not part of the current run, so the report does not
+claim it.
+
+
+8.7 Limitations and practical conclusion
+The experiment demonstrates a reproducible OpenCV calibration for the supplied iPhone 15 Pro rear-camera
+images, with translations expressed in centimeters because square_size=3.0 was supplied in centimeters. The
+result is tied to the selected rear-camera mode, resolution, crop, focus, and computational photography pipeline.
+The NPZ file does not contain a covariance estimate for the global parameters, and the current acquisition does
+not document a per-image pose label independent of the estimated extrinsics. Consequently, the recovered K
+and d are suitable as calibrated parameters for this image-coordinate setup, but they should be re-estimated if
+the phone changes lens mode, resolution, crop, or focus. The most direct improvement is to add more edge and
+corner views, keep the board sharp and flat, and compare the new per-view residual distribution with Figure 2.
+
+
+9 Conclusion
+This experiment completed OpenCV camera calibration using 18 real JPEG images from the rear camera of an
+iPhone 15 Pro. The calibration used an 8 × 5 checkerboard-inner-corner configuration and a 3 cm square size.
+The program produced the camera matrix, five distortion coeﬀicients, 18 rotation vectors, and 18 translation
+vectors, and recorded OpenCV RMS, mean pointwise reprojection error, and mean per-image RMS. All 18
+candidate images were valid; no image-read, corner-detection, or resolution failures occurred.
+     The run used square_size=3.0, so translation vectors are expressed in cm, while the camera matrix and
+pixel-coordinate distortion results describe the present image model. JPEG EXIF and the acquisition record
+identify the Apple iPhone 15 Pro rear camera. The exact rear-lens focal length was not recorded and is not
+inferred here. A detailed pose-coverage log should still be added before submission, but it does not affect the
+numerical readback of the oﬀicial NPZ result.
+
+
+
+
+                                                       12
+

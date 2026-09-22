@@ -1,0 +1,18 @@
+flowchart TD
+    A[Load the left and right aloe images] --> B[Check dimensions and validate inputs]
+    B --> C[Convert to grayscale and synchronized pyrDown]
+    C --> D[Configure and run StereoSGBM]
+    D --> E[Divide by 16 to obtain floating-point disparity]
+    E --> F[Filter valid disparity d greater than 15]
+    F --> G[Visualize disparity and valid mask]
+    F --> H[Compute relative depth as 1 divided by d]
+    G --> I[Save arrays and images]
+    H --> I
+    I --> J[Read statistics and write the experiment report]
+
+    classDef io fill:#e8f1fb,stroke:#356aa0,stroke-width:1px;
+    classDef process fill:#eef7ed,stroke:#4d8449,stroke-width:1px;
+    classDef output fill:#fff4dc,stroke:#b98222,stroke-width:1px;
+    class A,B io;
+    class C,D,E,F,H process;
+    class G,I,J output;

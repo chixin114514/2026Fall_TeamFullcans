@@ -1,0 +1,15 @@
+\section{Conclusion}
+
+\subsection{Contribution}
+
+Using the official OpenCV aloe stereo image pair, this experiment establishes a complete pipeline from data loading, dimension checking, grayscale conversion and synchronized downsampling, through StereoSGBM matching, to floating-point disparity, the valid-disparity mask, a relative-depth proxy, and result archiving. The report also retains the Mermaid flowchart source, so that the processing steps can be checked both from the diagram and from the program entry point.
+
+\subsection{Evidence}
+
+Statistics from the real arrays show that $261378$ of the $355755$ pixels satisfy the valid-disparity condition, corresponding to $73.4713\%$. The valid disparity ranges from $16.000$ to $105.875$~px, and the relative-depth proxy ranges from $0.0094451$ to $0.0625$. Direct array verification gives a maximum error of $0.0$ for $1/d$ in the saved relative-depth array, showing that the saved proxy is consistent with the formula used in the report. The result images reveal the main structures of the leaves, flowerpot, and background, supporting the experimental conclusion that disparity represents relative front-to-back structure.
+
+\subsection{Implications and limitations}
+
+The experiment completes OpenCV stereo matching and relative-depth estimation on an arbitrary scale, and demonstrates the distinction between parameter settings, invalid-region filtering, and raw arrays versus display images. Because the aloe stereo pair has no explicitly paired focal length $f$, baseline $B$, or $\mathbf{Q}$ matrix, this experiment cannot convert \codepath{depth_proxy} into metres or centimetres and does not output a metric 3D point cloud. Occlusion, insufficient texture, repeated texture, and the image-boundary search range further reduce the valid-pixel fraction.
+
+For metric depth measurement, the same stereo system should first be calibrated and stereo-rectified. The matching, array-saving, and statistical-verification procedures from this experiment can then be reused. The reported scope and limitations are based on the real run; unperformed calibration and comparison steps are not presented as experimental facts.

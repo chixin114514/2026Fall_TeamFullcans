@@ -1,57 +1,62 @@
 \section{Analysis}\label{sec:task2-analysis}
 
-This analysis is based on 18 real JPEG images, the official result file, and the corresponding run. Conclusions are limited to the current \(5712\times4284\) images, \(8\times5\) checkerboard inner corners, and 3 cm square size; a pixel error is not treated as a direct guarantee of physical measurement accuracy.
+This analysis is based on the 18 real JPEG images, the official result file, and the corresponding OpenCV run. Conclusions are limited to the current \(5712\times4284\) image-coordinate setup, \(8\times5\) checkerboard inner corners, and 3 cm square size. A pixel reprojection error is not treated as a direct guarantee of physical measurement accuracy.
 
-\subsection{Intrinsic-Parameter Consistency}
+\subsection{Scope of the plotted variation}
+
+The camera matrix \(\mathbf K\) and distortion vector \(\mathbf d\) are fitted jointly from all valid views, so this experiment produces one global estimate of \(f_x,f_y,c_x,c_y\) and \((k_1,k_2,p_1,p_2,k_3)\). It would be methodologically incorrect to draw 18 apparent intrinsic-parameter trajectories by copying the same global values or by fitting a single planar view independently without reporting a separate uncertainty protocol. The additional figures therefore use quantities that really have one value per image: reprojection RMS, rotation and translation vectors, detected-corner locations, and the response of the fitted distortion model over normalized radius. This gives more diagnostic information without fabricating parameter fluctuations.
+
+\subsection{Intrinsic-parameter consistency}
 
 The estimated \(f_x\), \(f_y\), \(c_x\), and \(c_y\) are finite and positive. From the measured focal lengths,
 \[
 \rho_f=\frac{\lvert f_x-f_y\rvert}{(f_x+f_y)/2}
 =0.0003511422\quad(0.035114\%).
 \]
-The two focal-length estimates are therefore very close, which is compatible with nearly square pixel scaling in this image set. It does not identify the exact rear-lens focal length or rule out image cropping. The image center is
-\((W/2,H/2)=(2856,2142)\), while the principal-point offset is
+The two focal-length estimates are therefore very close, which is compatible with nearly equal horizontal and vertical pixel scales in this image set. It does not identify the exact physical focal length of the iPhone lens, and it does not rule out digital cropping, resizing, or other image-processing operations.
+
+The image center is
+\[
+(W/2,H/2)=(2856,2142),
+\]
+whereas the principal-point offset is
 \[
 \left(c_x-W/2,c_y-H/2\right)
 =(27.66418,-34.79706)\ {\rm px}.
 \]
-Its Euclidean length is \(44.45382\) px, approximately \(0.7783\%\) of the image width and \(1.0377\%\) of its height. The principal point is therefore near, but not identical to, the image center.
+Its Euclidean length is \(44.45382\) px, approximately \(0.7783\%\) of the image width and \(1.0377\%\) of its height. The principal point is thus near, but not identical to, the image center. This is a reasonable result for a calibrated image coordinate system, but the offset should not be interpreted as a hardware defect without controlling the phone's crop and image pipeline.
 
-\subsection{Distortion and Error}
+\subsection{Per-view reprojection error}
 
-In the OpenCV order, the distortion vector is
+The global OpenCV RMS is \(2.06424401\) px, the global mean pointwise distance is \(1.65696931\) px, and the arithmetic mean of the 18 per-image RMS values is \(1.90750642\) px. The per-image distribution in Figure~\ref{fig:task2-per-image-rms} has minimum \(0.850436\) px, first quartile \(1.223223\) px, median \(1.810399\) px, third quartile \(2.360739\) px, maximum \(3.625463\) px, and sample standard deviation \(0.811881\) px. The largest residuals occur in \texttt{IMG\_5513} (3.625463 px), \texttt{IMG\_5514} (3.115401 px), \texttt{IMG\_5516} (2.684612 px), and \texttt{IMG\_5509} (2.665750 px).
+
+These values indicate that corner localization quality is not identical across views, even though all images passed the program's validity checks. A higher residual can result from blur, glare, partial perspective compression, printing or board flatness, or local corner ambiguity; the residual alone cannot identify which cause occurred. The per-view errors have an exploratory Pearson correlation of approximately \(r=0.38\) with board-normal tilt and \(r=-0.32\) with board-origin distance. With only 18 observations, these weak correlations are not evidence of a causal trend, but they suggest that strongly tilted views deserve visual inspection. Removing such a view without rerunning calibration and documenting the effect would also be premature.
+
+At the current resolution, the OpenCV RMS is approximately \(0.03614\%\) of the image width and \(0.04818\%\) of its height. Thus the error is small relative to the full image dimensions, but a high-resolution image makes a fixed pixel error appear smaller in relative terms. The RMS is an internal fit residual, not an independent validation measurement, and comparisons across resolutions should account for image scale and acquisition conditions.
+
+\subsection{Pose diversity and calibration geometry}
+
+The translation plot in Figure~\ref{fig:task2-pose-translation} shows meaningful geometric variation. The checkerboard-origin depth \(t_z\) ranges from \(24.705\) to \(90.828\) cm, while \(\lVert\mathbf t\rVert\) ranges from \(27.559\) to \(91.815\) cm. The lateral components span \(24.583\) cm in \(x\) and \(23.001\) cm in \(y\). The board was therefore not observed at one fixed distance and one fixed lateral location.
+
+The orientation plot in Figure~\ref{fig:task2-pose-orientation} gives a complementary view. The Rodrigues-vector norm ranges from \(2.688^\circ\) to \(173.651^\circ\), and the board-normal tilt ranges from \(2.683^\circ\) to \(62.936^\circ\), with a median tilt of \(29.703^\circ\). The Rodrigues vector is an axis-angle representation of the board-to-camera rotation; its component values and norm are not three independent physical tilt angles. The board-normal tilt is easier to interpret as the angle between the board plane normal and the camera optical axis. The near-\(180^\circ\) norm in \texttt{IMG\_5516} may reflect the rotation representation and the board's in-plane orientation, so it should be checked against the image rather than automatically treated as a bad calibration pose.
+
+\subsection{Corner coverage and distortion extrapolation}
+
+All 18 candidate JPEG files passed image reading, \(8\times5\) corner detection, and the resolution check. Every valid image contributes 40 refined corners, giving 720 observations. Figure~\ref{fig:task2-corner-coverage} shows that the union of those corners extends from approximately \(x=0.191\) to \(0.814\) and \(y=0.182\) to \(0.792\) in normalized image coordinates. In physical pixels, the board observations therefore occupy a central region rather than the full \(5712\times4284\) sensor frame.
+
+This coverage is sufficient for a working calibration run, but it limits the evidence available for the outermost distortion behavior. Figure~\ref{fig:task2-distortion-profile} is computed from the global coefficient vector, not from measured corner displacements at every radius. At the image-corner radius in the current camera model, the radial scale factor is approximately \(0.476\), while the tangential displacement is approximately \(0.004\)--\(0.011\) normalized coordinate units over viewing angle. The radial polynomial's strong high-radius response may be real, but the present dataset does not densely observe that region. Additional views placing the checkerboard near the left, right, top, bottom, and four corner regions would be the most valuable next experiment.
+
+\subsection{Distortion interpretation}
+
+In OpenCV order, the distortion vector is
 \[
-(0.20245123,-0.29420837,-0.00326679,0.00308671,-1.04554325).
+(k_1,k_2,p_1,p_2,k_3)
+=(0.20245123,-0.29420837,-0.00326679,0.00308671,-1.04554325).
 \]
-The radial and tangential correction terms are nonzero in this model. Their signs and magnitudes alone do not prove correction quality; the corrected image in Figure~\ref{fig:task2-visual-results} should be examined together with checkerboard edges in the original image.
+The nonzero \(p_1\) and \(p_2\) terms indicate that the fitted model includes tangential distortion, while the alternating signs of the radial terms make the radial response nonlinear rather than a simple monotonic correction. The numerical size of a distortion coefficient is scale-dependent because it is applied to normalized coordinates; it should not be compared with coefficients obtained under a different resolution or coordinate normalization without checking the model definition.
 
-The three error values are OpenCV RMS \(2.06424401\) px, mean pointwise reprojection error \(1.65696931\) px, and mean per-image RMS \(1.90750642\) px. They differ because the first aggregates squared point distances globally, the second averages point distances, and the third averages per-image RMS values. The per-image RMS range is \(0.850436\)--\(3.625463\) px; views with larger errors should be inspected if a refined acquisition is needed.
+The undistorted example in Figure~\ref{fig:task2-visual-results} is a qualitative check only. A stronger validation would hold out several images, estimate parameters on the remaining views, and compare reprojection errors on the held-out corners. That uncertainty or cross-validation analysis was not part of the current run, so the report does not claim it.
 
-At the current resolution, the OpenCV RMS is approximately \(0.03614\%\) of the image width and \(0.04818\%\) of its height. Thus the error is small relative to the image dimensions, but a high-resolution image also makes a fixed pixel error appear smaller in relative terms. This metric is not an independent validation and should not be compared directly across resolutions without accounting for scale and acquisition conditions.
+\subsection{Limitations and practical conclusion}
 
-\subsection{Data Quality and Pose Coverage}
-
-All 18 candidate JPEG files passed reading, \(8\times5\) corner detection, and the resolution check. The failure count is zero, and every image contributes 40 corners. The run therefore passes the program-level data-integrity checks. A separate pose log is not available in the current report, so the successful detection count alone cannot prove uniform coverage of the image center, edges, distances, and tilt angles. The original acquisition should be reviewed, especially for views with larger per-image RMS.
-
-Because \texttt{square\_size=3.0} is in cm, the rotation vectors are dimensionless and the camera matrix and distortion coefficients remain pixel-coordinate quantities, while the translation vectors are measured in cm.
-
-\begin{table}[htbp]
-    \centering
-    \caption{Analysis summary based on the measured result}
-    \label{tab:task2-analysis}
-    \begin{tabular}{lll}
-        \hline
-        Check & Evidence & Cautious interpretation \\
-        \hline
-        Focal-length consistency & \(\rho_f=0.0003511422\) & The two estimates are close \\
-        Principal point & Offset \(44.45382\) px & Small displacement from the center \\
-        Distortion & Complete five-coefficient vector & Interpret with corrected image \\
-        Error metrics & \(2.06424401/1.65696931/1.90750642\) px & Three definitions are recorded \\
-        Data integrity & 18 candidates, 18 valid, 0 failed & Program checks passed \\
-        Pose coverage & No independent pose log & Coverage cannot be claimed complete \\
-        Physical scale & \path{square_size=3.0} cm & Translation vectors are in cm \\
-        \hline
-    \end{tabular}
-\end{table}
-
-Overall, the data support a reproducible camera matrix and distortion model for the current image-coordinate setup, with translation vectors in centimeters. The exact rear-lens focal length and the detailed pose-coverage record remain undocumented, so the result should not be presented as a universal accuracy guarantee for every lens mode or scene.
+The experiment demonstrates a reproducible OpenCV calibration for the supplied iPhone 15 Pro rear-camera images, with translations expressed in centimeters because \texttt{square\_size=3.0} was supplied in centimeters. The result is tied to the selected rear-camera mode, resolution, crop, focus, and computational photography pipeline. The NPZ file does not contain a covariance estimate for the global parameters, and the current acquisition does not document a per-image pose label independent of the estimated extrinsics. Consequently, the recovered \(\mathbf K\) and \(\mathbf d\) are suitable as calibrated parameters for this image-coordinate setup, but they should be re-estimated if the phone changes lens mode, resolution, crop, or focus. The most direct improvement is to add more edge and corner views, keep the board sharp and flat, and compare the new per-view residual distribution with Figure~\ref{fig:task2-per-image-rms}.

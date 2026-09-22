@@ -1,0 +1,15 @@
+%%{init: {"theme": "neutral", "flowchart": {"curve": "linear"}}}%%
+flowchart TD
+    A[Construct RandomVector] --> B[Clamp negative size or max to zero]
+    B --> C[Generate n values with rand]
+    C --> D{Vector empty?}
+    D -- Yes --> E[Statistics return zero]
+    D -- No --> F[Linear scan for mean, min, max]
+    F --> G{Histogram bins valid?}
+    G -- No --> H[Return without output]
+    G -- Yes --> I{All values equal?}
+    I -- Yes --> J[Put all values in final bin]
+    I -- No --> K[Map values into equal-width bins]
+    K --> L[Clamp upper bound to final bin]
+    J --> M[Print bars from top to bottom]
+    L --> M

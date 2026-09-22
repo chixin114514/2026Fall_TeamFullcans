@@ -1,0 +1,61 @@
+Remote host: remote-133
+Herdr workspace/tab/pane: 2026Fall_TeamFullcans / Lab1 / w5:p1
+Working directory: /home/chixin/f29xs/2026Fall_TeamFullcans/lab1
+Capture date: 2026-09-20
+
+$ cat /etc/os-release | grep '^PRETTY_NAME='; g++ --version | head -n 1; cmake --version | head -n 1
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+cmake version 3.28.3
+
+$ wc -l -w dante.txt; awk 'NF {n++} END {print n}' dante.txt
+ 19567  97676 dante.txt
+14338
+
+$ g++ -std=c++11 -Wall -pedantic vnav-codes/lab1/RandomVector/main.cpp vnav-codes/lab1/RandomVector/random_vector.cpp -o /tmp/lab1-report-randomvector/random_vector
+$ /tmp/lab1-report-randomvector/random_vector
+0.193146 0.935807 0.0478698 0.831597 0.539111 0.0278694 0.93919 0.544454 0.893339 0.693182 0.415163 0.454242 0.320536 0.0766892 0.809584 0.93073 0.982655 0.102505 0.716924 0.706215
+Mean: 0.55804
+Min: 0.0278694
+Max: 0.982655
+Histogram:
+                ***
+                ***
+***             ***
+***     ***     ***
+***     *** *** ***
+***     *** *** ***
+*** *** *** *** ***
+Exit status: 0
+
+$ cmake -S vnav-codes/lab1/lab1_demo -B /tmp/lab1-report-cmake
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /tmp/lab1-report-cmake
+Exit status: 0
+
+$ cmake --build /tmp/lab1-report-cmake
+[ 25%] Building CXX object CMakeFiles/mylib.dir/my_lib.cpp.o
+[ 50%] Linking CXX static library libmylib.a
+[ 50%] Built target mylib
+[ 75%] Building CXX object CMakeFiles/main.dir/main.cpp.o
+[100%] Linking CXX executable main
+[100%] Built target main
+Exit status: 0
+
+$ cd /tmp/lab1-report-cmake && ./main
+Hello world!
+In library
+Exit status: 0
+
+$ git status --short; git log -3 --oneline
+?? ../lab2/report/
+15f3843 track vnav-codes in outer repository
+f1fc892 feat: implement lab1_and_lab2
+e6fc1f7 feat: do something

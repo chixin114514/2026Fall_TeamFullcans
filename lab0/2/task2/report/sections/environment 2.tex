@@ -1,0 +1,42 @@
+\section{实验环境}
+
+\subsection{软件与数据}
+
+实验使用 OpenCV 官方仓库 `opencv/opencv` 的
+`4.x/samples/data` 目录中的 `aloeL.jpg` 和 `aloeR.jpg`。两幅原始图像尺寸均为
+$1282\times1110$，程序默认对左右图像同步执行一次 `pyrDown`，得到用于匹配的
+$641\times555$ 图像。可选的 `aloeGT.png` 只作为官方视差参考，不参与深度标定。
+
+\begin{table}[H]
+  \centering
+  \caption{实际运行环境}
+  \label{tab:environment}
+  \begin{tabular}{ll}
+    \toprule
+    项目 & 实测版本或说明 \\
+    \midrule
+    Python & 3.13.5 \\
+    OpenCV runtime & 5.0.0 \\
+    NumPy & 2.5.3 \\
+    数据来源 & OpenCV 官方 `4.x/samples/data` \\
+    输入文件 & `aloeL.jpg`、`aloeR.jpg` \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+版本信息和输入路径来自程序生成的
+\codepath{task2/results/params.json}；未在报告中填入未经实测的版本号。
+
+\subsection{实际运行命令}
+
+本次结果由以下默认命令生成，未使用 `--no-pyrdown`，也未额外调整匹配参数：
+
+\begin{lstlisting}[language=bash]
+task2/.venv/bin/python task2/src/stereo_depth.py \\
+  --left task2/data/aloeL.jpg \\
+  --right task2/data/aloeR.jpg \\
+  --out-dir task2/results
+\end{lstlisting}
+
+程序检查左右图像均可读取且尺寸一致，随后进行灰度转换、同步降采样、StereoSGBM
+匹配、视差筛选和相对深度计算。整个实验不使用其他图像对的标定文件。

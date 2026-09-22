@@ -1,0 +1,75 @@
+\section{Principle}
+
+\subsection{Pinhole stereo model}
+
+Let the optical centres of the left and right cameras be separated horizontally by the baseline $B$, and let the two cameras have the same focal length $f$. For a spatial point $(X,Y,Z)$, its horizontal projections under the parallel-camera model can be written as
+\begin{equation}
+  x_L=\frac{fX}{Z},\qquad
+  x_R=\frac{f(X-B)}{Z}.
+\end{equation}
+Subtracting the two equations gives the relationship between disparity and depth:
+\begin{equation}
+  d=x_L-x_R=\frac{fB}{Z},\qquad
+  Z=\frac{fB}{d}.
+  \label{eq:metric-depth}
+\end{equation}
+Thus, a larger disparity generally corresponds to a closer scene point, whereas a smaller disparity corresponds to a farther point. Equation~\eqref{eq:metric-depth} also shows that pixel disparity alone cannot determine the physical depth scale: the focal length and baseline associated with the current camera system are also required.
+
+\subsection{Epipolar constraint and horizontal search}
+
+Corresponding points in a stereo image pair satisfy the epipolar constraint defined by the fundamental matrix:
+\begin{equation}
+  \mathbf{x}_R^{\mathsf{T}}\mathbf{F}\mathbf{x}_L=0,
+\end{equation}
+where $\mathbf{x}_L$ and $\mathbf{x}_R$ are the corresponding homogeneous pixel coordinates and $\mathbf{F}$ is the fundamental matrix. This relationship restricts the candidate point in the right image to the epipolar line associated with a point in the left image. After reliable stereo rectification, the epipolar lines are approximately horizontal scanlines, so the matcher only needs to search for horizontal displacements within the same row.
+
+This experiment follows the direct matching procedure for the official OpenCV aloe sample and does not re-estimate a rectification transform. The disparity convention in this report is $d=x_L-x_R$; the valid-disparity rule used by the program is a finite value with $d>15$.
+
+\subsection{StereoBM and StereoSGBM}
+
+\textbf{StereoBM} compares image blocks within a local window. It is structurally simple and fast, but it is prone to holes or incorrect matches in textureless regions, at occlusion boundaries, and in repeated textures. \textbf{StereoSGBM} accumulates matching costs along multiple directions and uses semi-global path optimization to balance local consistency against global smoothness. It generally produces more continuous disparity results. This experiment selects StereoSGBM so that the official aloe images yield an interpretable course demonstration.
+
+For a pixel $p$ and candidate disparity $d$, the matching cost can be abstracted as $C(p,d)$. The recurrence along a path penalizes changes in the disparity of adjacent pixels: a small change is assigned the penalty $P_1$, whereas a larger jump is assigned the penalty $P_2$. This experiment uses $P_2>P_1$, encouraging most regions to remain smooth while allowing disparity discontinuities at object boundaries. The actual configuration also includes the following constraints:
+
+\begin{itemize}
+  \item \texttt{minDisparity} and \texttt{numDisparities} define the search origin and range; their values in this run are $16$ and $96$, respectively;
+  \item \texttt{blockSize} determines the local matching window and is $5$ in this run; a larger window is generally more stable but loses boundary detail;
+  \item \texttt{uniquenessRatio} requires the best match to be clearly better than the second-best match, reducing the probability that ambiguous points are retained;
+  \item \texttt{disp12MaxDiff} is used for the left--right consistency check;
+  \item \texttt{speckleWindowSize} and \texttt{speckleRange} remove small regions with anomalous disparity changes.
+\end{itemize}
+
+\subsection{Relative depth and calibration boundary}
+
+The OpenCV matcher returns an integer result with a fixed scale. The program divides it by $16$ to obtain floating-point disparity in pixel units. For a valid disparity, it computes
+\begin{equation}
+  \mathrm{depth\_proxy}=\frac{1}{d},\qquad d>15.
+  \label{eq:proxy-depth}
+\end{equation}
+This quantity preserves the front-to-back ordering represented by disparity, but it does not contain the factor $fB$ in Equation~\eqref{eq:metric-depth}. The current official aloe sample does not provide an explicitly paired $f$, $B$, \texttt{doffs}, or $\mathbf{Q}$. Therefore, the experiment does not call \texttt{reprojectImageTo3D} with guessed parameters and does not generate a point cloud with physical scale. If \texttt{aloeGT.png} is used, it can only serve as a disparity reference image; it cannot be treated as metric-depth ground truth.
+
+\subsection{Depth sensitivity to disparity error}
+
+Equation~\eqref{eq:metric-depth} gives not only the depth inversion formula but also the direction of error propagation. Differentiating with respect to $d$ for fixed $fB$ gives
+\begin{equation}
+  \frac{\partial Z}{\partial d}=-\frac{fB}{d^2},\qquad
+  \frac{\Delta Z}{Z}\approx-\frac{\Delta d}{d}.
+  \label{eq:depth-sensitivity}
+\end{equation}
+For the relative-depth proxy used in this report, we likewise have
+\begin{equation}
+  \frac{\partial (1/d)}{\partial d}=-\frac{1}{d^2}.
+\end{equation}
+This means that a disparity perturbation of the same magnitude has a larger relative effect in a low-disparity region, whereas in a high-disparity region, which is generally closer to the camera, the same pixel error produces a smaller absolute change in $1/d$. Consequently, the grayscale continuity of a disparity map alone is insufficient to judge depth precision at every pixel; the valid-disparity mask, local texture, and matching consistency must also be considered.
+
+\subsection{Definition and statistical meaning of valid disparity}
+
+The program defines a valid disparity as a finite pixel satisfying $d>15$ and stores all other positions as \texttt{NaN}. This threshold is first a numerical and search-range constraint: the matcher starts its search at $16$, so values below the threshold cannot be directly treated as reliable positive disparity. The rule answers which pixels enter the subsequent computation; it is not equivalent to saying that all retained pixels are correctly matched. Thus, the valid-disparity mask is the support set for later statistics rather than an accuracy label, and the valid-pixel fraction is coverage rather than accuracy.
+
+When reliable disparity ground truth is unavailable, at least three kinds of information should be recorded separately: coverage, namely how many pixels pass the validity filter; the disparity distribution, namely the range and quantiles of the retained pixels; and matching confidence, namely whether the disparities pass left--right consistency, reprojection-error, or external-reference checks. This experiment saves the raw \texttt{npy} arrays and the valid-disparity mask precisely to avoid treating a percentile-stretched display PNG as quantitative evidence of any of these three quantities.
+
+\subsection{Coordinate comparability after downsampling}
+
+In this run, the left and right images are synchronously downsampled once using \texttt{pyrDown}. The matching coordinates therefore lie on the $641\times555$ processed images rather than on the original $1282\times1110$ images. One pixel in the disparity array corresponds to one pixel in the processed-image coordinate system. If the result is compared with calibration parameters defined at the original resolution, or with another result that was not downsampled, the scale transformations of the focal length, principal point, and disparity coordinates must be considered consistently. Otherwise, a numerical difference caused solely by resolution changes may be misinterpreted as a depth change even when the scene and algorithm are identical.
+
+The immediate benefit of downsampling is reduced matching cost, allowing the course experiment to be reproduced quickly; the cost is that fine textures and narrow boundaries may be smoothed or merged. Because this experiment interprets $d$ and $1/d$ only within the same processed resolution, the report does not extrapolate the result to metric depth in the original camera coordinate system. If calibration parameters are enabled in future work, the calibration model should be regenerated at the same resolution, or the parameters should be explicitly converted to the processed resolution.

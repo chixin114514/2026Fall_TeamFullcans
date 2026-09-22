@@ -1,0 +1,65 @@
+% Task 2: OpenCV stereo depth estimation experiment report
+% This file contains only global configuration and section organization;
+% the report body is stored under sections/.
+\documentclass[a4paper,11pt]{article}
+
+% Keep the document setup compact and stable for XeLaTeX.
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+% Result images are read from task2/results/; report-local figures are
+% stored under report_en/figures/.
+\graphicspath{{../results/}{figures/}}
+
+% Unified style for paths, command-line arguments, and Python listings.
+\newcommand{\codepath}[1]{\texttt{\nolinkurl{#1}}}
+\lstdefinestyle{reportcode}{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!25},
+  showstringspaces=false
+}
+\lstset{style=reportcode}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  urlcolor=blue!60!black,
+  citecolor=blue!50!black,
+  pdftitle={OpenCV Stereo Depth Estimation Experiment Report},
+  pdfauthor={Course Experiment}
+}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\setcounter{secnumdepth}{3}
+
+\title{OpenCV Stereo Depth Estimation Experiment Report}
+\author{Course Experiment}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% Organize the report according to the experiment structure.
+\input{sections/objective}
+\input{sections/principle}
+\input{sections/environment}
+\input{sections/implementation}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\end{document}

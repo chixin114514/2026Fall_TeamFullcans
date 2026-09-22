@@ -1,0 +1,52 @@
+\section{Discussion and Error Analysis}
+
+\subsection{Main sources of error}
+
+\textbf{Occlusion.} A spatial point may be visible in only one of the left and right images. At an occlusion boundary, the matcher cannot find the true correspondence, which can produce holes, isolated disparities, or jumps near the boundary. Blank regions in the valid-disparity mask should be retained rather than being turned into fabricated measurements by interpolation.
+
+\textbf{Insufficient texture.} In uniform or low-contrast regions, the matching costs of multiple candidate disparities are similar. \texttt{uniquenessRatio} therefore rejects results that are not sufficiently unambiguous. Large weak-texture regions in the tabletop and background are consequently more likely to contain invalid or unstable disparities.
+
+\textbf{Repeated texture.} Periodic texture can produce several local matches with nearly identical costs. SGBM path smoothing can use neighbourhood structure to reduce some of this ambiguity, but it cannot guarantee the correct global correspondence on a repeated pattern.
+
+\textbf{Image boundaries and search range.} The matching window and disparity search range consume pixels available near the left and right image boundaries. When the true disparity lies outside the search interval from \texttt{minDisparity} to \texttt{minDisparity+numDisparities}, no valid result can be obtained even if the image contains texture.
+
+\subsection{Effects of parameters and downsampling}
+
+This run records one fixed parameter setting and does not include an additional comparison experiment. In general, increasing \texttt{blockSize} can improve local stability in weak-texture regions, but it makes object boundaries thicker. A smaller window preserves more detail but is more sensitive to noise. \texttt{P1} and \texttt{P2} control disparity smoothness: values that are too large may flatten real boundaries, whereas values that are too small may produce speckles. Increasing \texttt{uniquenessRatio} leaves fewer but more reliable matches; the speckle parameters remove small connected regions with abnormal disparity.
+
+Applying \texttt{pyrDown} once synchronously reduces the number of matching pixels and the computational burden, which is suitable for rapid reproduction in a course experiment. The cost is that fine leaf boundaries and small textures may be merged, reducing disparity detail. If detail is the priority, downsampling should be disabled while maintaining identical scaling for the left and right images, and a complete new set of arrays, images, and parameters should be recorded. Results at different resolutions must not be mixed in one table.
+
+\subsection{Limitation of the metric-depth scale}
+
+The current result measures pixel disparity only. According to $Z=fB/d$, even a perfectly estimated disparity still has an unknown proportional factor when $fB$ is unknown. Therefore, the numerical value of \codepath{depth_proxy} cannot be interpreted as metres or centimetres. Other calibration files in the official sample directory have not been verified to match the aloe images, the resolution, and the camera setup, and therefore cannot be applied directly.
+
+\subsection{The valid-pixel fraction is not matching accuracy}
+
+The valid-pixel fraction of $73.4713\%$ obtained in this run means, strictly, the fraction of pixels at the processed resolution that passed the filter ``finite and $d>15$''. It reflects coverage, but it does not establish whether those disparities agree with the true correspondences. A pixel with a finite disparity may still result from repeated texture, an occlusion boundary, or an incorrect local cost minimum. Conversely, an invalid pixel may simply indicate that the matcher could not provide a sufficiently confident answer; it does not mean that the scene has no depth there. This experiment therefore discusses coverage, disparity distribution, and matching correctness separately, without describing the valid-pixel fraction as accuracy or recognition rate.
+
+To obtain a comparable accuracy metric, an additional disparity reference with the same resolution and coordinate definition would be required, or the evaluation would need independent left--right consistency errors, reprojection errors, and manually annotated regions. Even when the official \texttt{aloeGT.png} is retained, its encoding scale, valid region, and geometric correspondence with the current images must first be checked before computing MAE, RMSE, or the bad-pixel ratio. Until those conditions are verified, the reference image cannot be used directly as ground truth for this experiment. The conclusion of the current report is therefore limited to the statement that it produces an interpretable relative disparity structure, rather than claiming a particular disparity accuracy.
+
+\subsection{From numerical distributions to spatial structure}
+
+The disparity range and quantiles indicate whether the numerical values lie within the matcher's working range, but they do not by themselves show where errors occur. Spatially, occlusion boundaries, weak-texture regions, and the image-side search boundaries may all appear as invalid pixels. The same invalid fraction can therefore correspond to very different spatial patterns. The results should consequently be interpreted by treating the valid-disparity mask as a spatial support map and inspecting it alongside the left-image texture, the disparity grayscale image, and the relative-depth map. This separates a region with insufficient evidence over its whole area from a small group of rejected pixels near an object boundary, instead of summarizing all failure modes with one global percentage.
+
+Similarly, a region with larger disparity can generally be interpreted as relatively closer, but an isolated high-disparity patch may also be an incorrect match caused by repeated texture. SGBM smoothness uses neighbourhood continuity to supplement local evidence, so a continuous result may reflect a real surface or the algorithm's prior. A local disparity change should be interpreted as a front-to-back change only when its spatial structure, left--right consistency, and available reference evidence support that interpretation together.
+
+\subsection{Different effects of a single-pixel perturbation in far and near regions}
+
+As shown by Equation~\eqref{eq:depth-sensitivity}, depth inversion is nonlinear. For the same absolute disparity error $\Delta d$, the relative error magnitude is larger in a low-disparity region, which generally corresponds to a farther scene region. Consequently, even a matching deviation on the order of one pixel in a distant weak-texture region may cause a more noticeable perturbation in relative-depth ordering. A near region has larger disparity, so its front-to-back ordering is often easier to separate, but occlusion and boundary mixing can make local matching more difficult. The formula alone therefore does not guarantee that far regions are numerically more stable or that near regions are always more accurate. Evaluation should consider disparity magnitude, texture conditions, and boundary location together.
+
+This nonlinearity is also why the experiment retains floating-point disparity instead of saving only an 8-bit grayscale image. The display image is stretched between the first and 99th percentiles and is intended primarily for structural inspection; it compresses extreme values and loses the numerical meaning of invalid pixels. Any analysis of disparity perturbations, depth changes, or quantiles must return to \texttt{disparity\_raw.npy} and \texttt{depth\_proxy.npy}, rather than attempting to infer the original pixel displacement from display grayscale values.
+
+\subsection{Low-cost improvements}
+
+Within the scope of the course task, the following low-cost improvements are possible:
+
+\begin{enumerate}
+  \item Capture a sequence of left--right checkerboard images with known square size for the same stereo system, and estimate the intrinsics, distortion, extrinsics, and $Q$ matrix;
+  \item Use the calibration parameters to undistort and stereo-rectify the images before running the same SGBM and array-saving pipeline;
+  \item While retaining the original \texttt{npy} arrays, compare a small, pre-specified set of \texttt{numDisparities}, \texttt{blockSize}, and speckle parameter settings, saving each parameter set and result separately;
+  \item Add left--right consistency and confidence statistics to the disparity output in order to distinguish ``no match'' from ``low-confidence match''.
+\end{enumerate}
+
+These improvements do not have the same priority. If the goal is physical measurement, calibration and rectification for the same camera system should come first. If the goal is only to compare the spatial structure of the matcher, pre-specified parameter comparisons and consistency statistics should come first. In either case, inputs, resolution, search range, and output files should remain one-to-one, so that disparity arrays from different experimental conditions are not mixed into a single conclusion. These are improvement suggestions; this submission does not claim to have completed the additional calibration or comparison experiments.

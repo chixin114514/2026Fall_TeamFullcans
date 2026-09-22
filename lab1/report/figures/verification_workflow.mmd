@@ -1,0 +1,16 @@
+%%{init: {"theme": "neutral", "flowchart": {"curve": "linear"}}}%%
+flowchart TD
+    A[Lab 1 files] --> B{Evidence type}
+    B --> C[Shell files]
+    B --> D[C++ sources]
+    B --> E[CMake project]
+    B --> F[Git history]
+    C --> G[GNU wc and AWK recount]
+    D --> H[Compile in /tmp and run]
+    E --> I[Configure and build in /tmp]
+    F --> J[Inspect commits and status]
+    G --> K[Compare with submitted records]
+    H --> K
+    I --> K
+    J --> K
+    K --> L[Report verified results]

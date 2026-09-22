@@ -1,7 +1,10 @@
 \section{Experimental Results}\label{sec:task2-results}
 
-The results below were read directly from \path{task2/output/camera_params.npz} for the 18 real JPEG files in \path{task2/images_jpg/*.jpg}. The run used an \(8\times5\) checkerboard, a 3.0 cm square size, and \texttt{--min-images 3}. These values are recorded outputs, not estimates or placeholders.
+The results below were read directly from \path{task2/output/camera_params.npz} for the 18 real JPEG files in \path{task2/images_jpg/*.jpg}. The run used an $8\times5$ checkerboard, a 3.0 cm square size, and \texttt{--min-images 3}. These values are recorded outputs, not estimates or placeholders. The image order used in the per-view figures is the order of \path{valid_image_paths} in the NPZ file.
 
+\subsection{Recovered calibration quantities}
+
+The recovered camera matrix is
 \begin{equation}
 \mathbf K=
 \begin{bmatrix}
@@ -12,15 +15,15 @@ The results below were read directly from \path{task2/output/camera_params.npz} 
 \label{eq:task2-result-k}
 \end{equation}
 
+The five-coefficient OpenCV distortion vector is
 \begin{equation}
 \mathbf d=
 \left[
-0.20245123,\;-0.29420837,\;-0.00326679,\;0.00308671,\;-1.04554325
+0.20245123;\;-0.29420837;\;-0.00326679;\;0.00308671;\;-1.04554325
 \right],
 \label{eq:task2-result-distortion}
 \end{equation}
-where \(\mathbf d\) follows the common OpenCV order
-\((k_1,k_2,p_1,p_2,k_3)\).
+where $\mathbf d$ follows the order $(k_1,k_2,p_1,p_2,k_3)$.
 
 \begin{table}[htbp]
     \centering
@@ -34,24 +37,90 @@ where \(\mathbf d\) follows the common OpenCV order
         Data & Candidate images & 18 \\
         Data & Valid calibration images & 18 \\
         Data & Failed images & 0 (read, corner, and size failures) \\
-        Data & Image size (width \(\times\) height) & \(5712\times4284\) \\
-        Configuration & Checkerboard inner corners & \(8\times5\) \\
+        Data & Image size (width $\times$ height) & $5712\times4284$ \\
+        Configuration & Checkerboard inner corners & $8\times5$ \\
         Configuration & \path{square_size} & 3.0 cm \\
-        Intrinsics & Camera matrix \(\mathbf K\) & See Equation~\ref{eq:task2-result-k} \\
-        Intrinsics & \(f_x\) & 4082.15290893 \\
-        Intrinsics & \(f_y\) & 4083.58657686 \\
-        Intrinsics & \(c_x\) & 2883.66417823 \\
-        Intrinsics & \(c_y\) & 2107.20293734 \\
-        Distortion & \((k_1,k_2,p_1,p_2,k_3)\) & See Equation~\ref{eq:task2-result-distortion} \\
+        Intrinsics & Camera matrix $\mathbf K$ & See Equation~\ref{eq:task2-result-k} \\
+        Intrinsics & $f_x$ & 4082.15290893 \\
+        Intrinsics & $f_y$ & 4083.58657686 \\
+        Intrinsics & $c_x$ & 2883.66417823 \\
+        Intrinsics & $c_y$ & 2107.20293734 \\
+        Distortion & $(k_1,k_2,p_1,p_2,k_3)$ & See Equation~\ref{eq:task2-result-distortion} \\
         Error & OpenCV RMS (pixels) & 2.06424401 \\
         Error & Mean pointwise reprojection error (pixels) & 1.65696931 \\
         Error & Mean per-image RMS (pixels) & 1.90750642 \\
-        Extrinsics & Rotation/translation shape & \(18\times3\times1\); translations in cm \\
+        Extrinsics & Rotation/translation shape & $18\times3\times1$; translations in cm \\
         \hline
     \end{tabular}
 \end{table}
 
-OpenCV RMS is the global root-mean-square error returned by \texttt{cv2.calibrateCamera}. The mean pointwise reprojection error is \path{mean_reprojection_error}, averaged over all \(18\times40=720\) valid corners. The mean per-image RMS is \path{mean_per_image_rms}, the arithmetic mean of 18 per-image RMS values. These definitions are distinct. The per-image array is stored in \path{per_image_reprojection_error}; poses are stored in \path{rotation_vectors} and \path{translation_vectors}.
+OpenCV RMS is the global root-mean-square error returned by \texttt{cv2.calibrateCamera}. The mean pointwise reprojection error is \path{mean_reprojection_error}, averaged over all $18\times40=720$ valid corners. The mean per-image RMS is \path{mean_per_image_rms}, the arithmetic mean of 18 per-image RMS values. These definitions are distinct. The per-image array is stored in \path{per_image_reprojection_error}; poses are stored in \path{rotation_vectors} and \path{translation_vectors}.
+
+\subsection{Per-view and geometric diagnostics}
+
+The global intrinsic matrix and distortion vector are each one joint estimate from all 18 views. They are not 18 independent estimates. Therefore, the additional plots below show quantities that genuinely vary by view: reprojection residuals, checkerboard pose, detected-corner coverage, and the response of the single fitted distortion model. This distinction prevents visual fluctuation plots from incorrectly treating one global $\mathbf K$ or $\mathbf d$ as if it had been refitted independently to every image.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.76\linewidth]{per_image_rms.pdf}
+    \caption{Per-image RMS reprojection error for the 18 valid views. The bars are calculated from the 40 detected corners in each image using \texttt{cv2.projectPoints}. The horizontal lines show the median, the arithmetic mean of per-image RMS values, and the global OpenCV RMS. These bars are per-view residual diagnostics, not 18 separate intrinsic-parameter fits.}
+    \label{fig:task2-per-image-rms}
+\end{figure}
+
+The per-image RMS values range from 0.850436 px (\texttt{IMG\_5505}) to 3.625463 px (\texttt{IMG\_5513}), with a median of 1.810399 px and an interquartile range of 1.223223--2.360739 px. Eight of the 18 views exceed 2 px, and four exceed 2.5 px. These views remain valid detections, but their larger residuals make them useful candidates for visual inspection or for a future refined acquisition. The plot also shows why the arithmetic mean of the per-image RMS values (1.907506 px) is not identical to the global OpenCV RMS (2.064244 px).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.68\linewidth]{corner_coverage.pdf}
+    \caption{Coverage of the 720 refined checkerboard corners in normalized image coordinates. The points were regenerated with the same \texttt{findChessboardCorners} flags and \texttt{cornerSubPix} criteria used by the calibration program. The plot summarizes where observations were actually made; it is not a claim that the entire sensor area was sampled uniformly.}
+    \label{fig:task2-corner-coverage}
+\end{figure}
+
+The detected corners occupy normalized coordinates approximately from $(0.191,0.182)$ to $(0.814,0.792)$, so the union of the observed board corners covers about 62.3\% of the image width and 61.1\% of the image height. This is useful central coverage, but it does not reach the outer image border. The fitted distortion coefficients are consequently less directly constrained at the extreme corners than in the central region, which is an important limitation when interpreting the distortion-response plot below.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.76\linewidth]{pose_translation.pdf}
+    \caption{Translation-vector variation across views. OpenCV uses $\mathbf t$ to map the checkerboard origin from board coordinates to camera coordinates; because the object-point square size is 3 cm, the plotted components and $\lVert\mathbf t\rVert$ are in centimeters. The $t_z$ curve is the depth of the board origin, while the lower panel gives its Euclidean distance from the camera origin.}
+    \label{fig:task2-pose-translation}
+\end{figure}
+
+The checkerboard-origin depth $t_z$ varies from 24.705 to 90.828 cm, and the board-origin distance $\lVert\mathbf t\rVert$ varies from 27.559 to 91.815 cm. The lateral components span $-17.256$ to 7.327 cm in $x$ and $-12.834$ to 10.166 cm in $y$. Thus the dataset contains both distance and lateral-position changes rather than a repeated single pose.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.76\linewidth]{pose_orientation.pdf}
+    \caption{Rotation-vector and board-tilt diagnostics. The upper panel reports the three OpenCV Rodrigues-vector components in radians. The lower panel reports the Rodrigues-vector norm in degrees and the angle between the transformed board normal and the camera optical axis. The latter is a direct board-tilt diagnostic and should not be confused with camera roll.}
+    \label{fig:task2-pose-orientation}
+\end{figure}
+
+The Rodrigues-vector norm ranges from 2.688$^{\circ}$ to 173.651$^{\circ}$, while the board-normal tilt ranges from 2.683$^{\circ}$ to 62.936$^{\circ}$. The two angles answer different questions: the norm describes the axis-angle representation of the full board-to-camera rotation, whereas the board-normal tilt isolates the departure of the board plane from a fronto-parallel view. The large norm in \texttt{IMG\_5516} should therefore be interpreted together with the other components and the original image, not automatically labeled as a calibration failure.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.72\linewidth]{distortion_profile.pdf}
+    \caption{Response of the fitted distortion model over normalized radius. The upper curve is the radial scale factor $1+k_1r^2+k_2r^4+k_3r^6$. The lower curve is the tangential displacement induced by $(p_1,p_2)$, summarized over angular direction. Both panels are deterministic calculations from the one global coefficient vector in Equation~\ref{eq:task2-result-distortion}; they are not per-image measurements.}
+    \label{fig:task2-distortion-profile}
+\end{figure}
+
+The distortion plot gives an interpretable view of the coefficient signs and magnitudes beyond listing five numbers. At the largest normalized radius corresponding to the image corners, the radial scale factor predicted by the polynomial is approximately 0.476, while the tangential displacement remains on the order of $10^{-2}$ normalized coordinate units and depends on angular direction. This strong high-radius response should be treated cautiously because the observed-corner coverage does not reach the sensor border. It is a model extrapolation that should be checked against additional edge-of-frame calibration views before using the parameters for precision measurements.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Additional measured ranges used in the diagnostic analysis}
+    \label{tab:task2-diagnostic-ranges}
+    \begin{tabular}{lll}
+        \hline
+        Quantity & Measured summary & Meaning \\
+        \hline
+        Per-image RMS & 0.850--3.625 px; median 1.810 px & View-dependent residual quality \\
+        Board depth $t_z$ & 24.705--90.828 cm & Distance variation along optical axis \\
+        Board distance $\lVert\mathbf t\rVert$ & 27.559--91.815 cm & Distance from camera origin \\
+        Board-normal tilt & 2.683--62.936$^{\circ}$ & Plane-orientation variation \\
+        Corner union & 62.3\% width, 61.1\% height & Observed image-area span \\
+        \hline
+    \end{tabular}
+\end{table}
 
 \begin{figure}[htbp]
     \centering
@@ -62,4 +131,4 @@ OpenCV RMS is the global root-mean-square error returned by \texttt{cv2.calibrat
     \label{fig:task2-visual-results}
 \end{figure}
 
-Figure~\ref{fig:task2-visual-results} shows one of the 18 valid views rather than repeating all outputs. The left image checks coverage of the \(8\times5\) inner corners, while the right image illustrates the undistortion result. Both were generated with \texttt{--save-corners --undistort}.
+Figure~\ref{fig:task2-visual-results} shows one of the 18 valid views rather than repeating all outputs. The corner overlay checks that the expected $8\times5$ inner-corner pattern was found, while the corrected image provides a qualitative check on the fitted distortion model. A single visual example cannot validate all views, so the quantitative per-view plots and the coverage plot are retained as complementary checks.

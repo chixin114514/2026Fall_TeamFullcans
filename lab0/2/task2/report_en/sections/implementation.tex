@@ -1,0 +1,86 @@
+\section{Program Design and Implementation}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=0.72\textheight,keepaspectratio]{figures/stereo_pipeline.png}
+  \caption{Stereo depth estimation pipeline generated from the Mermaid source file.}
+  \label{fig:stereo-pipeline}
+\end{figure}
+
+The program entry point is \codepath{task2/src/stereo_depth.py}, which implements a single
+reproducible run from input validation to result serialization. The program does not use display
+images as numerical inputs; instead, it saves both the original floating-point arrays and the
+8-bit visualizations used in the report. The overall processing relationship is shown in
+Fig.~\ref{fig:stereo-pipeline}.
+
+\subsection{Input Reading, Validation, and Preprocessing}
+
+The program uses \texttt{cv2.imread} to read the left and right color images. Before matching,
+it checks that the files exist, that OpenCV returns non-empty arrays, and that the two images have
+the same row and column dimensions. If either image is empty or the dimensions are inconsistent,
+the program raises a locatable error and does not continue to produce seemingly valid results.
+
+The two images are then converted to grayscale. To reduce the computational cost, the left and
+right color images and their grayscale versions are downsampled once with
+\texttt{cv2.pyrDown}. Thus, no different scaling ratio is introduced between the two views. The
+original size of $1282\times1110$ becomes $641\times555$; all subsequent disparity arrays and
+output images correspond to this processed size.
+
+\subsection{StereoSGBM Configuration}
+
+The parameters used in the actual run are recorded in \codepath{task2/results/params.json} and
+listed in Table~\ref{tab:sgbm-params}. \texttt{numDisparities} is set to a multiple of 16 so
+that the search range covers the main disparity variation in the official aloe images.
+
+\begin{table}[H]
+  \centering
+  \caption{StereoSGBM parameters used in the reported run}
+  \label{tab:sgbm-params}
+  \begin{tabular}{lr}
+    \toprule
+    Parameter & Actual value \\
+    \midrule
+    \texttt{window\_size} & $3$ \\
+    \texttt{minDisparity} & $16$ \\
+    \texttt{numDisparities} & $96$ \\
+    \texttt{blockSize} & $5$ \\
+    $P_1$ & $72$ \\
+    $P_2$ & $288$ \\
+    \texttt{disp12MaxDiff} & $1$ \\
+    \texttt{uniquenessRatio} & $10$ \\
+    \texttt{speckleWindowSize} & $100$ \\
+    \texttt{speckleRange} & $32$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Disparity, Valid-Disparity Mask, and Relative Depth}
+
+The OpenCV matcher returns integer disparities with a fixed scale factor. The program divides
+these values by $16$ to obtain a floating-point array in pixel units. In this run, a disparity is
+considered valid when it is finite and satisfies $d>15$; all other positions are stored as
+\texttt{NaN} in \codepath{disparity_raw.npy}, so they do not enter the range, proportion, or
+relative-depth statistics. The core logic is:
+
+\begin{lstlisting}[language=Python]
+disparity = matcher.compute(left_match, right_match).astype(np.float32) / 16.0
+valid = np.isfinite(disparity) & (disparity > 15)
+disparity_raw = np.where(valid, disparity, np.nan)
+depth_proxy = np.where(valid, 1.0 / disparity_raw, np.nan)
+\end{lstlisting}
+
+The relative-depth array is computed as $1/d$ and has no physical unit. It is used only to express
+relative front-to-back ordering. To generate a stable display image, the program takes the first
+and 99th percentiles of the valid pixels as the display range and linearly maps that range to
+0--255. Therefore, the grayscale values in the PNG files are not the raw disparities or raw
+relative-depth values; quantitative analysis must read the \texttt{npy} arrays instead.
+
+\subsection{Output and Exception Checks}
+
+After writing each file, the program checks that the file exists and is non-empty. The outputs
+include \codepath{left.png}, \codepath{right.png}, \codepath{disparity_raw.npy},
+\codepath{disparity.png}, \codepath{valid_mask.png}, \codepath{depth_proxy.npy},
+\codepath{depth_proxy.png}, and \codepath{params.json}. The parameter summary also records the
+input paths, processed dimensions, matcher parameters, Python/OpenCV/NumPy versions, and output
+paths, so that the numerical values reported here can be traced back to the same set of result
+files.
