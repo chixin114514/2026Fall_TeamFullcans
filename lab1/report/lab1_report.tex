@@ -1,4 +1,7 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[letterpaper,10pt,conference]{ieeeconf}
+
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
 
 \usepackage{booktabs}
 \usepackage{array}
@@ -22,23 +25,21 @@
   showstringspaces=false
 }
 
-\title{Lab 1: Linux, C++ and Git\\
-\large Toolchain and RandomVector Experiment Report}
+\title{\LARGE \bf
+Lab 1: Linux, C++ and Git\\
+Toolchain and RandomVector Experiment Report}
 
-\author{\IEEEauthorblockN{Jiaqiao Su}
-\IEEEauthorblockA{Integrated Project\\
-September 2026}}
+\author{Boyang Xie\\
+\small Student ID: 24020036030 \quad Course/Class: F29XS}
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
 
 \begin{abstract}
 MIT VNAV Lab 1 introduces the Linux shell, Git, C++ fundamentals, and CMake. The repository contains the required text-processing results, five appended \texttt{fortune} outputs, answers to the C++ warm-up questions, the completed \texttt{RandomVector} class, and a small CMake project. On Ubuntu 24.04.5, GCC 13.3.0 compiled the C++ code without warnings and CMake 3.28.3 built the example project successfully. GNU \texttt{wc} returned 19,567 lines, 97,676 words, and 14,338 nonblank lines, matching the submitted answers. For a 20-element vector generated with seed 314159, \texttt{RandomVector} reported a mean of 0.55804, a minimum of 0.0278694, and a maximum of 0.982655. The CMake executable printed \texttt{Hello world!} and \texttt{In library}. Tests with the same files on macOS gave different word counts and pseudo-random values because the relevant system implementations differ.
 \end{abstract}
-
-\begin{IEEEkeywords}
-Linux shell, Git, C++, CMake, random vector, histogram, reproducibility
-\end{IEEEkeywords}
 
 \section{Objectives}
 
@@ -159,7 +160,7 @@ The same \texttt{dante.txt} file, with SHA-256 prefix and suffix \texttt{1cd578e
 
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[x=0.036cm,y=0.68cm,font=\scriptsize]
+\begin{tikzpicture}[x=0.032cm,y=0.68cm,font=\scriptsize]
   \draw[->] (0,0) -- (210,0) node[right]{words};
   \foreach \x/\lab in {0/97600,100/97700,200/97800} {
     \draw (\x,0.08) -- (\x,-0.08) node[below]{\lab};
@@ -314,7 +315,7 @@ MIT SPARK Lab, ``VNAV 2023 Lab 1: Exercises,'' 2023. [Online]. Available: \url{h
 MIT SPARK Lab, ``VNAV 2023 Lab 1: Build with CMake,'' 2023. [Online]. Available: \url{https://vnav.mit.edu/labs_2023/lab1/cmake.html}
 
 \bibitem{labbrief}
-``Lab 1: Linux, C++, Git,'' course note. [Online]. Available: \url{https://spurious-cornflower-507.notion.site/Lab-1-Linux-C-Git-e788685e06a84200ae587ffe64258c76}
+``Lab 1: Linux, C++, Git,'' course note. [Online]. Available: \href{https://spurious-cornflower-507.notion.site/Lab-1-Linux-C-Git-e788685e06a84200ae587ffe64258c76}{Notion course note}
 \end{thebibliography}
 
 \end{document}

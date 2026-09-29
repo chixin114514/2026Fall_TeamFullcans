@@ -1,8 +1,11 @@
-\documentclass[letterpaper,10pt,conference]{IEEEtran}
+\documentclass[letterpaper,10pt,conference]{ieeeconf}
+
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
 
 \usepackage{amsmath,amssymb}
-\usepackage{booktabs}
 \usepackage{balance}
+\usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{url}
 \usepackage{xcolor}
@@ -11,15 +14,17 @@
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\T}{\mathsf{T}}
 
-\title{Lab 2: Rigid-Body Transformations and Relative Trajectories in ROS}
+\title{\LARGE \bf
+Lab 2: Rigid-Body Transformations and Relative Trajectories in ROS
+}
 
-\author{\IEEEauthorblockN{Student Name \quad Student ID}
-\IEEEauthorblockA{Integrated Project\\
-Institution Name\\
-Email: student@example.com}}
+\author{Boyang Xie\\
+Student ID: 24020036030 \quad Course/Class: F29XS}
 
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
 
 \begin{abstract}
 The MIT VNAV Lab 2 two-drone scenario is implemented in ROS Noetic. A transform broadcaster publishes the time-varying poses of two aerial vehicles at 50~Hz, while a second node queries TF and publishes their world-frame and relative trajectories for RViz. The observed paths are a circle for AV1, a parabola for AV2, and a planar ellipse for AV2 expressed in AV1. The report also derives the relative homogeneous transformation, identifies the supporting plane and ellipse semi-axes, and proves the requested quaternion operator identities.
@@ -51,14 +56,14 @@ rosrun tf2\_ros static\_transform\_publisher\\
 \quad 0 0 1 0 0 0 1 world av2\\
 rosrun two\_drones\_pkg plots\_publisher\_node\\
 rosrun rviz rviz -d\\
-\quad \$(rospack find two\_drones\_pkg)/config/default.rviz
+\$(rospack find two\_drones\_pkg)/config/\allowbreak default.rviz
 \end{quote}
 
 The launch argument \texttt{static} defaults to \texttt{false}. The \texttt{if} group therefore starts the two static broadcasters only when \texttt{static:=True}; the \texttt{unless} condition starts \texttt{/frames\_publisher\_node} only in dynamic mode. Omitting the argument consequently replaces both fixed broadcasters with the dynamic 50~Hz publisher.
 
 The resulting dynamic ROS graph is shown in Table~\ref{tab:runtime_graph}.
 
-\begin{table}[t]
+\begin{table}[h]
 \caption{ROS graph in dynamic mode (excluding \texttt{/rosout}).}
 \label{tab:runtime_graph}
 \centering
@@ -251,17 +256,17 @@ Eliminating $t$ gives
 Hence the relative trajectory is an ellipse centered at $\mathbf{p}^{1}$, with semi-axis lengths $1/2$ and $\sqrt{5}/2$.
 The longer semi-axis lies along $\mathbf{e}_{y_p}$, a direction tilted in the AV1 $y$-$z$ plane. Figure~\ref{fig:relative_ellipse} plots the ellipse in these intrinsic coordinates and projects the six saved TF positions from Table~\ref{tab:plane_check} onto the same axes. The points fall near the curve at the resolution of the saved coordinates; unlike the continuous black line, they are individual runtime samples.
 
+\newpage
+\balance
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{relative_ellipse_samples.pdf}
+\includegraphics[width=0.98\columnwidth]{relative_ellipse_samples.pdf}
 \caption{Analytic relative ellipse and six TF samples in the plane coordinates of Eq.~\eqref{eq:plane_coordinates}. Symbols distinguish the two captures in Table~\ref{tab:plane_check}.}
 \label{fig:relative_ellipse}
 \end{figure}
 
-\newpage
-\balance
 \section{Quaternion Operator Properties}
-Let $q=[q_1,q_2,q_3,q_4]^{\T}$ use scalar-last convention, and let $\Omega_1(q)$ and $\Omega_2(q)$ denote left- and right-quaternion multiplication as defined in the exercise.
+For scalar-last $q=[q_1,q_2,q_3,q_4]^{\T}$, let $\Omega_1(q)$ and $\Omega_2(q)$ denote left and right quaternion multiplication.
 
 \subsection{Orthogonality}
 Direct multiplication gives, for either operator,
@@ -304,7 +309,7 @@ Furthermore, transposition corresponds to right multiplication by the conjugate:
 \end{equation}
 
 \section{Conclusion}
-The ROS implementation produced the prescribed world-frame circle and parabolic arc. Expressing AV2 in AV1 gives a shorter-period relative motion: an ellipse on $2y-z+1=0$ with semi-axes $1/2$ and $\sqrt{5}/2$. The analytic plots clarify the geometry seen in RViz, while the saved TF positions provide discrete samples of the relative path.
+The ROS implementation produced the prescribed world-frame circle and parabolic arc. Expressing AV2 in AV1 gives a shorter-period relative motion: an ellipse on $2y-z+1=0$ with semi-axes $1/2$ and $\sqrt{5}/2$. Analytic plots clarify the RViz geometry, and saved TF positions sample the relative path.
 
 \begin{thebibliography}{9}
 \bibitem{mitlab}
