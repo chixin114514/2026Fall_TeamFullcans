@@ -1,0 +1,27 @@
+C++ Warm-up Exercises
+
+Operators
+
+1. The final values are i = 2 and j = 1. The pre-increment changes i to 1 before assigning j. The post-increment then assigns the old value of i (1) to j and changes i to 2.
+
+2. The program prints b because 42 < 42 is false.
+
+References and Pointers
+
+1. The program prints 10 10. ri is a reference to i, so assigning 10 to ri also changes i to 10.
+
+2. The program prints 1764. j points to i, whose value is 42. The expression multiplies the pointed-to value by itself and stores the result in i: 42 * 42 = 1764.
+
+3. The program prints 0. i + 2 points to the third array element. Its new value is *(i + 1) - i[3], which is 24 - 24 = 0.
+
+4. The program prints 0. reset receives j by reference and assigns 0 to it.
+
+Numbers
+
+1. short, int, long, and long long are signed integer types with increasing minimum ranges. Their actual widths depend on the implementation, and some may have the same width. The standard requires at least 16 bits for short and int, 32 bits for long, and 64 bits for long long.
+
+2. float typically provides single precision, while double typically provides greater precision and range. Assigning 3.14 to an int discards the fractional part by truncating toward zero, so i is 3.
+
+3. A signed type can represent negative values; an unsigned type represents only nonnegative values. For an 8-bit unsigned char, the range is 0 through 255. Converting -1 to this type gives 255, so c is 255.
+
+4. The final value of i is 0. The initial value 42 is nonzero, so the if branch runs and assigns 0 to i.
