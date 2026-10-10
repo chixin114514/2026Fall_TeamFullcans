@@ -1,0 +1,23 @@
+VNAV Lab 3 — Official TESSE / RViz circular flight
+
+Local video (user explicitly requested local files only):
+report/video/rviz_official_tesse.mp4
+
+Complete original recording, including initial transient:
+report/video/rviz_official_tesse_full.mp4
+
+The official MIT Lab3 Unity player ran unmodified through Box64 0.3.6 in an
+ARM64 ROS Noetic Docker container. The controller tracked the original 5 m
+radius, 2 m target-height circle with period 4*pi seconds.
+
+The primary video is an unaccelerated 27.125 s RViz screen recording excerpt
+starting at 30 s in the complete 57.125 s recording. It includes more than
+one complete stable circular flight. The full telemetry contains 55.02 s
+of trajectory time and 2.376 observed turns after the first two periods;
+steady position RMS error is 0.3063 m.
+
+Evidence: report/unity_flight.csv, report/unity_flight.bag,
+report/unity_metrics.json, report/unity_tracking.pdf, report/validation.md.
+
+No Google Drive or Dropbox upload was performed. The course's public-link
+requirement is replaced with this local path according to the user's request.
