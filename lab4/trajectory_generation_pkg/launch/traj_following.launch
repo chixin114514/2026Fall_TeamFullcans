@@ -1,0 +1,15 @@
+<launch>
+  <arg name="gains_file" default="$(find trajectory_generation)/config/gains_arm64.yaml"/>
+  <arg name="v_max" default="2.0"/>
+  <arg name="a_max" default="1.0"/>
+  <arg name="time_scale" default="1.0"/>
+  <node name="trajectory_generation_node" pkg="trajectory_generation" type="trajectory_generation_node" output="screen">
+    <param name="v_max" value="$(arg v_max)"/>
+    <param name="a_max" value="$(arg a_max)"/>
+    <param name="time_scale" value="$(arg time_scale)"/>
+    <param name="publish_rate" value="100.0"/>
+  </node>
+  <node name="controller_node" pkg="controller_pkg" type="controller_node" output="screen">
+    <rosparam command="load" file="$(arg gains_file)"/>
+  </node>
+</launch>

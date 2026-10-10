@@ -1,0 +1,134 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=23mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,url}
+\title{VNAV Lab 4: Trajectory Optimization\\Deliverables 1 and 2}
+\author{Team Fullcans}\date{}
+\begin{document}\maketitle
+\section*{Deliverable 1: Single-segment minimum velocity}
+Let $P(t)=\sum_{i=1}^N p_i t^i$, so $P(0)=0$ is already imposed.
+Then
+\[
+J=\int_0^1\!\left(\sum_{i=1}^N i p_i t^{i-1}\right)^2dt
+=\boldsymbol p^T Q\boldsymbol p,\qquad Q_{ij}=\frac{ij}{i+j-1},\quad i,j=1,\ldots,N.
+\]
+The endpoint position is $A\boldsymbol p=b$, with $A=[1,\ldots,1]$, $b=1$.
+Here the objective is $p^TQp$; a solver using $\tfrac12p^THp$ needs $H=2Q$.
+\subsection*{1. Degree one}
+$P(1)=p_1=1$, hence $P^*(t)=t$ and $J^*=1$.
+\subsection*{2. Degree two}
+\begin{align*}
+J&=p_1^2+2p_1p_2+\tfrac43p_2^2, &
+Q&=\begin{bmatrix}1&1\\1&4/3\end{bmatrix}, & A&=\begin{bmatrix}1&1\end{bmatrix}, & b&=1.
+\end{align*}
+Substitute $p_1=1-p_2$: $J=1+\tfrac13p_2^2$.
+Thus $\boldsymbol p^*=(1,0)^T$, $P^*(t)=t$, and $J^*=1$.
+Allowing a quadratic does not lower the cost.
+\subsection*{3. Degree three}
+\[
+Q=\begin{bmatrix}1&1&1\\1&4/3&3/2\\1&3/2&9/5\end{bmatrix},\qquad
+A=\begin{bmatrix}1&1&1\end{bmatrix},\qquad b=1.
+\]
+The KKT equations $2Qp+A^T\lambda=0$, $Ap=b$ yield
+$p^*=(1,0,0)^T$, $\lambda=-2$, so again $P^*(t)=t$, $J^*=1$.
+This agrees with Euler--Lagrange: $P''=0$ for the integrand $(P')^2$.
+In fact, Cauchy--Schwarz gives
+\[
+J\geq\left(\int_0^1 P'(t)dt\right)^2=(P(1)-P(0))^2=1.
+\]
+Equality requires constant velocity almost everywhere. Thus this answer is globally optimal for all polynomial degrees.
+\subsection*{4. Add the terminal velocity $P'(1)=-2$}
+The second constraint row is $[1,2,\ldots,N]$ and $b=(1,-2)^T$.
+For a positive definite $Q$, the equality-constrained solution is
+\[
+p^*=Q^{-1}A^T(AQ^{-1}A^T)^{-1}b.
+\]
+\paragraph{(a) Degree two.}
+\[
+A=\begin{bmatrix}1&1\\1&2\end{bmatrix},\quad b=\begin{bmatrix}1\\-2\end{bmatrix},\quad
+p^*=\begin{bmatrix}4\\-3\end{bmatrix}.
+\]
+Both coefficients are fixed by the constraints. Therefore
+\[
+\boxed{P^*(t)=4t-3t^2,\qquad J^*=\int_0^1(4-6t)^2dt=4.}
+\]
+\paragraph{(b) Degree three.}
+\[
+A=\begin{bmatrix}1&1&1\\1&2&3\end{bmatrix},\quad b=\begin{bmatrix}1\\-2\end{bmatrix}.
+\]
+Writing $p_3=z$ gives $p_1=4+z$ and $p_2=-3-2z$.
+Substitution gives $J=4+z+\tfrac{2}{15}z^2$, minimized at $z=-15/4$.
+Consequently
+\[
+\boxed{P^*(t)=\tfrac14t+\tfrac92t^2-\tfrac{15}{4}t^3,\qquad J^*=\tfrac{17}{8}.}
+\]
+Indeed $P(1)=1$ and $P'(1)=\tfrac14+9-\tfrac{45}{4}=-2$.
+The cubic improves on the quadratic, but its cost remains above 1.
+The unconstrained-degree infimum with this terminal velocity is 1 and is not attained:
+velocity can change in an arbitrarily thin terminal layer. The Euler--Lagrange
+linear solution cannot satisfy all three boundary conditions. The finite-degree QPs are well posed.
+
+\section*{Deliverable 2: Multiple segments}
+All counts below are per scalar coordinate, for fixed strictly increasing knot times
+$t_0<\cdots<t_k$ and prescribed waypoint positions. Spatial coordinates can be solved independently.
+\subsection*{1. Minimum snap ($r=4$)}
+On each open segment, Euler--Lagrange gives $P_i^{(8)}=0$.
+Each segment therefore has degree at most 7 and eight coefficients: $8k$ unknowns.
+With position, velocity, acceleration and jerk fixed at the overall endpoints,
+the conditions determining the stationary optimum are:
+\begin{center}
+\begin{tabular}{lll}\toprule
+Type & Conditions & Scalar count\\\midrule
+Waypoint & Both sides equal each interior position; two endpoints & $2k$\\
+Free derivative & Match derivatives 1 through 6 at each interior knot & $6(k-1)$\\
+Fixed derivative & Prescribe derivatives 1 through 3 at each endpoint & $6$\\\bottomrule
+\end{tabular}
+\end{center}
+The total is $2k+6(k-1)+6=8k$. There are $k+1$ physical waypoint positions;
+each interior waypoint supplies \emph{two} scalar equations.
+For $k=3$: 6 waypoint equations, 12 free derivative equations and 6 fixed derivative equations give 24 equations.
+
+Velocity, acceleration and jerk continuity are imposed for admissibility.
+Continuity of snap, the fifth derivative and the sixth derivative follows from
+stationarity when the common interior velocity, acceleration and jerk are free.
+These last three are \emph{natural optimality conditions}, not additional
+prescribed derivative values. The seventh derivative can jump because the
+interior positions are fixed. In a QP one imposes only the waypoint, low-order
+continuity and endpoint constraints; minimizing the cost supplies the natural conditions.
+
+\subsection*{2. General derivative order $r\geq1$}
+For $J=\sum_i\int_{t_{i-1}}^{t_i}(P_i^{(r)})^2dt$,
+Euler--Lagrange yields $P_i^{(2r)}=0$. Hence there are $2r$ coefficients
+per segment and $2rk$ unknowns.
+\begin{itemize}
+\item Waypoint equations: $P_1(t_0)=\bar p_0$, $P_k(t_k)=\bar p_k$,
+and $P_i(t_i)=P_{i+1}(t_i)=\bar p_i$ at the $k-1$ interior knots: $2k$ equations.
+\item Fixed endpoint derivatives: orders $1,\ldots,r-1$ at each endpoint:
+$2(r-1)$ equations (typically all zero).
+\item Free derivative equations: continuity of orders $1,\ldots,2r-2$ at
+interior knots: $(2r-2)(k-1)$ equations. Orders $1,\ldots,r-1$ are
+admissibility constraints; orders $r,\ldots,2r-2$ are natural optimality conditions.
+\end{itemize}
+Their total is
+\[
+\boxed{2k+(2r-2)(k-1)+2(r-1)=2rk.}
+\]
+To see the natural conditions, integrate the first variation by parts $r$ times:
+\[
+\tfrac12\delta J_i=
+\left[\sum_{j=0}^{r-1}(-1)^jP_i^{(r+j)}\delta P_i^{(r-1-j)}\right]_{t_{i-1}}^{t_i}
++(-1)^r\int_{t_{i-1}}^{t_i}P_i^{(2r)}\delta P_i\,dt.
+\]
+At an interior knot $\delta P=0$ since position is fixed. The common variations
+$\delta P^{(1)},\ldots,\delta P^{(r-1)}$ are arbitrary, giving continuity of orders
+$r,\ldots,2r-2$. The derivative of order $2r-1$ need not be continuous.
+
+\paragraph{Relation to the code.}
+The supplied library uses $N=10$ coefficients (degree at most 9) and
+\texttt{makeStartOrEnd(..., SNAP)} fixes derivatives through order 4 to zero.
+This is a richer polynomial parameterization with an extra endpoint snap condition;
+it differs from the minimal degree-7, endpoint-through-jerk theoretical count above.
+The implementation follows the supplied library convention.
+\paragraph{Source.}
+Problem statement: \url{https://vnav.mit.edu/labs_2023/lab4/exercises.html}.
+All calculations and explanations above were derived for these exercises.
+\end{document}

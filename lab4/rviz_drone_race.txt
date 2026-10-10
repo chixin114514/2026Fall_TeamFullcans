@@ -1,0 +1,16 @@
+VNAV 2023 Lab4 — official Unity race
+
+Video (official Unity screen recording):
+https://drive.google.com/file/d/1qS76fBFgmc6kP91T2xKxFPBrs0Lib6I2/view?usp=drivesdk
+
+ROS1 bag (/current_state and /desired_state):
+https://drive.google.com/file/d/152iBXHHfN01wkPfngvWhBnI1umyN6WMM/view?usp=drivesdk
+
+Trajectory duration: 91.07968441 s. All 12 gate centers visited in order.
+Local originals: report/unity_race.mp4, report/unity_race.bag
+Upload video: report/unity_race_submission.mp4
+
+SHARING STATUS: uploaded, currently owner-only as verified through Drive metadata.
+Before submission, set both files to “Anyone with the link / Viewer”.
+The available Drive connector supports named-user/domain sharing but does not
+expose public-link permission creation. Public access is not yet verified.

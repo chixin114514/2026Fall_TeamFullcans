@@ -1,0 +1,8 @@
+/build/
+/devel/
+/logs/
+/simulator/
+*.aux
+*.log
+*.out
+__pycache__/

@@ -1,0 +1,18 @@
+path:        /workspace/lab4/report/unity_race.bag
+version:     2.0
+duration:    2:05s (125s)
+start:       Jan 01 1970 00:15:14.50 (914.50)
+end:         Jan 01 1970 00:17:20.04 (1040.04)
+size:        5.3 MB
+messages:    9409
+compression: none [7/7 chunks]
+types:       nav_msgs/Odometry                            [cd5e73d190d741a2f92e81eda573aca7]
+             trajectory_msgs/MultiDOFJointTrajectoryPoint [3ebe08d1abd5b65862d50e09430db776]
+topics:      /current_state   6284 msgs    : nav_msgs/Odometry                           
+             /desired_state   3125 msgs    : trajectory_msgs/MultiDOFJointTrajectoryPoint
+codec_name=h264
+width=960
+height=600
+r_frame_rate=289/12
+duration=126.893000
+size=7687861
