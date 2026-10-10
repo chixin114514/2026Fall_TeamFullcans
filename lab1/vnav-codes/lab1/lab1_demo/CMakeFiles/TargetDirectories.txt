@@ -1,0 +1,4 @@
+/home/chixin/f29xs/2026Fall_TeamFullcans/lab1/vnav-codes/lab1/lab1_demo/CMakeFiles/mylib.dir
+/home/chixin/f29xs/2026Fall_TeamFullcans/lab1/vnav-codes/lab1/lab1_demo/CMakeFiles/main.dir
+/home/chixin/f29xs/2026Fall_TeamFullcans/lab1/vnav-codes/lab1/lab1_demo/CMakeFiles/edit_cache.dir
+/home/chixin/f29xs/2026Fall_TeamFullcans/lab1/vnav-codes/lab1/lab1_demo/CMakeFiles/rebuild_cache.dir
