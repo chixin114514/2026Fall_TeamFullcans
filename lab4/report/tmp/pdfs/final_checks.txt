@@ -1,0 +1,11 @@
+PASS: two successful LaTeX passes; no warnings, unresolved references or overflows.
+PASS: all fonts embedded and all 20 figure captions present.
+PASS: figure source preflight has zero failures; rendering log empty.
+PASS: existing metrics match all original summary values; per-axis squared RMS sums to 3D squared RMS.
+PASS: 12 local gate windows, 201 samples each; all displayed local samples within axes.
+PASS: 12 full video frames decoded; time basis documented.
+Pages: 19
+Figures: 20
+Tables: 3
+PASS: all 19 pages visually reviewed; compact paired figures; no isolated one-figure float pages.
+PASS: delivered PDF byte-identical to the verified build.

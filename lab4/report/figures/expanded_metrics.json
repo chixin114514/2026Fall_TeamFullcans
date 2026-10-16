@@ -1,0 +1,80 @@
+{
+  "axis_rms_m": {
+    "x": 0.07682193940744227,
+    "y": 0.0647354871735176,
+    "z": 0.30290490622140676
+  },
+  "active_error_quantiles_m": {
+    "median": 0.2849522393004309,
+    "p90": 0.4548218968629051,
+    "p95": 0.5065069355232104
+  },
+  "quaternion_norm_range": [
+    0.9999998862545637,
+    1.0000001593810453
+  ],
+  "local_gate_windows": [
+    {
+      "gate": 0,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 1,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 2,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 3,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 4,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 5,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 6,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 7,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 8,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 9,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 10,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 11,
+      "rows": 201,
+      "window_s": 2
+    }
+  ],
+  "local_gate_window_definition": "All rows within +/-2 seconds of each whole-record closest approach",
+  "video_time_basis": "Video playback time; not synchronised to telemetry"
+}
