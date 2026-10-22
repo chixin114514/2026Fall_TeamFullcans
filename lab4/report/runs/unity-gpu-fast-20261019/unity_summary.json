@@ -1,0 +1,95 @@
+{
+  "source": "Official MIT Lab4 Unity 2019.3.9f1, native x86_64, hardware OpenGL via D3D12 / NVIDIA RTX 4060; ROS1 Noetic via PRoot",
+  "trajectory": "minimum snap, z solved separately with zero vertical velocity at gates, segment times uniformly scaled to peak |v|<=10 m/s, |a|<=8 m/s^2",
+  "gains": {
+    "kx": 10.0,
+    "kv": 5.0,
+    "kr": 16.0,
+    "komega": 2.5
+  },
+  "trajectory_duration_s": 25.523646303,
+  "rms_tracking_error_m": 0.0691781464870424,
+  "max_tracking_error_m": 0.3612586938329405,
+  "final_position_error_m": 0.012968015422569352,
+  "final_hold_s": 10.079999999999927,
+  "max_speed_m_s": 8.391668316848785,
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 2.0399999999999636,
+      "min_center_distance_m": 0.03069378634251554
+    },
+    {
+      "gate": 1,
+      "time_s": 4.220000001000017,
+      "min_center_distance_m": 0.013451912313496892
+    },
+    {
+      "gate": 2,
+      "time_s": 6.339999999999918,
+      "min_center_distance_m": 0.03304188900471662
+    },
+    {
+      "gate": 3,
+      "time_s": 8.480000001000008,
+      "min_center_distance_m": 0.025842156605050765
+    },
+    {
+      "gate": 4,
+      "time_s": 10.620000001000108,
+      "min_center_distance_m": 0.04058205100780193
+    },
+    {
+      "gate": 5,
+      "time_s": 12.680000001000053,
+      "min_center_distance_m": 0.016612185437202377
+    },
+    {
+      "gate": 6,
+      "time_s": 14.819999999999936,
+      "min_center_distance_m": 0.020381387342377086
+    },
+    {
+      "gate": 7,
+      "time_s": 16.920000001000062,
+      "min_center_distance_m": 0.02079920190776482
+    },
+    {
+      "gate": 8,
+      "time_s": 19.059999999999945,
+      "min_center_distance_m": 0.0033134036880517652
+    },
+    {
+      "gate": 9,
+      "time_s": 21.200000001000035,
+      "min_center_distance_m": 0.0336869102507208
+    },
+    {
+      "gate": 10,
+      "time_s": 23.339999999999918,
+      "min_center_distance_m": 0.033000293710813935
+    },
+    {
+      "gate": 11,
+      "time_s": 30.559999999999945,
+      "min_center_distance_m": 0.010505019038535582
+    }
+  ],
+  "collisions": "Floor_01 only (takeoff from the floor); no wall, ceiling or gate colliders",
+  "previous_gpu_run": {
+    "dir": "unity-gpu-final-20261019",
+    "trajectory_duration_s": 91.0797,
+    "rms_tracking_error_m": 0.1344,
+    "max_tracking_error_m": 0.593,
+    "final_position_error_m": 0.1124,
+    "max_gate_center_distance_m": 0.1998,
+    "note": "its 0.59 m peak was the reference bulging to z=4.46 m between gates 2 and 3 and the drone striking Collider_02/03"
+  },
+  "checks": {
+    "twelve_ordered_gate_center_visits": true,
+    "all_gate_center_distances_below_0_1m": true,
+    "final_error_below_0_2m": true,
+    "final_hold_at_least_10s": true
+  },
+  "passed": true
+}

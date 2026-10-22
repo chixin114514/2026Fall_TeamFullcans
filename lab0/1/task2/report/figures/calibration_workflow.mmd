@@ -1,0 +1,31 @@
+flowchart TD
+    A([Start]) --> B["Configure 8x5 inner corners<br/>Square size: 3 cm"]
+    B --> C["Discover JPEG files<br/>task2/images_jpg/*.jpg"]
+    C --> D["Read next image"]
+    D --> E{"Readable?"}
+    E -- "No" --> F["Record [FAILED]<br/>read failure"]
+    F --> N{"More images?"}
+    E -- "Yes" --> G{"Resolution consistent?"}
+    G -- "No" --> H["Record [FAILED]<br/>size mismatch"]
+    H --> N
+    G -- "Yes" --> I["Grayscale image<br/>findChessboardCorners"]
+    I --> J{"Corners found?"}
+    J -- "No" --> K["Record [FAILED]<br/>corner failure"]
+    K --> N
+    J -- "Yes" --> L["cornerSubPix<br/>append point pairs"]
+    L --> N
+    N -- "Yes" --> D
+    N -- "No" --> O["Summarize valid and failed counts"]
+    O --> P{"Valid views >= min-images?"}
+    P -- "No" --> Q["Abort<br/>do not write NPZ"]
+    P -- "Yes" --> R["calibrateCamera<br/>estimate K, d, rvec, tvec"]
+    R --> S["projectPoints<br/>compute error metrics"]
+    S --> T["Save camera_params.npz"]
+    T --> U{"--save-corners?"}
+    U -- "Yes" --> V["Save corner overlays"]
+    U -- "No" --> W{"--undistort?"}
+    V --> W
+    W -- "Yes" --> X["Save undistorted images"]
+    W -- "No" --> Z([End])
+    X --> Z
+    Q --> Z

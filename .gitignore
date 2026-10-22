@@ -1,0 +1,8 @@
+*.DS_Store
+*__pycache__*
+*.aux
+*.out
+*.bbl
+*.blg
+*.log
+*.zip

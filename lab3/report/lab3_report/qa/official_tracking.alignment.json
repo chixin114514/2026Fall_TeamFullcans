@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "applicable": true,
+  "auditable": true,
+  "verdict": "PASS",
+  "backend": "python-matplotlib",
+  "summary": {
+    "fail": 0,
+    "warn": 0,
+    "comparisons": 1,
+    "exemptions": 1
+  },
+  "tolerances": {
+    "alignment_pt": 1.5,
+    "gutter_pt": 1.5
+  },
+  "layout": {
+    "schema_version": 1,
+    "backend": "python-matplotlib",
+    "figure": {
+      "width_pt": 453.54330708661416,
+      "height_pt": 317.4803149606299
+    },
+    "panels": [
+      {
+        "id": "a",
+        "bbox_pt": [
+          29.300240000000002,
+          74.75765816743433,
+          210.17398862576138,
+          255.63140679319562
+        ],
+        "grid_id": "matplotlib-grid-1",
+        "row_start": 0,
+        "row_stop": 3,
+        "col_start": 0,
+        "col_stop": 1
+      },
+      {
+        "id": "b",
+        "bbox_pt": [
+          247.9644686257614,
+          229.53201997375342,
+          450.54306708661414,
+          302.67507496062996
+        ],
+        "grid_id": "matplotlib-grid-1",
+        "row_start": 0,
+        "row_stop": 1,
+        "col_start": 1,
+        "col_stop": 2
+      },
+      {
+        "id": "c",
+        "bbox_pt": [
+          247.9644686257614,
+          128.62300498687674,
+          450.54306708661414,
+          201.76605997375339
+        ],
+        "grid_id": "matplotlib-grid-1",
+        "row_start": 1,
+        "row_stop": 2,
+        "col_start": 1,
+        "col_stop": 2
+      },
+      {
+        "id": "d",
+        "bbox_pt": [
+          247.9644686257614,
+          27.71399,
+          450.54306708661414,
+          100.8570449868767
+        ],
+        "grid_id": "matplotlib-grid-1",
+        "row_start": 2,
+        "row_stop": 3,
+        "col_start": 1,
+        "col_stop": 2
+      }
+    ],
+    "row_groups": [],
+    "column_groups": [
+      {
+        "id": "inferred-column-2",
+        "panels": [
+          "b",
+          "c",
+          "d"
+        ]
+      }
+    ],
+    "boundary_groups": [
+      {
+        "id": "inferred-shared-top-1",
+        "edge": "top",
+        "panels": [
+          "a",
+          "b"
+        ]
+      },
+      {
+        "id": "inferred-shared-bottom-1",
+        "edge": "bottom",
+        "panels": [
+          "a",
+          "d"
+        ]
+      }
+    ],
+    "exemptions": [
+      {
+        "panels": [
+          "a"
+        ],
+        "checks": [
+          "row"
+        ],
+        "reason": "equal-aspect hero top view spans three stacked time traces"
+      }
+    ]
+  },
+  "findings": []
+}

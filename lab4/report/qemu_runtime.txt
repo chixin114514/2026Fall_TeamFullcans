@@ -1,0 +1,3 @@
+Set current directory to /tmp/tesse-lab4
+Found path: /tmp/tesse-lab4/lab4.x86_64
+timeout: the monitored command dumped core

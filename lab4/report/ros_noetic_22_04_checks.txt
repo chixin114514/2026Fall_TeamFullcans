@@ -1,0 +1,43 @@
+Lab4 ROS1 environment verification — 2026-10-19
+
+Host: Ubuntu 22.04.4 LTS, x86_64 (WSL2 kernel)
+Guest: Ubuntu 20.04.6 LTS, Python 3.8.10, ROS Noetic
+ros_comm: 1.17.4
+Runtime: PRoot; no Docker daemon or privileged mounts required
+Filesystem: /opt/vnav-noetic/bundle/rootfs
+Workspace: /tmp/lab4_ws
+Launcher: bash scripts/noetic.sh
+
+Official base image:
+docker.io/library/ros@sha256:72b8bc59035dc0a5b8e07aae28c16caa84192971d72d207c72ed734fb1d5e97d
+
+PASS: ROS1 environment excludes the host ROS2 Humble paths.
+PASS: roscore, parameter server, rospy publisher/subscriber handshake.
+PASS: all 7 workspace packages compiled in Release mode:
+  catkin_simple, mav_msgs, controller_pkg, mav_trajectory_generation,
+  tesse_ros_bridge, trajectory_generation, planner_pkg.
+  Catkin reports 8 successful targets including catkin_tools_prebuild;
+  no warnings, abandoned packages, or failures.
+PASS: rospy, rosbag, tf, cv2, cv_bridge, tesse imports.
+PASS: both TESSE bridge node modules import after compilation.
+PASS: interactive shell loads ROS shell functions including roscd.
+PASS: Unity ROS1 bag reads successfully: 9409 messages,
+  /current_state: 6284; /desired_state: 3125.
+PASS: RViz opens rviz/lab4.rviz under Xvfb/software rendering;
+  rviz_plugin_tutorials/Imu is installed and loads without plugin errors.
+
+Existing integration test output from this installation:
+PASS: empty input, wait for state, repeated gates, finite states, yaw wrapping, derivatives, endpoint hold
+PASS: invalid waypoint rejection, one coincident gate, minimum segment duration
+PASS: first-gate hover and continuous publication
+
+The integration runner now checks ROS master readiness instead of sleeping
+for a fixed two seconds. Existing application C++ sources were not modified.
+Unity was not downloaded or run during this ROS environment setup.
+
+Detailed temporary logs:
+  /tmp/lab4-noetic-install-build.log
+  /tmp/lab4-noetic-integration-final.log
+  /tmp/lab4-noetic-smoke.log
+  /tmp/lab4-noetic-rviz-final.log
+  /tmp/lab4-noetic-rviz.log

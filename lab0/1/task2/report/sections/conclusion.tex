@@ -1,0 +1,5 @@
+\section{Conclusion}\label{sec:task2-conclusion}
+
+This experiment completed OpenCV camera calibration using 18 real JPEG images from the rear camera of an iPhone 15 Pro. The calibration used an \(8\times5\) checkerboard-inner-corner configuration and a 3 cm square size. The program produced the camera matrix, five distortion coefficients, 18 rotation vectors, and 18 translation vectors, and recorded OpenCV RMS, mean pointwise reprojection error, and mean per-image RMS. All 18 candidate images were valid; no image-read, corner-detection, or resolution failures occurred.
+
+The run used \texttt{square\_size=3.0}, so translation vectors are expressed in cm, while the camera matrix and pixel-coordinate distortion results describe the present image model. JPEG EXIF and the acquisition record identify the Apple iPhone 15 Pro rear camera. The exact rear-lens focal length was not recorded and is not inferred here. A detailed pose-coverage log should still be added before submission, but it does not affect the numerical readback of the official NPZ result.

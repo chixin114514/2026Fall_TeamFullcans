@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="464.743307pt" height="189.782677pt" viewBox="0 0 464.743307 189.782677" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-20T16:35:49.428971</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 189.782677 
+L 464.743307 189.782677 
+L 464.743307 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 12.153776 79.545354 
+L 108.076901 79.545354 
+Q 110.778961 79.545354 110.778961 76.914614 
+L 110.778961 40.522709 
+Q 110.778961 37.891969 108.076901 37.891969 
+L 12.153776 37.891969 
+Q 9.451717 37.891969 9.451717 40.522709 
+L 9.451717 76.914614 
+Q 9.451717 79.545354 12.153776 79.545354 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #edf3f7; stroke: #286c91; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 147.256769 79.545354 
+L 247.683326 79.545354 
+Q 250.385386 79.545354 250.385386 76.914614 
+L 250.385386 40.522709 
+Q 250.385386 37.891969 247.683326 37.891969 
+L 147.256769 37.891969 
+Q 144.554709 37.891969 144.554709 40.522709 
+L 144.554709 76.914614 
+Q 144.554709 79.545354 147.256769 79.545354 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #edf3f7; stroke: #286c91; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 291.366627 79.545354 
+L 450.337814 79.545354 
+Q 453.039874 79.545354 453.039874 76.914614 
+L 453.039874 40.522709 
+Q 453.039874 37.891969 450.337814 37.891969 
+L 291.366627 37.891969 
+Q 288.664567 37.891969 288.664567 40.522709 
+L 288.664567 76.914614 
+Q 288.664567 79.545354 291.366627 79.545354 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #edf3f7; stroke: #286c91; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 151.760202 178.19811 
+L 252.186759 178.19811 
+Q 254.888819 178.19811 254.888819 175.56737 
+L 254.888819 139.175465 
+Q 254.888819 136.544724 252.186759 136.544724 
+L 151.760202 136.544724 
+Q 149.058142 136.544724 149.058142 139.175465 
+L 149.058142 175.56737 
+Q 149.058142 178.19811 151.760202 178.19811 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #edf3f7; stroke: #286c91; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 112.777799 58.93789 
+Q 126.98979 58.93789 140.19555 58.93789 
+" clip-path="url(#pd8e9d46393)" style="fill: none; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+    <path d="M 136.19555 56.93789 
+L 140.19555 58.93789 
+L 136.19555 60.93789 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #777777; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 252.382355 58.93789 
+Q 268.848024 58.93789 284.307462 58.93789 
+" clip-path="url(#pd8e9d46393)" style="fill: none; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+    <path d="M 280.307462 56.93789 
+L 284.307462 58.93789 
+L 280.307462 60.93789 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #777777; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 368.047676 80.63494 
+Q 312.305681 116.815413 257.407712 152.448053 
+" clip-path="url(#pd8e9d46393)" style="fill: none; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+    <path d="M 261.851791 151.947893 
+L 257.407712 152.448053 
+L 259.674031 148.592694 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #777777; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 200.847622 134.982776 
+Q 200.847622 108.481962 200.847622 82.98738 
+" clip-path="url(#pd8e9d46393)" style="fill: none; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+    <path d="M 198.847622 86.98738 
+L 200.847622 82.98738 
+L 202.847622 86.98738 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #777777; stroke: #777777; stroke-width: 0.9; stroke-linecap: round"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 147.444325 137.551858 
+Q 109.65307 109.798842 72.492613 82.50907 
+" clip-path="url(#pd8e9d46393)" style="fill: none; stroke-dasharray: 2.59,1.12; stroke-dashoffset: 0; stroke: #b9b9b9; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 74.124769 85.692789 
+L 72.492613 82.50907 
+L 76.018882 83.113577 
+z
+" clip-path="url(#pd8e9d46393)" style="fill: #b9b9b9; stroke-dasharray: 2.59,1.12; stroke-dashoffset: 0; stroke: #b9b9b9; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(29.514401 56.734161)">Trajectory publisher</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(24.418073 64.32238)">Start sequence + circle</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(165.961844 56.826365)">Geometric controller</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(152.528953 64.230177)">Force, attitude and allocation</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(335.259955 56.828005)">Unity/TESSE simulator</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(309.579252 64.313849)">Motor commands and simulated motion</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(171.239652 155.38812)">TESSE ROS bridge</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(160.345355 162.981589)">Odometry feedback, 50 Hz</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: middle" x="125.189946" y="26.930551" transform="rotate(-0 125.189946 26.930551)">/desired_state</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; text-anchor: middle" x="268.399118" y="26.930551" transform="rotate(-0 268.399118 26.930551)">/rotor_speed_cmds</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 7.5px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(207.602772 105.659393)">/current_state</text>
+    <!-- $\Omega = R^T\Omega_{world}$ -->
+    <g transform="translate(207.602772 117.950018)">
+     <text>
+      <tspan x="0" y="-0.758906" style="font-size: 7.5px; font-family: 'Arial'">Ω</tspan>
+      <tspan x="7.067871" y="-0.758906" style="font-size: 7.5px; font-family: 'Arial'">=</tspan>
+      <tspan x="12.908936" y="-0.758906" style="font-size: 7.5px; font-family: 'Arial'">R</tspan>
+      <tspan x="22.03614" y="-0.758906" style="font-size: 7.5px; font-family: 'Arial'">Ω</tspan>
+      <tspan x="18.455871" y="-5.985938" style="font-size: 5.25px; font-family: 'Arial'">T</tspan>
+      <tspan x="27.773505" y="1.48125" style="font-size: 5.25px; font-family: 'Arial'">w</tspan>
+      <tspan x="31.564887" y="1.48125" style="font-size: 5.25px; font-family: 'Arial'">o</tspan>
+      <tspan x="34.484687" y="1.48125" style="font-size: 5.25px; font-family: 'Arial'">r</tspan>
+      <tspan x="36.232978" y="1.48125" style="font-size: 5.25px; font-family: 'Arial'">l</tspan>
+      <tspan x="37.399359" y="1.48125" style="font-size: 5.25px; font-family: 'Arial'">d</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(335.126061 131.333195)">Simulator state</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif" transform="translate(345.63153 138.737008)">via UDP</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 6.5px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; fill: #777777" transform="translate(42.996682 95.15935)">spawn pose</text>
+    <text style="font-size: 6.5px; font-family: 'Arial', 'Helvetica', 'DejaVu Sans', sans-serif; fill: #777777" transform="translate(40.07676 102.129381)">(takeoff:=true)</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pd8e9d46393">
+   <rect x="7.2" y="7.2" width="450.343307" height="175.382677"/>
+  </clipPath>
+ </defs>
+</svg>

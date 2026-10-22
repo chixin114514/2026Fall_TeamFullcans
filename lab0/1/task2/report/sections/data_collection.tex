@@ -1,0 +1,37 @@
+\section{Data Acquisition}\label{sec:task2-data-collection}
+
+\subsection{Checkerboard and Coordinate Convention}
+
+The calibration target is a planar black-and-white checkerboard. The option
+\texttt{--checkerboard} specifies the number of checkerboard inner-corner columns and rows, while
+\texttt{--square-size} specifies the physical side length of one square. The present run used \(8\times5\) inner corners and a 3 cm square size, with \texttt{square\_size=3.0}. The upper-left inner corner was set to \((0,0,0)\); the two board directions define \(X_w\) and \(Y_w\), and all board points have \(Z_w=0\). This convention is consistent with the planar model in Equation~\ref{eq:task2-homography}.
+
+\subsection{Acquisition Conditions}
+
+The input set contains 18 JPEG files under \path{task2/images_jpg/}, each with resolution
+\(5712\times4284\). JPEG EXIF records an Apple iPhone 15 Pro, and the acquisition used its rear camera. The specific rear-lens focal length was not recorded and is not inferred. The original HEIC files under \path{task2/images/} were not used as direct OpenCV input because the current \texttt{cv2.imread} cannot read them.
+
+The board should be captured at different distances, translations, and tilt angles so that it covers the image center, edges, and different depths. A set consisting only of nearly frontal views with repeated poses is insufficient. The board should be complete and sharp, without severe reflection, motion blur, occlusion, or overexposure. A separate pose-coverage log remains to be organized from the original acquisition.
+
+The program reads \path{task2/images_jpg/} and preserves the original filenames, allowing the NPZ \path{image_paths} field to be matched to each detection result.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Mobile-camera acquisition record}
+    \label{tab:task2-data-record}
+    \begin{tabular}{lll}
+        \hline
+        Item & Recorded content & Status \\
+        \hline
+        Phone & Manufacturer and model & Apple iPhone 15 Pro (JPEG EXIF) \\
+        Camera & Front/rear camera and lens mode & Rear camera; focal length not recorded \\
+        Image resolution & Width \(\times\) height (pixels) & \(5712\times4284\) \\
+        Image count & Input JPEG files & 18 \\
+        Checkerboard & Inner corners per row/column & \(8\times5\) \\
+        Square size & Physical side length & 3 cm; \texttt{square\_size=3.0} \\
+        Pose coverage & Position, distance, and tilt & Acquisition log to be organized \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The calibration values come from the actual run on the 18 JPEG files. The rear-camera mode, checkerboard configuration, and 3 cm square size are fixed acquisition facts; only the exact rear-lens focal length and the detailed pose-coverage log remain undocumented.

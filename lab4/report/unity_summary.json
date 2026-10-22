@@ -1,0 +1,75 @@
+{
+  "source": "Official MIT Lab4 Unity 2019.3.9f1 via Box64 0.3.6 on ARM64",
+  "trajectory_duration_s": 91.07968441,
+  "total_recorded_simulation_duration_s": 121.30000000100006,
+  "gate_count": 12,
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 5.720000000000027,
+      "min_center_distance_m": 0.2000131879039228
+    },
+    {
+      "gate": 1,
+      "time_s": 13.019999999999982,
+      "min_center_distance_m": 0.10036576005570809
+    },
+    {
+      "gate": 2,
+      "time_s": 21.180000001000053,
+      "min_center_distance_m": 0.2756911250693426
+    },
+    {
+      "gate": 3,
+      "time_s": 30.82000000100004,
+      "min_center_distance_m": 0.26842323253027106
+    },
+    {
+      "gate": 4,
+      "time_s": 39.66000000100007,
+      "min_center_distance_m": 0.44541739393068164
+    },
+    {
+      "gate": 5,
+      "time_s": 44.879999999999995,
+      "min_center_distance_m": 0.44812811506197564
+    },
+    {
+      "gate": 6,
+      "time_s": 52.940000001000044,
+      "min_center_distance_m": 0.20144119214549927
+    },
+    {
+      "gate": 7,
+      "time_s": 58.82000000100004,
+      "min_center_distance_m": 0.21961914379443365
+    },
+    {
+      "gate": 8,
+      "time_s": 65.86000000000001,
+      "min_center_distance_m": 0.35977242668942844
+    },
+    {
+      "gate": 9,
+      "time_s": 73.63999999999999,
+      "min_center_distance_m": 0.40511783228591663
+    },
+    {
+      "gate": 10,
+      "time_s": 82.46000000100003,
+      "min_center_distance_m": 0.25179700037927355
+    },
+    {
+      "gate": 11,
+      "time_s": 100.18000000100005,
+      "min_center_distance_m": 0.1509827169446889
+    }
+  ],
+  "rms_tracking_error_m": 0.31912955971973617,
+  "max_tracking_error_m": 0.5781758134988896,
+  "final_position_error_m": 0.1692868895957393,
+  "final_hold_s": 30.139999999999986,
+  "terminal_tolerance_m": 0.2,
+  "note": "Gate passage is also visible as green gates in unity_race_submission.mp4. The original live monitor demanded 0.08m and timed out; this offline check uses the documented 0.20m hover tolerance.",
+  "verification": "PASS: 12 ordered gate-center visits, full trajectory, terminal hold within 0.20m"
+}

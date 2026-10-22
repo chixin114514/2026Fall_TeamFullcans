@@ -1,0 +1,57 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[a4paper,left=2.0cm,right=2.0cm,top=2.0cm,bottom=2.0cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\linespread{1.05}
+\setlist{nosep}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    columns=fullflexible,
+    breaklines=true,
+    frame=single,
+    showstringspaces=false
+}
+
+\hypersetup{
+    pdftitle={Mobile Camera Intrinsic Calibration Report},
+    pdfauthor={Boyang Xie},
+    pdfsubject={OpenCV Camera Calibration Experiment}
+}
+
+\title{\textbf{Mobile Camera Intrinsic Calibration Report}\\[-0.2em]
+\large LAB0-1: Camera Calibration Experiment}
+\author{Name: Boyang Xie\\Student ID: 24020036030\\Course/Class: F29XS}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+    \fbox{\parbox{0.90\linewidth}{\centering
+    \textbf{Data status:} An OpenCV calibration was completed using 18 real JPEG images from an iPhone 15 Pro rear camera. The checkerboard has \(8\times5\) inner corners and 3 cm squares.}}
+\end{center}
+
+\input{sections/purpose}
+\input{sections/principle}
+\input{sections/environment}
+\input{sections/data_collection}
+\input{sections/procedure}
+\input{sections/program_design}
+\input{sections/results}
+\input{sections/analysis}
+\input{sections/conclusion}
+
+\end{document}

@@ -1,0 +1,19 @@
+\section{Program Design}\label{sec:task2-program-design}
+
+\subsection{Input, Configuration, and Output}
+
+The Python entry point uses \texttt{argparse} and reads JPEG files from
+\path{task2/images_jpg/}.
+
+The options \texttt{--checkerboard} and \texttt{--square-size} specify the checkerboard inner-corner configuration and square size. The options \texttt{--images} and \texttt{--output-dir} specify the input pattern and output directory. The option \texttt{--min-images} sets the minimum number of valid views.
+
+The present run used \(8\times5\) inner corners, \texttt{square\_size=3.0} cm, and
+\texttt{--min-images 3}. Each image was read, converted to grayscale, searched for corners, and refined to subpixel accuracy. Successful files print \texttt{[OK]}; read failures, corner failures, and resolution mismatches print \texttt{[FAILED]} with a reason and are counted. All 18 JPEG files succeeded in this run. HEIC files under \path{task2/images/} are not directly readable by the current \texttt{cv2.imread}.
+
+\subsection{Core Computation}
+
+Three-dimensional board points are generated from the checkerboard geometry, while two-dimensional points are obtained from the refined corners. Calling \texttt{cv2.calibrateCamera} produces the camera matrix, distortion coefficients, and a rotation and translation vector for each valid view. The call receives \texttt{objectPoints}, \texttt{imagePoints}, and \texttt{imageSize}; the projection relation is given in Equation~\ref{eq:task2-projection}.
+
+The program uses \texttt{cv2.projectPoints} to reproject every board point and compare it with the detected pixel. It stores OpenCV RMS in \path{rms_error}, the per-image RMS array in \path{per_image_reprojection_error}, the global pointwise mean in \path{mean_reprojection_error}, and the arithmetic mean of per-image RMS values in \path{mean_per_image_rms}. Their definitions are given in Equations~\ref{eq:task2-reprojection-error} and~\ref{eq:task2-per-image-rms}.
+
+The official result is written to \path{task2/output/camera_params.npz}. The file records the image size, checkerboard configuration, poses, candidate/valid/failed paths, failure reasons, and all three error statistics. The 3.0 square-size value is in cm, so the translation vectors are in cm. Hardware mode and physical board measurements are acquisition facts, not values inferred by the program.

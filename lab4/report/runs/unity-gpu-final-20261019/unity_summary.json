@@ -1,0 +1,96 @@
+{
+  "source": "Official MIT Lab4 Unity 2019.3.9f1, native x86_64, hardware OpenGL via D3D12 / NVIDIA RTX 4060; ROS1 Noetic via PRoot",
+  "trajectory_duration_s": 91.07968441,
+  "telemetry_rows": 5063,
+  "total_recorded_simulation_duration_s": 101.23999999899999,
+  "rms_tracking_error_m": 0.13441312803753785,
+  "max_tracking_error_m": 0.5929812077753529,
+  "final_position_error_m": 0.1123797570739498,
+  "final_hold_s": 10.180000000000007,
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 5.719999999999999,
+      "min_center_distance_m": 0.1650625242878892
+    },
+    {
+      "gate": 1,
+      "time_s": 13.219999999999999,
+      "min_center_distance_m": 0.09276966091152802
+    },
+    {
+      "gate": 2,
+      "time_s": 21.159999999000007,
+      "min_center_distance_m": 0.19981905345837195
+    },
+    {
+      "gate": 3,
+      "time_s": 30.979999999,
+      "min_center_distance_m": 0.17472363506406344
+    },
+    {
+      "gate": 4,
+      "time_s": 39.620000000000005,
+      "min_center_distance_m": 0.043728970534417384
+    },
+    {
+      "gate": 5,
+      "time_s": 45.18000000000001,
+      "min_center_distance_m": 0.07989510991919309
+    },
+    {
+      "gate": 6,
+      "time_s": 52.919999999,
+      "min_center_distance_m": 0.09110547670145817
+    },
+    {
+      "gate": 7,
+      "time_s": 58.82000000000002,
+      "min_center_distance_m": 0.04578473363469603
+    },
+    {
+      "gate": 8,
+      "time_s": 65.9,
+      "min_center_distance_m": 0.0356881162293574
+    },
+    {
+      "gate": 9,
+      "time_s": 73.55999999899998,
+      "min_center_distance_m": 0.025806849405728128
+    },
+    {
+      "gate": 10,
+      "time_s": 82.46000000000001,
+      "min_center_distance_m": 0.04391358301254813
+    },
+    {
+      "gate": 11,
+      "time_s": 98.539999999,
+      "min_center_distance_m": 0.0787452983294873
+    }
+  ],
+  "checks": {
+    "twelve_ordered_gate_center_visits": true,
+    "all_gate_center_distances_below_0_6m": true,
+    "final_error_below_0_2m": true,
+    "final_hold_at_least_10s": true,
+    "final_reference_is_last_gate": true
+  },
+  "passed": true,
+  "video": {
+    "programs": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "width": 960,
+        "height": 600,
+        "r_frame_rate": "30/1"
+      }
+    ],
+    "format": {
+      "duration": "105.567000",
+      "size": "64916909"
+    }
+  },
+  "note": "Gate-centre proximity/order is checked numerically; this is not a gate-plane crossing detector. Video keeps the real screen timing, without interpolation or speed changes."
+}

@@ -1,0 +1,65 @@
+{
+  "local_gate_windows": [
+    {
+      "gate": 0,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 1,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 2,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 3,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 4,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 5,
+      "rows": 100,
+      "window_s": 1
+    },
+    {
+      "gate": 6,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 7,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 8,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 9,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 10,
+      "rows": 101,
+      "window_s": 1
+    },
+    {
+      "gate": 11,
+      "rows": 101,
+      "window_s": 1
+    }
+  ],
+  "local_gate_window_definition": "Rows within +/-1 s of each closest approach (gate 11: of the end of the reference), clipped to +/-4.5 m along the gate heading"
+}

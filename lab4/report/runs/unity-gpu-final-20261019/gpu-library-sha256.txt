@@ -1,0 +1,3 @@
+b3d78d409a4dbbe8612551fc0c0d746d3e58d7997ee7eba78ce1064d77cfa8c3  /opt/vnav-gpu/lib/libd3d12.so
+a4104a2022932d8e6c714f103ebd89db1c5bdbf36fe92151c88d3d93d4e3894d  /opt/vnav-gpu/lib/libd3d12core.so
+bef6c824f550ff561f3866e1b053b1f86dba893a3cce072a3a0c4a5dbec3983f  /usr/lib/wsl/drivers/nvmdi.inf_amd64_98af6b31f4d34a19/libnvwgf2umx.so

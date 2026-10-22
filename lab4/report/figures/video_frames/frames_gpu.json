@@ -1,0 +1,26 @@
+{
+  "unity": {
+    "video": "report/video/unity_gpu_race.mp4",
+    "playback_times_s": [
+      5,
+      8,
+      11,
+      14,
+      17,
+      21
+    ],
+    "transform": "Full 960x600 frame, no crop or colour adjustment"
+  },
+  "rviz": {
+    "video": "report/video/rviz_gpu_race.mp4",
+    "playback_time_s": 26,
+    "crop_rows_cols": [
+      243,
+      570,
+      366,
+      1262
+    ],
+    "transform": "Cropped to the 3D view, no colour adjustment"
+  },
+  "time_basis": "Video playback time; both videos were recorded simultaneously"
+}

@@ -1,0 +1,24 @@
+\section{Experimental Procedure}\label{sec:task2-procedure}
+
+\begin{enumerate}
+    \item Prepare the planar checkerboard, measure the physical square size, and record the number of inner corners in each direction.
+    \item Capture clear images at different distances, translations, and tilt angles. Record the phone model, rear-camera use, image resolution, and acquisition settings.
+    \item Read each image and check whether it can be loaded. A read failure is recorded for that file and does not stop processing of the remaining images.
+    \item Convert a color image to grayscale with \texttt{cv2.cvtColor}, then detect checkerboard inner corners with \texttt{cv2.findChessboardCorners}. Record the two-dimensional corners for successful images and the filename and reason for failures.
+    \item Refine detected corners to subpixel accuracy with \texttt{cv2.cornerSubPix}.
+    \item Generate planar three-dimensional object points from the checkerboard configuration and square size, and pair them with the two-dimensional image points. The geometry follows Equation~\ref{eq:task2-homography}.
+    \item Check the number of valid images and the consistency of image sizes. Mixed resolutions and fewer valid views than \texttt{--min-images} must be rejected.
+    \item Call \texttt{cv2.calibrateCamera} to estimate the camera matrix, distortion coefficients, and the rotation and translation vectors for each valid view. The camera matrix is defined in Equation~\ref{eq:task2-intrinsic}; the distortion model is given in Equations~\ref{eq:task2-radial-distortion} and~\ref{eq:task2-tangential-distortion}.
+    \item Reproject the three-dimensional points with \texttt{cv2.projectPoints}, compute pointwise errors using Equation~\ref{eq:task2-point-reprojection}, and summarize the three error definitions in Section~\ref{sec:task2-results}.
+    \item Save the camera matrix, distortion coefficients, poses, error statistics, image counts, and detection status to the NPZ result. If requested, use \texttt{cv2.undistort} to save corrected images.
+    \item Use the recorded result and the criteria in Section~\ref{sec:task2-analysis} to assess parameter consistency and data quality.
+\end{enumerate}
+
+The complete control flow implemented by the OpenCV program is summarized in Figure~\ref{fig:calibration-workflow}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.96\linewidth]{calibration_workflow.pdf}
+    \caption{OpenCV camera-calibration workflow implemented in this experiment.}
+    \label{fig:calibration-workflow}
+\end{figure}

@@ -1,0 +1,12 @@
+# Tuned on the official Lab4 Unity player with hardware D3D12 rendering
+# (RTX 4060, ~100 fps). Attitude: sqrt(kr/J)=12.6 rad/s with Unity's J=0.1,
+# damping ~1. kx=16/kr=25 tracked no better and chattered in attitude.
+# Too stiff for the 2-6 fps software/Box64 renderers; use gains_arm64.yaml there.
+kx: 10.0
+kv: 5.0
+kr: 16.0
+komega: 2.5
+hz: 200.0
+state_timeout: 1.0
+desired_timeout: 1.0
+compensate_drag: false

@@ -1,0 +1,48 @@
+{
+  "pdf": "figures/takeoff_transition.pdf",
+  "auditable": true,
+  "verdict": "REVIEW REQUIRED",
+  "page_count": 1,
+  "visible_text_box_count": 57,
+  "text_trace_count": 57,
+  "stroke_path_count": 75,
+  "filled_region_count": 181,
+  "image_region_count": 0,
+  "summary": {
+    "fail": 0,
+    "warn": 1,
+    "contained_fill_overlays": 14,
+    "contained_image_overlays": 0
+  },
+  "thresholds": {
+    "text_inset_pt": 0.6,
+    "min_overlap_ratio": 0.05,
+    "clipping_tolerance_pt": 0.5
+  },
+  "findings": [
+    {
+      "severity": "WARN",
+      "kind": "text-fill-edge",
+      "page": 1,
+      "message": "Text partially overlaps the edge of 1 filled region(s)",
+      "text": "Hover",
+      "text_bbox": [
+        63.494197845458984,
+        158.5069580078125,
+        79.49624633789062,
+        164.5069580078125
+      ],
+      "other_text": null,
+      "other_bbox": [
+        63.94160842895508,
+        139.5741729736328,
+        79.06241607666016,
+        237.06504821777344
+      ],
+      "object_count": 1,
+      "object_indexes": [
+        53000
+      ]
+    }
+  ]
+}

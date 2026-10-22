@@ -1,0 +1,59 @@
+GPU graphics configuration and verification — 2026-10-19
+
+Host: Ubuntu 22.04.4 / WSL2, x86_64
+GPU: NVIDIA GeForce RTX 4060, 8188 MiB
+Active Windows GPU driver: 591.74 (unchanged)
+Unity: official MIT Lab4 Linux player, Unity 2019.3.9f1
+ROS: existing isolated ROS1 Noetic / Ubuntu 20.04 environment
+
+Observed original failure:
+  Unity renderer: llvmpipe (CPU software rendering), approximately 2–3 fps.
+  GPU compute worked, but the container lacked libd3d12.so,
+  libd3d12core.so, and the matching NVIDIA libnvwgf2umx.so.
+  A file/device trace confirmed the missing NVIDIA library path.
+
+Installed graphics runtime:
+  /opt/vnav-gpu/lib/libd3d12.so
+  /opt/vnav-gpu/lib/libd3d12core.so
+  /usr/lib/wsl/drivers/nvmdi.inf_amd64_98af6b31f4d34a19/libnvwgf2umx.so
+
+Official sources:
+  Microsoft.Direct3D.Linux 1.611.1-81528511 from Microsoft's WslDependencies feed;
+  this is the version listed in microsoft/WSL/packages.config.
+  NVIDIA 591.74 package from us.download.nvidia.com; only the missing
+  matching WSL graphics library was installed, not a new kernel/Windows driver.
+
+SHA256:
+  libd3d12.so     b3d78d409a4dbbe8612551fc0c0d746d3e58d7997ee7eba78ce1064d77cfa8c3
+  libd3d12core.so a4104a2022932d8e6c714f103ebd89db1c5bdbf36fe92151c88d3d93d4e3894d
+  libnvwgf2umx.so bef6c824f550ff561f3866e1b053b1f86dba893a3cce072a3a0c4a5dbec3983f
+
+PASS: glxinfo reports direct rendering Yes, Accelerated yes,
+  OpenGL renderer string: D3D12 (NVIDIA GeForce RTX 4060)
+  OpenGL core profile version: 4.2, Mesa 23.2.1
+PASS: Unity's own log reports Renderer: D3D12 (NVIDIA GeForce RTX 4060).
+PASS: real Unity display observed at 90, 91, 99, 112 and 120 fps.
+  Recording is 30 fps; no frame interpolation is used.
+PASS: first complete GPU trial (unity-gpu-20261019T1015) passed the existing
+  numerical checks: 12 ordered gate-centre visits, final error 0.105986 m,
+  terminal hold 10.08 s; position tracking RMS 0.133570 m.
+
+Entrypoints:
+  sudo bash scripts/setup_unity_gpu.sh
+  ./scripts/start_unity_gpu.sh
+  ./scripts/noetic.sh env LAB4_GPU_SESSION=/tmp/lab4-unity-gpu LAB4_RECORD_FPS=30 bash scripts/run_unity_race.sh
+
+The GPU launcher verifies the renderer in both glxinfo and Unity's log.
+The prior software renderer startup script remains available for reproducing
+historical debug records. Existing ARM64 and software-rendered artifacts were kept.
+
+Final clean recording: report/runs/unity-gpu-final-20261019
+PASS: online monitor complete=True; independent CSV checks passed=true.
+  Reference duration: 91.07968441 s; telemetry duration: 101.24 s.
+  12 ordered gate-centre visits; maximum closest-centre distance: 0.199819 m.
+  Active-flight RMS tracking error: 0.134413 m.
+  Final position error: 0.112380 m; terminal hold: 10.18 s.
+  Video: 960x600, H.264, 30 fps, 3167 frames, 105.567 s.
+  rosbag: 14944 messages; includes both required state topics.
+  Original controller gains unchanged. No speed changes or frame interpolation.
+  Renderer evidence and library hashes are archived with the video.

@@ -1,0 +1,155 @@
+{
+  "rows_total": 6064,
+  "rows_active": 4556,
+  "rows_hold": 1508,
+  "trajectory_duration_s": 91.07968441,
+  "record_duration_s": 121.30000000100006,
+  "hold_start_record_time_s": 91.16000000100007,
+  "rms_tracking_error_m": 0.31912955971973617,
+  "max_tracking_error_m": 0.5781758134988896,
+  "hold_error_min_m": 0.15098271694464308,
+  "hold_error_max_m": 0.5853722976740129,
+  "final_position_error_m": 0.1692868895957393,
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 5.720000000000027,
+      "min_center_distance_m": 0.2000131879039228
+    },
+    {
+      "gate": 1,
+      "time_s": 13.019999999999982,
+      "min_center_distance_m": 0.10036576005570809
+    },
+    {
+      "gate": 2,
+      "time_s": 21.180000001000053,
+      "min_center_distance_m": 0.2756911250693426
+    },
+    {
+      "gate": 3,
+      "time_s": 30.82000000100004,
+      "min_center_distance_m": 0.26842323253027106
+    },
+    {
+      "gate": 4,
+      "time_s": 39.66000000100007,
+      "min_center_distance_m": 0.44541739393068164
+    },
+    {
+      "gate": 5,
+      "time_s": 44.879999999999995,
+      "min_center_distance_m": 0.44812811506197564
+    },
+    {
+      "gate": 6,
+      "time_s": 52.940000001000044,
+      "min_center_distance_m": 0.20144119214549927
+    },
+    {
+      "gate": 7,
+      "time_s": 58.82000000100004,
+      "min_center_distance_m": 0.21961914379443365
+    },
+    {
+      "gate": 8,
+      "time_s": 65.86000000000001,
+      "min_center_distance_m": 0.35977242668942844
+    },
+    {
+      "gate": 9,
+      "time_s": 73.63999999999999,
+      "min_center_distance_m": 0.40511783228591663
+    },
+    {
+      "gate": 10,
+      "time_s": 82.46000000100003,
+      "min_center_distance_m": 0.25179700037927355
+    },
+    {
+      "gate": 11,
+      "time_s": 100.18000000100005,
+      "min_center_distance_m": 0.1509827169446889
+    }
+  ]
+}
+{
+  "axis_rms_m": {
+    "x": 0.07682193940744227,
+    "y": 0.0647354871735176,
+    "z": 0.30290490622140676
+  },
+  "active_error_quantiles_m": {
+    "median": 0.2849522393004309,
+    "p90": 0.4548218968629051,
+    "p95": 0.5065069355232104
+  },
+  "quaternion_norm_range": [
+    0.9999998862545637,
+    1.0000001593810453
+  ],
+  "local_gate_windows": [
+    {
+      "gate": 0,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 1,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 2,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 3,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 4,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 5,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 6,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 7,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 8,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 9,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 10,
+      "rows": 201,
+      "window_s": 2
+    },
+    {
+      "gate": 11,
+      "rows": 201,
+      "window_s": 2
+    }
+  ],
+  "local_gate_window_definition": "All rows within +/-2 seconds of each whole-record closest approach",
+  "video_time_basis": "Video playback time; not synchronised to telemetry"
+}

@@ -1,0 +1,101 @@
+{
+  "rows_total": 1489,
+  "rows_active": 946,
+  "rows_hold": 543,
+  "trajectory_duration_s": 18.90720972,
+  "record_duration_s": 29.76,
+  "hold_start_record_time_s": 18.919999999,
+  "hold_duration_s": 10.840000001,
+  "rms_tracking_error_m": 0.06268364046229535,
+  "max_tracking_error_m": 0.11346043610070436,
+  "active_error_quantiles_m": {
+    "median": 0.05377657132991276,
+    "p95": 0.10019741010958794
+  },
+  "axis_rms_m": {
+    "x": 0.046435022419231343,
+    "y": 0.035594610735636446,
+    "z": 0.022495580924046063
+  },
+  "hold_error_min_m": 0.015156847428342621,
+  "hold_error_max_m": 0.08459373808078491,
+  "final_position_error_m": 0.01691822948774471,
+  "peak_speed_m_s": 7.265886018624674,
+  "peak_reference_speed_m_s": 7.167652280765594,
+  "mean_course_speed_m_s": 5.05038141903055,
+  "path_length_m": 95.4886206556018,
+  "peak_tilt_deg": 34.75525593113341,
+  "high_frequency_tilt_rms_deg": 0.0987063492105935,
+  "quaternion_norm_range": [
+    0.9999999052949405,
+    1.000000146027747
+  ],
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 2.0,
+      "min_center_distance_m": 0.03482463106767962
+    },
+    {
+      "gate": 1,
+      "time_s": 3.3999999989999985,
+      "min_center_distance_m": 0.04558085293859732
+    },
+    {
+      "gate": 2,
+      "time_s": 4.68,
+      "min_center_distance_m": 0.07710527192092563
+    },
+    {
+      "gate": 3,
+      "time_s": 6.18,
+      "min_center_distance_m": 0.057592632905608176
+    },
+    {
+      "gate": 4,
+      "time_s": 7.5,
+      "min_center_distance_m": 0.07335773939401301
+    },
+    {
+      "gate": 5,
+      "time_s": 8.900000000000002,
+      "min_center_distance_m": 0.03119451825241142
+    },
+    {
+      "gate": 6,
+      "time_s": 10.099999999000001,
+      "min_center_distance_m": 0.03546902338661181
+    },
+    {
+      "gate": 7,
+      "time_s": 11.279999999000001,
+      "min_center_distance_m": 0.02370490643305669
+    },
+    {
+      "gate": 8,
+      "time_s": 12.599999999000001,
+      "min_center_distance_m": 0.029082234044172973
+    },
+    {
+      "gate": 9,
+      "time_s": 13.959999999,
+      "min_center_distance_m": 0.05805818818599227
+    },
+    {
+      "gate": 10,
+      "time_s": 16.459999999,
+      "min_center_distance_m": 0.07411617008453159
+    },
+    {
+      "gate": 11,
+      "time_s": 26.499999999,
+      "min_center_distance_m": 0.015156847429462463
+    }
+  ],
+  "earlier_unsynchronised": {
+    "trajectory_duration_s": 25.523646303,
+    "high_frequency_tilt_rms_deg": 0.4860069887189729,
+    "high_frequency_tilt_peak_deg": 2.781915040468427
+  },
+  "high_frequency_tilt_peak_deg": 0.7621867447721626
+}

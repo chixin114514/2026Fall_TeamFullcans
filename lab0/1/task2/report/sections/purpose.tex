@@ -1,0 +1,13 @@
+\section{Objectives}\label{sec:task2-purpose}
+
+This experiment uses Python and OpenCV to perform camera calibration for a mobile-camera image set captured with a planar checkerboard. Its objectives are:
+
+\begin{enumerate}
+    \item to understand the relationships among the world, camera, image, and pixel coordinate systems and the pinhole camera model;
+    \item to distinguish intrinsic parameters from extrinsic parameters and understand the roles of focal length, principal point, and lens distortion coefficients;
+    \item to use checkerboard corner detection, subpixel refinement, and \texttt{cv2.calibrateCamera};
+    \item to obtain the camera matrix, distortion coefficients, and per-view poses, and to evaluate the fit using reprojection error;
+    \item to assess how checkerboard coverage, camera pose, and corner quality affect the calibration result.
+\end{enumerate}
+
+All numerical results in this report come from the recorded JPEG data and the official NPZ result file. No hardware or calibration value is inferred from a default configuration.

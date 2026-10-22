@@ -1,0 +1,30 @@
+trajectory_time=0.14 position=(0.40,8.00,0.22) error=0.000m
+trajectory_time=5.16 position=(0.39,4.46,1.89) error=0.314m
+trajectory_time=10.10 position=(0.82,-3.65,4.00) error=0.215m
+trajectory_time=15.04 position=(0.05,-4.37,0.70) error=0.313m
+trajectory_time=20.12 position=(-4.24,-8.16,1.90) error=0.308m
+trajectory_time=25.06 position=(-9.86,-10.93,4.26) error=0.194m
+trajectory_time=30.14 position=(-14.20,-7.62,2.86) error=0.356m
+trajectory_time=35.10 position=(-16.91,-2.67,1.57) error=0.556m
+trajectory_time=40.20 position=(-17.92,1.83,2.19) error=0.543m
+trajectory_time=45.18 position=(-20.16,5.96,2.15) error=0.521m
+trajectory_time=50.38 position=(-25.13,7.07,2.13) error=0.262m
+trajectory_time=55.22 position=(-29.80,5.53,2.74) error=0.416m
+trajectory_time=60.26 position=(-33.49,2.20,3.28) error=0.172m
+trajectory_time=65.32 position=(-37.21,-1.00,1.92) error=0.398m
+trajectory_time=70.28 position=(-41.08,-0.63,1.82) error=0.284m
+trajectory_time=75.30 position=(-47.18,2.05,2.39) error=0.276m
+trajectory_time=80.28 position=(-48.90,6.81,2.33) error=0.272m
+trajectory_time=85.30 position=(-42.05,13.28,2.09) error=0.439m
+trajectory_time=90.38 position=(-39.69,14.92,2.12) error=0.395m
+trajectory_time=91.08 position=(-39.61,14.97,2.06) error=0.452m
+trajectory_time=91.08 position=(-39.63,14.97,2.32) error=0.190m
+trajectory_time=91.08 position=(-39.61,14.97,2.26) error=0.253m
+trajectory_time=91.08 position=(-39.62,14.97,2.13) error=0.375m
+trajectory_time=91.08 position=(-39.62,14.97,2.20) error=0.307m
+trajectory_time=91.08 position=(-39.62,14.97,2.27) error=0.242m
+Final hold: 30.1s error=0.1693m complete=False
+Traceback (most recent call last):
+  File "/workspace/lab4/scripts/monitor_unity.py", line 58, in <module>
+    if not complete: raise RuntimeError('Unity run did not reach a settled final pose')
+RuntimeError: Unity run did not reach a settled final pose

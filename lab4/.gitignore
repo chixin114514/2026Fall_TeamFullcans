@@ -1,0 +1,12 @@
+/build/
+/devel/
+/logs/
+/simulator/
+*.aux
+*.log
+*.out
+__pycache__/
+# Raw and trial videos stay local; only the delivered runs' videos are committed.
+report/runs/**/*.mp4
+!report/runs/unity-gpu-smooth-gates-20261019/unity_race.mp4
+!report/runs/unity-gpu-fast-20261019/unity_race.mp4

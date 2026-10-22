@@ -1,0 +1,45 @@
+\section{实验原理}
+
+\subsection{双目视觉与对极约束}
+
+双目视觉使用两个视点观察同一场景。空间点在左右图像中的投影位置不同，这种位置
+差提供了深度线索。对应齐次像素坐标 $\mathbf{x}_L$ 和 $\mathbf{x}_R$ 满足对极几何
+约束
+\begin{equation}
+  \mathbf{x}_R^{\mathsf{T}}\mathbf{F}\mathbf{x}_L=0,
+\end{equation}
+其中 $\mathbf{F}$ 为基础矩阵。对于已经校正的双目图像，对应点位于同一水平扫描线，
+匹配可以从二维搜索简化为沿水平方向的搜索。
+
+\subsection{视差与深度}
+
+在本实验的视差约定下，视差定义为
+\begin{equation}
+  d=x_L-x_R,
+\end{equation}
+其中 $x_L$ 和 $x_R$ 分别是对应点的水平坐标。视差较大的点通常相对更近，视差较小
+的点通常相对更远。
+
+在平行双目模型中，若相机焦距为 $f$、左右相机基线长度为 $B$，物理深度 $Z$ 与视差
+满足
+\begin{equation}
+  Z=\frac{fB}{d}.
+  \label{eq:metric-depth}
+\end{equation}
+因此，米制深度必须使用与当前图像对配套的焦距和基线。OpenCV 的 StereoSGBM 输出
+带有固定缩放因子，程序除以 $16$ 后得到像素单位的浮点视差。
+
+\subsection{相对深度与标定边界}
+
+本实验使用 OpenCV 官方 `4.x/samples/data` 中的 aloe 图像对。现有官方样例材料没有
+提供与该图像对明确配套的焦距 $f$、基线 $B$、`doffs` 或 $\mathbf{Q}$ 矩阵，因此不调用
+带猜测参数的 `reprojectImageTo3D`，也不生成带物理尺度的三维点云。
+
+对有效视差计算无单位的相对深度代理
+\begin{equation}
+  \mathrm{depth\_proxy}=\frac{1}{d},
+  \label{eq:proxy-depth}
+\end{equation}
+该量保留前后关系，但不包含 $fB$，不能替代绝对深度。无效视差不参与范围统计和
+相对深度计算。目录中的 `aloeGT.png` 仅可作为视差结果的可选参考图，不能作为相机
+标定参数或米制深度真值。

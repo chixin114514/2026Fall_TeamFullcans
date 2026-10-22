@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="453.543307pt" height="162pt" viewBox="0 0 453.543307 162" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-20T15:19:16.145952</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 162 
+L 453.543307 162 
+L 453.543307 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 8.980157 73.2888 
+L 113.431181 73.2888 
+Q 115.209071 73.2888 115.209071 71.766 
+L 115.209071 20.3715 
+Q 115.209071 18.8487 113.431181 18.8487 
+L 8.980157 18.8487 
+Q 7.202268 18.8487 7.202268 20.3715 
+L 7.202268 71.766 
+Q 7.202268 73.2888 8.980157 73.2888 
+z
+" clip-path="url(#p130d8ba401)" style="fill: #eff4f6; stroke: #9bafba; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 173.434961 73.2888 
+L 277.885984 73.2888 
+Q 279.663874 73.2888 279.663874 71.766 
+L 279.663874 20.3715 
+Q 279.663874 18.8487 277.885984 18.8487 
+L 173.434961 18.8487 
+Q 171.657071 18.8487 171.657071 20.3715 
+L 171.657071 71.766 
+Q 171.657071 73.2888 173.434961 73.2888 
+z
+" clip-path="url(#p130d8ba401)" style="fill: #eff4f6; stroke: #9bafba; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 337.889764 73.2888 
+L 442.340787 73.2888 
+Q 444.118677 73.2888 444.118677 71.766 
+L 444.118677 20.3715 
+Q 444.118677 18.8487 442.340787 18.8487 
+L 337.889764 18.8487 
+Q 336.111874 18.8487 336.111874 20.3715 
+L 336.111874 71.766 
+Q 336.111874 73.2888 337.889764 73.2888 
+z
+" clip-path="url(#p130d8ba401)" style="fill: #eff4f6; stroke: #9bafba; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 337.889764 155.1393 
+L 442.340787 155.1393 
+Q 444.118677 155.1393 444.118677 153.6165 
+L 444.118677 102.222 
+Q 444.118677 100.6992 442.340787 100.6992 
+L 337.889764 100.6992 
+Q 336.111874 100.6992 336.111874 102.222 
+L 336.111874 153.6165 
+Q 336.111874 155.1393 337.889764 155.1393 
+z
+" clip-path="url(#p130d8ba401)" style="fill: #eff4f6; stroke: #9bafba; stroke-width: 0.8; stroke-linejoin: miter"/>
+   </g>
+   <g id="line2d_1">
+    <path d="M 336.111874 127.7289 
+L 224.993764 127.7289 
+L 224.993764 77.0958 
+" clip-path="url(#p130d8ba401)" style="fill: none; stroke: #666666; stroke-linecap: square"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="61.205669" y="34.121602" transform="rotate(-0 61.205669 34.121602)">Gate poses</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(21.185044 50.724666)">Coordinate conversion</text>
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(29.851294 61.144509)">and gate ordering</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="225.660472" y="34.121514" transform="rotate(-0 225.660472 34.121514)">Trajectory generator</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(191.429847 49.929666)">Minimum snap with</text>
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(192.539847 61.144509)">per-segment times</text>
+   </g>
+   <g id="text_5">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="390.115276" y="34.121602" transform="rotate(-0 390.115276 34.121602)">Lab 3 controller</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(352.760901 50.677791)">Matched desired and</text>
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(367.884651 61.875134)">current state</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="390.115276" y="115.972014" transform="rotate(-0 390.115276 115.972014)">Unity simulator</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(354.102151 131.784541)">Quadrotor dynamics</text>
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif" transform="translate(356.315276 143.838759)">and state feedback</text>
+   </g>
+   <g id="patch_6">
+    <path d="M 117.210797 46.6398 
+Q 143.435332 46.6398 168.541832 46.6398 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+    <path d="M 164.941832 44.8398 
+L 168.541832 46.6398 
+L 164.941832 48.4398 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="143.210835" y="35.2188" transform="rotate(-0 143.210835 35.2188)">Waypoints</text>
+   </g>
+   <g id="patch_7">
+    <path d="M 281.665601 39.0258 
+Q 307.890135 39.0258 332.996635 39.0258 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+    <path d="M 329.396635 37.2258 
+L 332.996635 39.0258 
+L 329.396635 40.8258 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="307.665638" y="29.889" transform="rotate(-0 307.665638 29.889)">Desired state</text>
+   </g>
+   <g id="patch_8">
+    <path d="M 281.665601 55.7766 
+Q 307.890135 55.7766 332.996635 55.7766 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+    <path d="M 329.396635 53.9766 
+L 332.996635 55.7766 
+L 329.396635 57.5766 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle" x="307.665638" y="65.6748" transform="rotate(-0 307.665638 65.6748)">Synced state</text>
+   </g>
+   <g id="patch_9">
+    <path d="M 413.450079 75.28636 
+Q 413.450079 86.992335 413.450079 97.580277 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+    <path d="M 415.250079 93.980277 
+L 413.450079 97.580277 
+L 411.650079 93.980277 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="406.782992" y="86.994" transform="rotate(-0 406.782992 86.994)">Commands</text>
+   </g>
+   <g id="patch_10">
+    <path d="M 224.993764 77.378351 
+Q 224.993764 76.333998 224.993764 76.407679 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+    <path d="M 223.193764 80.007679 
+L 224.993764 76.407679 
+L 226.793764 80.007679 
+" style="fill: none; stroke: #666666; stroke-linecap: round"/>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; text-anchor: end" x="217.882205" y="103.7448" transform="rotate(-0 217.882205 103.7448)">Current state</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #666666" transform="translate(11.20252 132.298219)">Each state is forwarded only after the</text>
+    <text style="font-size: 8px; font-family: 'Arial', 'DejaVu Sans', sans-serif; fill: #666666" transform="translate(11.20252 141.005406)">reference sampled at its own time stamp.</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p130d8ba401">
+   <rect x="4.535433" y="3.24" width="444.472441" height="152.28"/>
+  </clipPath>
+ </defs>
+</svg>

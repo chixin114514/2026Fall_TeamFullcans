@@ -1,0 +1,90 @@
+{
+  "source": "Official MIT Lab4 Unity 2019.3.9f1, native x86_64, hardware OpenGL via D3D12 / NVIDIA RTX 4060; ROS1 Noetic via PRoot",
+  "trajectory": "minimum snap; z solved separately with zero vertical velocity at gates; per-segment time allocation to |v|<=8 m/s, |a|<=6 m/s^2, |a_z|<=5 m/s^2 within a 0.5 m corridor of the uniform-time path; reference sampled at each state stamp",
+  "gains": {
+    "kx": 14.0,
+    "kv": 6.0,
+    "kr": 12.0,
+    "komega": 2.2
+  },
+  "collisions": "Floor_01 only (takeoff from the floor); no wall, ceiling or gate colliders",
+  "metric_note": "unity_flight.csv rebuilt from the rosbag by scripts/rebuild_flight_csv.py: each state is paired with the reference sampled at its own time. The live monitor CSV (unity_flight_monitor.csv) mis-aligned the reference. High-frequency tilt = roll/pitch minus a 0.5 s Savitzky-Golay fit.",
+  "gate_colours": "Fresh Unity player: every gate is red until the drone flies through it in this run. scripts/run_unity_race.sh refuses a second recording on the same player.",
+  "trajectory_duration_s": 18.90720972,
+  "rms_tracking_error_m": 0.061296115934906956,
+  "max_tracking_error_m": 0.10927738408672436,
+  "max_gate_center_distance_m": 0.07381850742191658,
+  "final_position_error_m": 0.012902597606683502,
+  "final_hold_s": 10.799999998999994,
+  "high_frequency_tilt_rms_deg": 0.13176161835637712,
+  "max_speed_m_s": 7.278790903886442,
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 2.0,
+      "min_center_distance_m": 0.03314538020976678
+    },
+    {
+      "gate": 1,
+      "time_s": 3.3999999999999986,
+      "min_center_distance_m": 0.0510722023454054
+    },
+    {
+      "gate": 2,
+      "time_s": 4.68,
+      "min_center_distance_m": 0.06724724160885714
+    },
+    {
+      "gate": 3,
+      "time_s": 6.18,
+      "min_center_distance_m": 0.05876916162410343
+    },
+    {
+      "gate": 4,
+      "time_s": 7.5,
+      "min_center_distance_m": 0.07143516472998343
+    },
+    {
+      "gate": 5,
+      "time_s": 8.899999999999999,
+      "min_center_distance_m": 0.030786951066970398
+    },
+    {
+      "gate": 6,
+      "time_s": 10.099999998999998,
+      "min_center_distance_m": 0.03331873728099498
+    },
+    {
+      "gate": 7,
+      "time_s": 11.279999998999998,
+      "min_center_distance_m": 0.02901455794941543
+    },
+    {
+      "gate": 8,
+      "time_s": 12.599999998999998,
+      "min_center_distance_m": 0.02460571325932515
+    },
+    {
+      "gate": 9,
+      "time_s": 13.959999998999997,
+      "min_center_distance_m": 0.04951764344190964
+    },
+    {
+      "gate": 10,
+      "time_s": 16.459999998999997,
+      "min_center_distance_m": 0.07381850742191658
+    },
+    {
+      "gate": 11,
+      "time_s": 18.90720972,
+      "min_center_distance_m": 0.006987963151018804
+    }
+  ],
+  "checks": {
+    "twelve_ordered_gate_center_visits": true,
+    "all_gate_center_distances_below_0_1m": true,
+    "final_error_below_0_2m": true,
+    "final_hold_at_least_10s": true
+  },
+  "passed": true
+}

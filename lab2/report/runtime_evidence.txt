@@ -1,0 +1,55 @@
+===NODES===
+/frames_publisher_node
+/plots_publisher_node
+/rosout
+/rviz
+/tf_echo_1789906061900166964
+===VISUALS===
+Type: visualization_msgs/MarkerArray
+
+Publishers: 
+ * /plots_publisher_node (http://chixin:42701/)
+
+Subscribers: 
+ * /rviz (http://chixin:42007/)
+
+
+===TF===
+Type: tf2_msgs/TFMessage
+
+Publishers: 
+ * /frames_publisher_node (http://chixin:35643/)
+
+Subscribers: 
+ * /plots_publisher_node (http://chixin:42701/)
+ * /rviz (http://chixin:42007/)
+ * /tf_echo_1789906061900166964 (http://chixin:35895/)
+
+
+===TF_STATIC===
+Type: tf2_msgs/TFMessage
+
+Publishers: None
+
+Subscribers: 
+ * /plots_publisher_node (http://chixin:42701/)
+ * /rviz (http://chixin:42007/)
+ * /tf_echo_1789906061900166964 (http://chixin:35895/)
+
+
+===AV2_IN_AV1_SAMPLE===
+At time 1789906091.425
+- Translation: [-1.354, -0.147, 0.705]
+- Rotation: in Quaternion [0.000, 0.000, 0.196, 0.981]
+            in RPY (radian) [0.000, -0.000, 0.394]
+            in RPY (degree) [0.000, -0.000, 22.575]
+At time 1789906092.186
+- Translation: [-0.666, -0.128, 0.743]
+- Rotation: in Quaternion [0.000, 0.000, -0.182, 0.983]
+            in RPY (radian) [0.000, 0.000, -0.366]
+            in RPY (degree) [0.000, 0.000, -20.989]
+At time 1789906093.186
+- Translation: [-0.801, -0.959, -0.918]
+- Rotation: in Quaternion [0.000, 0.000, -0.631, 0.776]
+            in RPY (radian) [0.000, 0.000, -1.366]
+            in RPY (degree) [0.000, 0.000, -78.289]

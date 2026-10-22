@@ -1,0 +1,30 @@
+\section{Experimental Environment}\label{sec:task2-environment}
+
+The software environment was verified directly. The Python interpreter was
+\path{/Users/jiaqiaosu/miniconda3/bin/python}; it imports \texttt{cv2}. The JPEG EXIF records an Apple iPhone 15 Pro, and the data were captured with its rear camera. The specific rear-lens focal length was not recorded and is not inferred here.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Experimental environment and acquisition record}
+    \label{tab:task2-environment}
+    \begin{tabular}{lll}
+        \hline
+        Category & Item & Recorded value \\
+        \hline
+        Operating system & System and architecture & macOS 26.6.2, Darwin 25.6.0, arm64 \\
+        Software & Python & 3.13.12 \\
+        Software & OpenCV & 4.10.0 (\texttt{cv2}) \\
+        Software & Main APIs & \texttt{findChessboardCorners}, \texttt{cornerSubPix} \\
+        Software & Main APIs & \texttt{calibrateCamera}, \texttt{projectPoints} \\
+        Hardware & Phone model & Apple iPhone 15 Pro (JPEG EXIF) \\
+        Hardware & Camera mode & Rear camera; focal length not recorded \\
+        Image & Image resolution & \(5712\times4284\) \\
+        Board & Inner-corner configuration & \(8\times5\) \\
+        Board & Physical square size & 3 cm \\
+        Data & Input images & 18 JPEG files (\path{task2/images_jpg/}) \\
+        Data & Valid/failed images & 18 / 0 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The software versions, JPEG device information, image size, checkerboard configuration, 3 cm square size, and image counts were verified from local commands, EXIF, acquisition records, and \path{camera_params.npz}. The program was run with \texttt{square\_size=3.0}, so the translation vectors are measured in cm. The specific rear-lens focal length was not recorded.

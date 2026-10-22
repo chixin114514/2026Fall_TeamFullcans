@@ -1,0 +1,49 @@
+{
+  "pdf": "figures/official_tracking.pdf",
+  "auditable": true,
+  "verdict": "REVIEW REQUIRED",
+  "page_count": 1,
+  "visible_text_box_count": 54,
+  "text_trace_count": 54,
+  "stroke_path_count": 71,
+  "filled_region_count": 256,
+  "image_region_count": 0,
+  "summary": {
+    "fail": 0,
+    "warn": 1,
+    "contained_fill_overlays": 9,
+    "contained_image_overlays": 0
+  },
+  "thresholds": {
+    "text_inset_pt": 0.6,
+    "min_overlap_ratio": 0.05,
+    "clipping_tolerance_pt": 0.5
+  },
+  "findings": [
+    {
+      "severity": "WARN",
+      "kind": "text-fill-edge",
+      "page": 1,
+      "message": "Text partially overlaps the edge of 2 filled region(s)",
+      "text": "• reference step ≠ 20 ms",
+      "text_bbox": [
+        255.48944091796875,
+        127.53114318847656,
+        326.0014343261719,
+        134.03114318847656
+      ],
+      "other_text": null,
+      "other_bbox": [
+        252.4551239013672,
+        120.45660400390625,
+        364.4333190917969,
+        192.93882751464844
+      ],
+      "object_count": 2,
+      "object_indexes": [
+        46000,
+        47000
+      ]
+    }
+  ]
+}

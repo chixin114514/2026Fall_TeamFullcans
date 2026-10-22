@@ -1,0 +1,72 @@
+{
+  "source": "Independent 6-DoF rigid-body ROS model, NOT Unity/TESSE",
+  "gate_count": 12,
+  "trajectory_duration_s": 64.891162259,
+  "rms_tracking_error_m": 0.013617193411804594,
+  "max_tracking_error_m": 0.04051576587655461,
+  "final_position_error_m": 1.832203673147698e-05,
+  "minimum_height_m": 1.8253796543913807,
+  "gate_center_visits": [
+    {
+      "gate": 0,
+      "time_s": 5.040999999999915,
+      "min_center_distance_m": 0.024651845180066925
+    },
+    {
+      "gate": 1,
+      "time_s": 10.381000000000224,
+      "min_center_distance_m": 0.010006216414963211
+    },
+    {
+      "gate": 2,
+      "time_s": 15.841000000001078,
+      "min_center_distance_m": 0.017742809280677615
+    },
+    {
+      "gate": 3,
+      "time_s": 22.480999999999813,
+      "min_center_distance_m": 0.004416430484852454
+    },
+    {
+      "gate": 4,
+      "time_s": 28.460999999998624,
+      "min_center_distance_m": 0.007259882223722021
+    },
+    {
+      "gate": 5,
+      "time_s": 32.960999999998414,
+      "min_center_distance_m": 0.011840269821009943
+    },
+    {
+      "gate": 6,
+      "time_s": 38.38100000000119,
+      "min_center_distance_m": 0.0004401268595015416
+    },
+    {
+      "gate": 7,
+      "time_s": 43.00100000000355,
+      "min_center_distance_m": 0.00479841053276114
+    },
+    {
+      "gate": 8,
+      "time_s": 48.10100000000616,
+      "min_center_distance_m": 0.005354484675601965
+    },
+    {
+      "gate": 9,
+      "time_s": 53.48100000000891,
+      "min_center_distance_m": 0.013507455983512495
+    },
+    {
+      "gate": 10,
+      "time_s": 59.56100000001202,
+      "min_center_distance_m": 0.009028158216072906
+    },
+    {
+      "gate": 11,
+      "time_s": 70.20100000000865,
+      "min_center_distance_m": 9.83644138055503e-07
+    }
+  ],
+  "limitation": "Gate center proximity does not certify collision-free Unity gate passage."
+}

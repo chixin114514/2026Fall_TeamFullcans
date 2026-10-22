@@ -1,0 +1,9 @@
+% Translation worker B: Section 4 of the source paper.
+\section{退化配置}\label{sec:degenerate-configurations}
+
+本节研究这样一些配置：在这些配置中，增加图像并不会为相机内参数提供更多约束。由于式~\eqref{eq:orthogonality} 和式~\eqref{eq:equal-norm} 源自旋转矩阵的性质，如果 $\mat{R}_2$ 不独立于 $\mat{R}_1$，则第 2 幅图像不会提供额外约束。特别地，如果一个平面仅发生平移，则 $\mat{R}_2=\mat{R}_1$，此时第 2 幅图像对相机标定没有帮助。下面考虑一种更复杂的配置。
+
+\noindent\textbf{命题 1.}
+如果模型平面在第二个位置与其第一个位置平行，则第二个单应性不会提供额外约束。
+
+证明因篇幅所限略去，可参见我们的技术报告~\cite{zhang1998flexible}。在实践中，退化配置非常容易避免：只需改变模型平面在相邻两次拍摄之间的方向即可。

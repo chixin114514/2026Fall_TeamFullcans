@@ -1,0 +1,70 @@
+\section{基本方程}
+
+我们研究通过观测单个平面得到的相机内参数约束。首先介绍本文使用的记号。
+
+\subsection{记号}
+
+二维点记为
+$\mathbf m=[u,v]^{\T}$，三维点记为
+$\mathbf M=[X,Y,Z]^{\T}$。我们用波浪号表示在向量末尾添加 1 后得到的增广向量，即
+$\widetilde{\mathbf m}=[u,v,1]^{\T}$，以及
+$\widetilde{\mathbf M}=[X,Y,Z,1]^{\T}$。相机采用通常的针孔模型：三维点 $\mathbf M$ 与其图像投影 $\mathbf m$ 之间的关系为
+\begin{equation}
+    s\widetilde{\mathbf m}=\mathbf A
+    \begin{bmatrix}\mathbf R & \mathbf t\end{bmatrix}
+    \widetilde{\mathbf M},
+    \qquad
+    \mathbf A=\begin{bmatrix}
+        \alpha & c & u_0\\
+        0 & \beta & v_0\\
+        0 & 0 & 1
+    \end{bmatrix}.
+    \label{eq:pinhole}
+\end{equation}
+其中，$s$ 是任意尺度因子；$(\mathbf R,\mathbf t)$ 称为外参数，分别是联系世界坐标系与相机坐标系的旋转和平移；$\mathbf A$ 称为相机内参数矩阵；$(u_0,v_0)$ 是主点的坐标；$\alpha$ 和 $\beta$ 分别是图像 $u$ 轴和 $v$ 轴方向的尺度因子；$c$ 是两个图像轴之间的倾斜参数。
+
+我们使用如下记号缩写：
+$\mathbf A^{-\T}$ 表示 $(\mathbf A^{-1})^{\T}$ 或 $(\mathbf A^{\T})^{-1}$。
+
+\subsection{模型平面与其图像之间的单应性}
+
+不失一般性，假设模型平面位于世界坐标系的 $Z=0$ 平面上。将旋转矩阵 $\mathbf R$ 的第 $i$ 列记为 $\mathbf r_i$。由式~\eqref{eq:pinhole} 可得
+\begin{equation*}
+    s\begin{bmatrix}u\\v\\1\end{bmatrix}
+    =\mathbf A
+    \begin{bmatrix}\mathbf r_1 & \mathbf r_2 & \mathbf r_3 & \mathbf t\end{bmatrix}
+    \begin{bmatrix}X\\Y\\0\\1\end{bmatrix}
+    =\mathbf A
+    \begin{bmatrix}\mathbf r_1 & \mathbf r_2 & \mathbf t\end{bmatrix}
+    \begin{bmatrix}X\\Y\\1\end{bmatrix}.
+\end{equation*}
+虽然存在记号上的不严格之处，我们仍用 $\mathbf M$ 表示模型平面上的一个点，但此时 $\mathbf M=[X,Y]^{\T}$，因为 $Z$ 始终等于 0。相应地，$\widetilde{\mathbf M}=[X,Y,1]^{\T}$。因此，模型点 $\mathbf M$ 与其图像点 $\mathbf m$ 通过单应性矩阵 $\mathbf H$ 联系起来：
+\begin{equation}
+    s\widetilde{\mathbf m}=\mathbf H\widetilde{\mathbf M},
+    \qquad
+    \mathbf H=\mathbf A
+    \begin{bmatrix}\mathbf r_1 & \mathbf r_2 & \mathbf t\end{bmatrix}.
+    \label{eq:homography}
+\end{equation}
+显然，$3\times3$ 矩阵 $\mathbf H$ 只定义到一个尺度因子。
+
+\subsection{内参数约束}
+
+给定模型平面的一幅图像，即可估计一个单应性（见附录 A）。记该单应性为
+$\mathbf H=\begin{bmatrix}\mathbf h_1&\mathbf h_2&\mathbf h_3\end{bmatrix}$。由式~\eqref{eq:homography} 可得
+\begin{equation*}
+    \begin{bmatrix}\mathbf h_1&\mathbf h_2&\mathbf h_3\end{bmatrix}
+    =\lambda\mathbf A
+    \begin{bmatrix}\mathbf r_1&\mathbf r_2&\mathbf t\end{bmatrix},
+\end{equation*}
+其中 $\lambda$ 是任意标量。利用 $\mathbf r_1$ 和 $\mathbf r_2$ 相互正交且均为单位向量这一事实，有
+\begin{equation}
+    \mathbf h_1^{\T}\mathbf A^{-\T}\mathbf A^{-1}\mathbf h_2=0.
+    \label{eq:orthogonality}
+\end{equation}
+\begin{equation}
+    \mathbf h_1^{\T}\mathbf A^{-\T}\mathbf A^{-1}\mathbf h_1
+    =\mathbf h_2^{\T}\mathbf A^{-\T}\mathbf A^{-1}\mathbf h_2.
+    \label{eq:equal-norm}
+\end{equation}
+这就是给定一个单应性时关于内参数的两个基本约束。由于一个单应性具有 8 个自由度，而外参数有 6 个（旋转 3 个、平移 3 个），因此我们只能得到关于内参数的 2 个约束。

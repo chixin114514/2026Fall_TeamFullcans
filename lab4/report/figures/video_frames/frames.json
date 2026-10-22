@@ -1,0 +1,55 @@
+{
+  "source": "unity_race_submission.mp4",
+  "time_basis": "Video playback time; not synchronised to telemetry",
+  "transform": "Full frame, no crop or colour adjustment",
+  "frames": [
+    {
+      "image": "frame_01.png",
+      "requested_playback_time_s": 5
+    },
+    {
+      "image": "frame_02.png",
+      "requested_playback_time_s": 15
+    },
+    {
+      "image": "frame_03.png",
+      "requested_playback_time_s": 25
+    },
+    {
+      "image": "frame_04.png",
+      "requested_playback_time_s": 35
+    },
+    {
+      "image": "frame_05.png",
+      "requested_playback_time_s": 45
+    },
+    {
+      "image": "frame_06.png",
+      "requested_playback_time_s": 55
+    },
+    {
+      "image": "frame_07.png",
+      "requested_playback_time_s": 65
+    },
+    {
+      "image": "frame_08.png",
+      "requested_playback_time_s": 75
+    },
+    {
+      "image": "frame_09.png",
+      "requested_playback_time_s": 85
+    },
+    {
+      "image": "frame_10.png",
+      "requested_playback_time_s": 95
+    },
+    {
+      "image": "frame_11.png",
+      "requested_playback_time_s": 105
+    },
+    {
+      "image": "frame_12.png",
+      "requested_playback_time_s": 115
+    }
+  ]
+}

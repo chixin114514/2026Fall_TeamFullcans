@@ -1,0 +1,41 @@
+VNAV Lab 3 — Deliverable 1: Transformations in Practice (ROS Noetic / C++)
+
+Required headers:
+  #include <tf2/LinearMath/Quaternion.h>
+  #include <tf2/utils.h>
+  #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+  #include <tf2_eigen/tf2_eigen.h>
+  #include <Eigen/Geometry>
+
+A. Message vs. tf
+
+A1. Convert quat_msg into the already-declared quat_tf:
+  tf2::fromMsg(quat_msg, quat_tf);
+
+A2. Create a geometry_msgs::Quaternion from quat_tf:
+  geometry_msgs::Quaternion quat_msg = tf2::toMsg(quat_tf);
+
+A3. Get the scalar (w) component:
+  quat_tf.w();
+  getW() is also available; the scalar component is not the quaternion norm.
+
+B. Conversion
+
+B1. Extract yaw in radians with one function call:
+  double yaw = tf2::getYaw(quat_t);
+
+B2. Convert a geometry_msgs::Quaternion to an Eigen 3x3 rotation matrix:
+  Eigen::Quaterniond q_eigen;
+  tf2::fromMsg(quat_msg, q_eigen);
+  Eigen::Matrix3d R = q_eigen.toRotationMatrix();
+
+This uses two conversion calls, assuming the message contains a unit quaternion.
+For a valid but nonunit input, call q_eigen.normalize() before toRotationMatrix().
+Reject a zero quaternion. Eigen's constructor takes (w,x,y,z), while the ROS
+message exposes fields x,y,z,w; fromMsg handles this ordering correctly.
+
+Sources:
+https://github.com/ros/geometry2/blob/noetic-devel/tf2_geometry_msgs/include/tf2_geometry_msgs/tf2_geometry_msgs.h
+https://github.com/ros/geometry2/blob/noetic-devel/tf2_eigen/include/tf2_eigen/tf2_eigen.h
+https://github.com/ros/geometry2/blob/noetic-devel/tf2/include/tf2/utils.h
+https://eigen.tuxfamily.org/dox/classEigen_1_1QuaternionBase.html

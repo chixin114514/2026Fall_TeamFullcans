@@ -1,0 +1,66 @@
+{
+  "samples": 3355,
+  "state_rate_hz": 49.99999999997442,
+  "start_sequence_samples": 600,
+  "initial_period_samples": 1257,
+  "steady_samples": 1498,
+  "repeated_reference_times": 99,
+  "samples_above_6cm_after_t0": 10,
+  "stale_reference_samples_above_6cm_after_t0": 10,
+  "steady_position_rms_fresh_reference_m": 0.04080530651954923,
+  "reference_step_counts_0_20_40ms": [
+    99,
+    3156,
+    99
+  ],
+  "steady_along_track_median_m": 0.03753526537809922,
+  "steady_along_track_regular_step_mean_m": 0.03737398669456387,
+  "steady_position_rms_m": 0.04102387318666102,
+  "steady_position_max_m": 0.10251182634527095,
+  "steady_component_rms_m": [
+    0.026084950970398577,
+    0.027800234837587944,
+    0.015155211878496111
+  ],
+  "steady_along_track_mean_m": 0.036231856917704225,
+  "steady_along_track_rms_m": 0.038035018474066935,
+  "steady_along_track_time_offset_ms": 14.492742767081689,
+  "steady_radial_rms_m": 0.0024482213958359317,
+  "steady_radial_max_m": 0.005291424299011638,
+  "steady_vertical_rms_m": 0.015155211878496107,
+  "steady_vertical_mean_m": -0.01505157743658211,
+  "steady_height_range_m": [
+    1.981336,
+    1.988438
+  ],
+  "steady_yaw_rms_deg": 3.925189329982338,
+  "observed_steady_laps": 2.3817014202986297,
+  "start_sequence_position_max_m": 0.034222800949657205,
+  "initial_periods_position_max_m": 0.08525838496510356,
+  "flight_height_max_m": 1.988438,
+  "start_sequence_body_rate_max_deg_s": 65.62766173889982,
+  "spawn_position_m": [
+    -2.881831e-05,
+    -1.379031e-05,
+    0.7000266
+  ],
+  "spawn_yaw_deg": -166.34956410206638,
+  "steady_squared_error_share_along_radial_vertical": [
+    0.8595951195036549,
+    0.003930634726154282,
+    0.1364742457701907
+  ],
+  "steady_thrust_mean_n": 10.100923779078114,
+  "steady_thrust_std_n": 0.04429364056198333,
+  "circle_thrust_feedforward_n": 9.889317468865078,
+  "steady_moment_std_nm": [
+    0.30651541543985045,
+    0.8736816246368085,
+    0.18123377175386873
+  ],
+  "steady_negative_rotor_command_fraction": 0.28604806408544725,
+  "rotor_command_range_rad_s": [
+    -156.24535912762346,
+    170.18613014124873
+  ]
+}
