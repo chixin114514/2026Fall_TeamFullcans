@@ -28,7 +28,7 @@
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
 \renewcommand{\abstractname}{Summary}
-\author{\small Name: \studentname\\[0.4em]\small Student number: \studentnumber\\[0.4em]\small Lab group: \labgroup}
+\author{\small Name: \studentname\\[0.4em]\small Student number: \studentnumber\\[0.4em]\small Lab group: \labgroup\\[0.4em]\small Code: \url{https://github.com/chixin114514/2026Fall_TeamFullcans/tree/main/lab3}}
 \date{}
 \hypersetup{pdftitle={Lab 3 Report: Quadrotor modelling and geometric trajectory control}}
 \raggedbottom
@@ -54,7 +54,7 @@ A quadrotor tracks a trajectory only if every link from the reference to the mot
 \section{Lab Introduction and Team Information}
 Quadrotor trajectory tracking requires a consistent connection between state coordinates and motor commands. A correct feedback equation can generate the wrong motion if the rotation direction, thrust sign or rotor numbering changes between the model and the simulator. This lab examines that connection through the individual exercises and the ROS controller implementation specified in MIT VNAV Lab 3~\citep{vnav}.
 
-The report follows the three deliverables: quaternion conversions, modelling and control analysis, and geometric control of a simulated UAV. The control loop adapts the geometric approach of \citet{lee2010} to an upward world and body $z$ axis. The flight is recorded simultaneously in Unity and RViz.
+The report follows the three deliverables: quaternion conversions, modelling and control analysis, and geometric control of a simulated UAV. The control loop adapts the geometric approach of \citet{lee2010} to an upward world and body $z$ axis. The flight is recorded simultaneously in Unity and RViz. The code, configuration and flight logs are available at \url{https://github.com/chixin114514/2026Fall_TeamFullcans/tree/main/lab3}.
 
 The main result is the accuracy of the circle's geometry. After the first two periods, the measured path stays within 5.3 mm of the 5 m radius. Decomposing the error along the reference's moving frame shows where the remaining 4.1 cm comes from: a constant timing offset along the path and a 1.5 cm height offset set by the proportional gain.
 
