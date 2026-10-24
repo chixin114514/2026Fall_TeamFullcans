@@ -1,0 +1,13 @@
+<launch>
+  <!-- Deliverable 8: Farneback dense optical flow on a rosbag image stream -->
+  <arg name="path_to_dataset" />
+  <arg name="image_topic" default="/camera/color/image_raw" />
+  <arg name="frames_dir" default="" />
+
+  <node name="self_flow" pkg="lab_5" type="self_flow" output="screen">
+    <param name="frames_dir" type="string" value="$(arg frames_dir)" />
+    <remap from="/images_topic" to="$(arg image_topic)"/>
+  </node>
+  <node name="rosbag" pkg="rosbag" type="play" output="screen" required="true"
+        args="--clock $(arg path_to_dataset)" />
+</launch>

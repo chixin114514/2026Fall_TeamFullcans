@@ -1,0 +1,11 @@
+[0m[INFO] [1792752863.506116362]: Got param: /root/2026Fall_TeamFullcans/lab5/feature_tracking/images/box.png[0m
+[0m[INFO] [1792752863.507034710]: Got param: /root/2026Fall_TeamFullcans/lab5/feature_tracking/images/box_in_scene.png[0m
+Descriptor size: 128 x 4 bytes per element (type 5)
+Avg. Keypoints 1 Size: 603
+Avg. Keypoints 2 Size: 969
+Avg. Number of matches: 603
+Avg. Number of good matches: 99.65
+Avg. Number of Inliers: 78.65
+Avg. Inliers ratio: 0.789593
+Avg. detect+describe+match time [ms]: 64.8252
+Num. of samples: 20

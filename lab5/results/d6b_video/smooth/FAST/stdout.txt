@@ -1,0 +1,8 @@
+Avg. Keypoints 1 Size: 299.868
+Avg. Keypoints 2 Size: 299.546
+Avg. Number of matches: 299.868
+Avg. Number of good matches: 210.97
+Avg. Number of Inliers: 194.991
+Avg. Inliers ratio: 0.920867
+Avg. detect+describe+match time [ms]: 2.75659
+Num. of samples: 1382
