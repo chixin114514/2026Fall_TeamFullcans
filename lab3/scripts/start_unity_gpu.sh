@@ -2,10 +2,13 @@
 # Foreground runtime session on x86_64 Ubuntu 20.04 / Noetic with WSL2 GPU.
 # Unity renders through Mesa D3D12 on the NVIDIA GPU. Run run_unity_flight.sh
 # in another terminal after "GPU rendering verified" is printed.
+# LAB3_DISPLAY=:0 shows Unity on the Windows desktop through WSLg instead of
+# the headless Xvfb :97.
 set -eo pipefail
 LAB3_WS=${LAB3_WS:-/tmp/lab3_unity_ws}
 LAB3_RUNTIME=${LAB3_RUNTIME:-/tmp/lab3-runtime}
 LAB3_SESSION=${LAB3_SESSION:-/tmp/lab3-unity-gpu}
+LAB3_DISPLAY=${LAB3_DISPLAY:-:97}
 GPU_LIB=
 for dir in /usr/lib/wsl/lib /opt/vnav-gpu/lib; do
   if [[ -f "$dir/libd3d12.so" ]]; then GPU_LIB=$dir; break; fi
@@ -19,11 +22,13 @@ if [[ ! -f "$LAB3_RUNTIME/lab3/lab3.x86_64" ]]; then
   7z x -aos "-o$LAB3_RUNTIME" "$LAB3_RUNTIME/lab3.zip"
 fi
 chmod +x "$LAB3_RUNTIME/lab3/lab3.x86_64"
-[[ ! -e /tmp/.X97-lock ]] || { printf 'Display :97 is already in use.\n' >&2; exit 1; }
+if [[ $LAB3_DISPLAY == :97 ]]; then
+  [[ ! -e /tmp/.X97-lock ]] || { printf 'Display :97 is already in use.\n' >&2; exit 1; }
+fi
 source "$LAB3_WS/devel/setup.bash"
 LAB3_BRIDGE_NODE=$(readlink -f "$LAB3_WS/src/tesse_ros_bridge")/src/tesse_ros_bridge/tesse_ros_node.py
 mkdir -p "$LAB3_SESSION"
-export DISPLAY=:97 ROS_MASTER_URI=http://localhost:11317 ROS_HOSTNAME=localhost
+export DISPLAY=$LAB3_DISPLAY ROS_MASTER_URI=http://localhost:11317 ROS_HOSTNAME=localhost
 unset LIBGL_ALWAYS_SOFTWARE LIBGL_ALWAYS_INDIRECT
 export GALLIUM_DRIVER=d3d12 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 pids=()
@@ -41,7 +46,9 @@ cleanup() {
   pkill -KILL -f "^python3 $LAB3_BRIDGE_NODE " 2>/dev/null || true
 }
 trap cleanup EXIT
-Xvfb :97 -screen 0 960x600x24 > "$LAB3_SESSION/xvfb.log" 2>&1 & pids+=("$!")
+if [[ $LAB3_DISPLAY == :97 ]]; then
+  Xvfb :97 -screen 0 960x600x24 > "$LAB3_SESSION/xvfb.log" 2>&1 & pids+=("$!")
+fi
 roscore -p 11317 > "$LAB3_SESSION/master.log" 2>&1 & pids+=("$!")
 ready=false
 for attempt in {1..60}; do
@@ -76,8 +83,8 @@ grep -q 'Renderer: D3D12 (NVIDIA' "$LAB3_SESSION/unity.log" || {
 roslaunch tesse_ros_bridge tesse_quadrotor_bridge.launch publish_imu:=false \
   publish_collisions:=true > "$LAB3_SESSION/bridge.log" 2>&1 & pids+=("$!")
 timeout 60 rostopic echo -n 1 /current_state > "$LAB3_SESSION/initial_state.txt"
-# Close Unity's startup audio-error console on the headless X server.
-xdotool windowfocus "$LAB3_WINDOW_ID" mousemove 512 570 sleep 0.5 \
-  mousedown 1 sleep 1 mouseup 1 sleep 0.5 mousemove 900 30
+# Close Unity's startup audio-error console (on WSLg it may need a manual click).
+xdotool windowfocus "$LAB3_WINDOW_ID" mousemove --window "$LAB3_WINDOW_ID" 512 570 sleep 0.5 \
+  mousedown 1 sleep 1 mouseup 1 sleep 0.5 mousemove --window "$LAB3_WINDOW_ID" 900 30 || true
 printf 'Unity GPU rendering verified: NVIDIA via D3D12. Logs: %s\n' "$LAB3_SESSION"
 wait "${pids[-1]}"

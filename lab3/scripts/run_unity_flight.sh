@@ -13,6 +13,10 @@ GAINS=${LAB3_GAINS_FILE:-$LAB3_DIR/controller_pkg/config/gains_gpu.yaml}
 DURATION=${LAB3_DURATION:-55}
 FPS=${LAB3_RECORD_FPS:-30}
 SOURCE=${LAB3_SOURCE_LABEL:-Official MIT Lab3 TESSE / GPU}
+# Set both to :0 to watch Unity and RViz on the Windows desktop (WSLg). Only
+# the headless Xvfb displays :97 / :96 are recorded to MP4.
+UNITY_DISPLAY=${LAB3_DISPLAY:-:97}
+RVIZ_DISPLAY=${LAB3_RVIZ_DISPLAY:-:96}
 mkdir -p "$OUT"
 for artifact in unity_flight.csv unity_flight.bag unity_sim.mp4 rviz.mp4; do
   [[ ! -e "$OUT/$artifact" ]] || { printf 'Refusing to overwrite %s/%s\n' "$OUT" "$artifact" >&2; exit 1; }
@@ -32,8 +36,8 @@ trap cleanup EXIT
 rosnode kill /controller_node /traj_publisher 2>/dev/null || true
 if [[ ${LAB3_RESPAWN:-1} == 1 ]]; then
   # Start every run from Unity's spawn pose, hovering on the ground.
-  LAB3_WINDOW_ID=$(DISPLAY=:97 xdotool search --onlyvisible --name tesse_vnav_scenes | head -n1)
-  DISPLAY=:97 xdotool windowfocus "$LAB3_WINDOW_ID" key r
+  LAB3_WINDOW_ID=$(DISPLAY=$UNITY_DISPLAY xdotool search --onlyvisible --name tesse_vnav_scenes | head -n1)
+  DISPLAY=$UNITY_DISPLAY xdotool windowfocus "$LAB3_WINDOW_ID" key r
   sleep 2
 fi
 python3 "$LAB3_DIR/scripts/monitor_unity.py" --output "$OUT/unity_flight.csv" \
@@ -45,18 +49,24 @@ rosbag record -O "$OUT/unity_flight.bag" \
   /flight/desired /flight/source /tesse/collisions \
   > "$OUT/bag.log" 2>&1 & pids+=("$!")
 if [[ ${LAB3_RVIZ:-1} == 1 ]]; then
-  Xvfb :96 -screen 0 1280x800x24 > "$OUT/rviz_xvfb.log" 2>&1 & pids+=("$!")
-  sleep 1
-  DISPLAY=:96 rosrun rviz rviz -d "$LAB3_DIR/controller_pkg/rviz/circle.rviz" \
+  if [[ $RVIZ_DISPLAY == :96 ]]; then
+    Xvfb :96 -screen 0 1280x800x24 > "$OUT/rviz_xvfb.log" 2>&1 & pids+=("$!")
+    sleep 1
+  fi
+  DISPLAY=$RVIZ_DISPLAY rosrun rviz rviz -d "$LAB3_DIR/controller_pkg/rviz/circle.rviz" \
     __name:=lab3_official_rviz > "$OUT/rviz.log" 2>&1 & pids+=("$!")
   sleep 5
-  ffmpeg -n -loglevel error -f x11grab -draw_mouse 0 -video_size 1280x800 -framerate "$FPS" -i :96 \
-    -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -movflags +faststart \
-    "$OUT/rviz.mp4" > "$OUT/rviz_ffmpeg.log" 2>&1 & videos+=("$!")
+  if [[ $RVIZ_DISPLAY == :96 ]]; then
+    ffmpeg -n -loglevel error -f x11grab -draw_mouse 0 -video_size 1280x800 -framerate "$FPS" -i :96 \
+      -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -movflags +faststart \
+      "$OUT/rviz.mp4" > "$OUT/rviz_ffmpeg.log" 2>&1 & videos+=("$!")
+  fi
 fi
-ffmpeg -n -loglevel error -f x11grab -draw_mouse 0 -video_size 960x600 -framerate "$FPS" -i :97 \
-  -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -movflags +faststart \
-  "$OUT/unity_sim.mp4" > "$OUT/unity_ffmpeg.log" 2>&1 & videos+=("$!")
+if [[ $UNITY_DISPLAY == :97 ]]; then
+  ffmpeg -n -loglevel error -f x11grab -draw_mouse 0 -video_size 960x600 -framerate "$FPS" -i :97 \
+    -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p -movflags +faststart \
+    "$OUT/unity_sim.mp4" > "$OUT/unity_ffmpeg.log" 2>&1 & videos+=("$!")
+fi
 roslaunch controller_pkg traj_tracking.launch gains_file:="$GAINS" \
   > "$OUT/controller.log" 2>&1 & pids+=("$!")
 printf 'Recording Lab3 Unity run in %s\n' "$OUT"

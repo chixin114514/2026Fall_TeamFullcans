@@ -43,6 +43,15 @@ bash scripts/run_unity_flight.sh
 结束后运行 `analyze_unity.py <输出目录>`。可用环境变量：`LAB3_GAINS_FILE`、
 `LAB3_DURATION`（默认 55 s）、`LAB3_OUTPUT_DIR`、`LAB3_RVIZ=0`。
 
+在 Windows 桌面上实时观看（WSLg，`DISPLAY=:0`）：两个终端都设置 `LAB3_DISPLAY=:0`，
+RViz 再加 `LAB3_RVIZ_DISPLAY=:0`。Unity 和 RViz 会以 Windows 窗口显示，此时不录 MP4，
+只记录 bag/CSV。若 Unity 启动时弹出的音频报错控制台没有自动关闭，手动点掉即可。
+
+```bash
+LAB3_DISPLAY=:0 bash scripts/start_unity_gpu.sh                              # 终端 1
+LAB3_DISPLAY=:0 LAB3_RVIZ_DISPLAY=:0 bash scripts/run_unity_flight.sh        # 终端 2
+```
+
 以下为 ARM64 / Box64 环境的原始交付记录。
 
 ## 本地交付
