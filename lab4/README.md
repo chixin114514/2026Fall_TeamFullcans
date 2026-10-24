@@ -59,6 +59,49 @@ bash scripts/noetic.sh bash scripts/run_integration_checks.sh
 
 2026-10-19 已在本机完成七个包的编译、ROS1 发布/订阅、轨迹集成测试、TESSE bridge 导入、已有 rosbag 读取和 RViz 启动验证。RViz 配置所需的 IMU 插件也已安装；验证记录见 `report/ros_noetic_22_04_checks.txt`。
 
+## 竞速版：2.5 s 跑完 12 个门（2026-10-23，GPU）
+
+成绩按 Unity 的规则计：从第一次碰到第 0 个门开始，到第一次碰到第 11 个门结束，用仿真时间。最好成绩 **2.46–2.50 s**（原 smooth 版本是 15.72 s），12 个门全部由 Unity 的触发日志确认，全程无碰撞。录像在 `report/runs/race-best-20261023/unity_race.mp4`（全新启动的 Unity，门从红变绿，这次 2.495 s），同目录有 rosbag、计时结果和节点日志。
+
+从 Unity 场景文件里读出来的规则和限制：
+- 门是 2.33 × 2.30 × 0.2 m 的触发盒，没有实体门框，只要无人机的碰撞盒（1.07 × 1.07 × 0.19 m）和它重叠，门就变绿，不需要从中间穿过；
+- ROS 发来的电机转速不限幅，也没有空气阻力；限制来自 50 Hz 的物理步长和 Unity 默认的 7 rad/s 最大角速度；
+- 惯量按电机指令和角速度数据辨识，约为 diag(0.11, 0.21, 0.11)（ROS 机体系），俯仰轴是控制器原先假设的两倍。
+
+做法：
+- `scripts/race_opt.py`：离线求最短时间轨迹。用 7 次多项式最小 snap 样条，优化门内的经过点、中间点和各段时长，惩罚项包括离墙距离（`race/course_occupancy.npz`，由场景碰撞体生成）、推力、参考角速度和角加速度。门的约束会考虑当时的机身倾角。结果是 `race/trajectories/u4.json`（推力 ≤ 250 m/s²，角速度 ≤ 6.5 rad/s，角加速度 ≤ 100 rad/s²，强制从门 6 中间穿过）。
+- `scripts/race_node.py`：轨迹回放加几何控制器，每收到一个状态就直接发电机指令。增加的内容有：角速度前馈；状态提前 0.03 s 预测；按辨识出的惯量缩放各轴增益；不锁 yaw，每步按最小旋转对准推力方向（锁 yaw 时机身倾斜超过 90° 会奇异）；计划推力小时，推力方向主要按轨迹走，反馈逐渐加进来。
+- `scripts/race_timer.py`：计时器。按碰撞盒重叠判断每个门，同时读 Unity 的 player log 核对；盒模型判为漏门、但 Unity 有对应触发记录时，以 Unity 为准。
+- `scripts/run_race_trial.sh`：在已启动的 Unity 会话里跑一次计时。`scripts/race_ilc.py`：迭代学习修正参考轨迹（在中速轨迹上有效，2.5 s 级别下不收敛，最终版本没有使用）。
+
+人工运行（显示到 Windows；另一套 TESSE 会话占用 9000 端口时，Unity 和 bridge 改用 9100）：
+
+```bash
+# 每个 ROS 终端：
+source /tmp/lab4_ws/devel/setup.bash
+export ROS_MASTER_URI=http://localhost:11316 ROS_HOSTNAME=localhost
+# 终端 1
+roscore -p 11316
+# 终端 2（不 source ROS）
+DISPLAY=:0 Xephyr :97 -screen 960x600 -title "Unity lab4" &
+cd /tmp/lab4-runtime/lab4
+export DISPLAY=:97 GALLIUM_DRIVER=d3d12 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA LD_LIBRARY_PATH=/usr/lib/wsl/lib
+./lab4.x86_64 -screen-width 960 -screen-height 600 -screen-fullscreen 0 -force-glcore --listen_port 9100 --send_port 9100
+# 终端 3
+roslaunch tesse_ros_bridge tesse_quadrotor_bridge.launch publish_imu:=false publish_collisions:=true \
+  position_port:=9100 metadata_port:=9101 image_port:=9102 udp_port:=9104 step_port:=9105
+# 终端 4
+python3 /workspace/lab4/scripts/race_timer.py
+# 终端 5：启动后在 Unity 窗口里按 r，悬停稳定后自动出发
+rosparam delete /race_node 2>/dev/null
+python3 /workspace/lab4/scripts/race_node.py _trajectory:=/workspace/lab4/race/trajectories/u4.json \
+  _lead:=0.03 _kr:=20 _komega:=3 "_inertia:=[0.11,0.21,0.11]" _yaw_free:=true _fb_tilt_thrust:=100
+```
+
+无界面运行：`LAB4_PORT=9200 LAB4_ROS_PORT=11318 bash scripts/start_unity_gpu.sh`，然后对 `run_race_trial.sh` 设置 `LAB4_ROS_MASTER=http://localhost:11318`。
+
+稳定性：同一个 Unity 会话里连续飞，3 次全部成功（2.484 s）；新启动 Unity 后的第一次飞行，大约一半会漏掉门 6，需要重启 Unity 再飞。计划时间更短的轨迹（2.37–2.40 s）参考角速度已贴近 7 rad/s，试飞都失败了。
+
 ## 轨迹调优：更平滑、更快（2026-10-19，GPU）
 
 最新录像：`report/runs/unity-gpu-smooth-gates-20261019/unity_race.mp4`（30 fps，33.4 s，含起飞和 10 s 终点保持）。这次是全新启动的 Unity：每个门在飞机穿过之前都是红色，穿过后才变绿。同目录有 rosbag、CSV、`unity_summary.json`、使用的增益和 `unity_tracking.png`。`unity-gpu-smooth-20261019` 是同一配置在旧会话里的录像（开场时门已经是绿的），数据几乎一致。

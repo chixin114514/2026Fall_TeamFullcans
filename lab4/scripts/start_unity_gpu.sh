@@ -5,6 +5,10 @@ set -eo pipefail
 LAB4_SOURCE=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 LAB4_RUNTIME=${LAB4_RUNTIME:-/tmp/lab4-runtime}
 LAB4_SESSION=${LAB4_SESSION:-/tmp/lab4-unity-gpu}
+# Unity listens on PORT..PORT+3 and PORT+5 and broadcasts state on PORT+4, so
+# another TESSE session (e.g. lab3 on 9000) can run beside this one.
+LAB4_PORT=${LAB4_PORT:-9000}
+LAB4_ROS_PORT=${LAB4_ROS_PORT:-11316}
 # Recent WSL exposes the D3D12 libraries itself; older images need setup_unity_gpu.sh.
 GPU_LIB=
 for dir in ${LAB4_GPU_DIR:+"$LAB4_GPU_DIR/lib"} /usr/lib/wsl/lib /opt/vnav-gpu/lib; do
@@ -31,7 +35,7 @@ chmod +x "$LAB4_RUNTIME/lab4/lab4.x86_64"
 [[ ! -e /tmp/.X98-lock ]] || { printf 'Display :98 is already in use.\n' >&2; exit 1; }
 mkdir -p "$LAB4_SESSION"
 LAB4_PID_DIR=$(mktemp -d "$LAB4_SESSION/pids.XXXXXX")
-export DISPLAY=:98 ROS_MASTER_URI=http://localhost:11316 ROS_HOSTNAME=localhost
+export DISPLAY=:98 ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT ROS_HOSTNAME=localhost
 unset LIBGL_ALWAYS_SOFTWARE LIBGL_ALWAYS_INDIRECT
 export GALLIUM_DRIVER=d3d12 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 export LD_LIBRARY_PATH="$GPU_LIB"
@@ -53,13 +57,13 @@ guest_service() {
   local pidfile="$LAB4_PID_DIR/$name.pid"
   pidfiles+=("$pidfile")
   ros env DISPLAY=:98 \
-    ROS_MASTER_URI=http://localhost:11316 ROS_HOSTNAME=localhost \
+    ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT ROS_HOSTNAME=localhost \
     bash -c 'printf "%s\n" "$$" > "$1"; shift; exec "$@"' service "$pidfile" "$@" \
     > "$LAB4_SESSION/$name.log" 2>&1 &
   pids+=("$!")
 }
 guest_service xvfb Xvfb :98 -screen 0 960x600x24
-guest_service master roscore -p 11316
+guest_service master roscore -p "$LAB4_ROS_PORT"
 ready=false
 for attempt in {1..60}; do
   if glxinfo -B > "$LAB4_SESSION/glxinfo.txt" 2>&1; then ready=true; break; fi
@@ -74,6 +78,7 @@ fi
 cd "$LAB4_RUNTIME/lab4"
 env -u PYTHONPATH ./lab4.x86_64 -screen-width 960 -screen-height 600 \
   -screen-fullscreen 0 -force-glcore -logFile "$LAB4_SESSION/unity.log" \
+  --listen_port "$LAB4_PORT" --send_port "$LAB4_PORT" \
   > "$LAB4_SESSION/player.log" 2>&1 & pids+=("$!")
 LAB4_PLAYER_PID=$!
 LAB4_WINDOW_ID=
@@ -90,8 +95,10 @@ grep -q 'Renderer: D3D12 (NVIDIA' "$LAB4_SESSION/unity.log" || {
   printf 'Unity did not confirm NVIDIA hardware rendering.\n' >&2; exit 1;
 }
 guest_service bridge roslaunch tesse_ros_bridge tesse_quadrotor_bridge.launch \
-  publish_imu:=false publish_collisions:=true
-ros env ROS_MASTER_URI=http://localhost:11316 \
+  publish_imu:=false publish_collisions:=true \
+  position_port:=$LAB4_PORT metadata_port:=$((LAB4_PORT+1)) image_port:=$((LAB4_PORT+2)) \
+  udp_port:=$((LAB4_PORT+4)) step_port:=$((LAB4_PORT+5))
+ros env ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT \
   ROS_HOSTNAME=localhost timeout 60 rostopic echo -n 1 /current_state \
   > "$LAB4_SESSION/initial_state.txt"
 ros env DISPLAY=:98 xdotool \

@@ -13,6 +13,12 @@
   <arg name="sim_ip"                default="127.0.0.1"/>
   <arg name="self_ip"               default="127.0.0.1"/>
   <arg name="use_broadcast"         default="true"/>
+  <!-- Unity listen_port P uses P..P+3 and P+5; send_port P broadcasts on P+4. -->
+  <arg name="position_port"         default="9000"/>
+  <arg name="metadata_port"         default="9001"/>
+  <arg name="image_port"            default="9002"/>
+  <arg name="udp_port"              default="9004"/>
+  <arg name="step_port"             default="9005"/>
 
   <!-- Specify data to publish -->
   <!-- `publish_stereo_gry` toggles between publishing as mono8 (true) or rgb8 (false) \
@@ -94,11 +100,11 @@
     <param name="sim_ip"           value="$(arg sim_ip)"/>
     <param name="self_ip"          value="$(arg self_ip)"/>
     <param name="use_broadcast"    value="$(arg use_broadcast)"/>
-    <param name="position_port"    value="9000"/>
-    <param name="metadata_port"    value="9001"/>
-    <param name="image_port"       value="9002"/>
-    <param name="udp_port"         value="9004"/>
-    <param name="step_port"        value="9005"/>
+    <param name="position_port" value="$(arg position_port)"/>
+    <param name="metadata_port" value="$(arg metadata_port)"/>
+    <param name="image_port" value="$(arg image_port)"/>
+    <param name="udp_port" value="$(arg udp_port)"/>
+    <param name="step_port" value="$(arg step_port)"/>
     <param name="lidar_port"       value="9006"/>
     <param name="lidar_udp_port"   value="9007"/>
 
@@ -146,6 +152,11 @@
         type="quadrotor_control_interface.py" output="screen">
     <!-- Topics -->
     <remap from="quadrotor_control/rotor_speed_cmds"  to="/rotor_speed_cmds"/>
+    <param name="position_port" value="$(arg position_port)"/>
+    <param name="metadata_port" value="$(arg metadata_port)"/>
+    <param name="image_port" value="$(arg image_port)"/>
+    <param name="udp_port" value="$(arg udp_port)"/>
+    <param name="step_port" value="$(arg step_port)"/>
   </node>
 
 </launch>
