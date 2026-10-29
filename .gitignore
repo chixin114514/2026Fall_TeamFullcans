@@ -8,3 +8,18 @@
 *.zip
 lab3/codex-session-lab3.md
 lab4/codex-session-lab4.md
+
+# LaTeX 中间产物（统一输出到 labN/.build/，见 AGENTS.md）
+.build/
+*.xdv
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# rosbag：results/ 下的运行过程 bag 不提交；最终交付的 bag 放 labN/bag/，正常提交（见 AGENTS.md）
+**/results/**/*.bag
+*.bag.active
+
+# Python
+*.pyc

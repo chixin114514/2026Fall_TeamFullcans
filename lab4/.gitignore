@@ -10,3 +10,4 @@ __pycache__/
 report/runs/**/*.mp4
 !report/runs/unity-gpu-smooth-gates-20261019/unity_race.mp4
 !report/runs/unity-gpu-fast-20261019/unity_race.mp4
+!report/runs/race-best-20261023/unity_race.mp4

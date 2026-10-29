@@ -1,0 +1,7 @@
+{
+  "descriptor": "FAST",
+  "bf_matcher": false,
+  "stats_csv": "/root/2026Fall_TeamFullcans/lab5/results/d6a_pair/FAST_flann_lsh/stats.csv",
+  "output_dir": "/root/2026Fall_TeamFullcans/lab5/results/d6a_pair/FAST_flann_lsh",
+  "show": false
+}

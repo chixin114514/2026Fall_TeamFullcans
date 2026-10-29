@@ -1,0 +1,9 @@
+{
+  "source": "Official MIT Lab3 TESSE / GPU",
+  "complete_duration": false,
+  "samples": 2746,
+  "trajectory_duration_s": 42.92,
+  "steady_position_rms_m": 0.044265498821544604,
+  "steady_position_max_m": 0.10937296649953669,
+  "final_position_error_m": 0.047537425448469076
+}

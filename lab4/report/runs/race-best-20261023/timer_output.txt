@@ -1,0 +1,29 @@
+[sim 0.000000] Race timer ready: waiting for gate 0
+[sim 12.480000] GO  gate  0 touched, timer started (20.3 m/s)
+[sim 12.660000]     gate  1    0.237 s  (37.6 m/s)
+[sim 12.880000]     gate  2    0.413 s  (42.2 m/s)
+[sim 13.140000]     gate  3    0.674 s  (41.4 m/s)
+[sim 13.320000]     gate  4    0.853 s  (37.7 m/s)
+[sim 13.500000]     gate  5    1.009 s  (29.9 m/s)
+[sim 13.960000]     gate  7    1.492 s  (26.7 m/s)
+[sim 14.300000]     gate  8    1.821 s  (22.6 m/s)
+[sim 14.580000]     gate  9    2.097 s  (33.0 m/s)
+[sim 14.760000]     gate 10    2.294 s  (41.8 m/s)
+[sim 14.960000]     gate 11    2.495 s  (42.0 m/s)
+=== Lab4 race, attempt 1 ===
+gate  0     0.000 s   split  0.000 s
+gate  1     0.237 s   split  0.237 s
+gate  2     0.413 s   split  0.176 s
+gate  3     0.674 s   split  0.261 s
+gate  4     0.853 s   split  0.179 s
+gate  5     1.009 s   split  0.156 s
+gate  6     1.354 s   split  0.345 s
+gate  7     1.492 s   split  0.138 s
+gate  8     1.821 s   split  0.329 s
+gate  9     2.097 s   split  0.276 s
+gate 10     2.294 s   split  0.197 s
+gate 11     2.495 s   split  0.200 s
+RACE TIME  2.495 s  (gate 0 -> gate 11, sim time)
+collisions during the race: 0 []
+gates timed from the Unity log (box model saw no overlap): [6]
+Unity trigger events: 12 (gate touches predicted: 12); not confirmed by Unity: none

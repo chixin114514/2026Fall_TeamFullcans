@@ -1,0 +1,7 @@
+{
+  "descriptor": "SURF",
+  "surf_hessian_threshold": 400.0,
+  "stats_csv": "/root/2026Fall_TeamFullcans/lab5/results/d6b_video/30fps/SURF_h400/stats.csv",
+  "output_dir": "/root/2026Fall_TeamFullcans/lab5/results/d6b_video/30fps/SURF_h400",
+  "show": false
+}

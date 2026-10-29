@@ -1,0 +1,7 @@
+{
+  "descriptor": "SIFT",
+  "sift_contrast_threshold": 0.02,
+  "stats_csv": "/root/2026Fall_TeamFullcans/lab5/results/d6b_video/smooth/SIFT_c002/stats.csv",
+  "output_dir": "/root/2026Fall_TeamFullcans/lab5/results/d6b_video/smooth/SIFT_c002",
+  "show": false
+}

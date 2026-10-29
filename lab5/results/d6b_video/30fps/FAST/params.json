@@ -1,0 +1,7 @@
+{
+  "descriptor": "FAST",
+  "fast_threshold": 20,
+  "stats_csv": "/root/2026Fall_TeamFullcans/lab5/results/d6b_video/30fps/FAST/stats.csv",
+  "output_dir": "/root/2026Fall_TeamFullcans/lab5/results/d6b_video/30fps/FAST",
+  "show": false
+}

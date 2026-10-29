@@ -1,0 +1,8 @@
+{
+  "descriptor": "ORB",
+  "orb_nlevels": 8,
+  "orb_nfeatures": 2000,
+  "stats_csv": "/root/2026Fall_TeamFullcans/lab5/results/d6a_pair/ORB_8lvl_2000/stats.csv",
+  "output_dir": "/root/2026Fall_TeamFullcans/lab5/results/d6a_pair/ORB_8lvl_2000",
+  "show": false
+}
