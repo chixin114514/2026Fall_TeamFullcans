@@ -77,7 +77,7 @@ if ! grep -q 'OpenGL renderer string: D3D12 (NVIDIA' "$LAB4_SESSION/glxinfo.txt"
 fi
 cd "$LAB4_RUNTIME/lab4"
 env -u PYTHONPATH ./lab4.x86_64 -screen-width 960 -screen-height 600 \
-  -screen-fullscreen 0 -force-glcore -logFile "$LAB4_SESSION/unity.log" \
+  -screen-fullscreen 0 -force-glcore -logFile "${LAB4_UNITY_LOGFILE:-$LAB4_SESSION/unity.log}" \
   --listen_port "$LAB4_PORT" --send_port "$LAB4_PORT" \
   > "$LAB4_SESSION/player.log" 2>&1 & pids+=("$!")
 LAB4_PLAYER_PID=$!
@@ -91,7 +91,7 @@ for attempt in {1..120}; do
 done
 [[ -n "$LAB4_WINDOW_ID" ]] || { printf 'Unity window did not appear.\n' >&2; exit 1; }
 sleep 5
-grep -q 'Renderer: D3D12 (NVIDIA' "$LAB4_SESSION/unity.log" || {
+grep -q 'Renderer: D3D12 (NVIDIA' "${LAB4_UNITY_LOGFILE:-$LAB4_SESSION/unity.log}" || {
   printf 'Unity did not confirm NVIDIA hardware rendering.\n' >&2; exit 1;
 }
 guest_service bridge roslaunch tesse_ros_bridge tesse_quadrotor_bridge.launch \

@@ -151,7 +151,12 @@ class Problem:
         for g in args.cross:
             half = gates[g][2]
             self.gate_bounds[g] = np.array([half[0] - args.margin, half[1] - args.margin, 1e-6])
-        self.gate_margin = np.array([args.margin, args.margin, args.margin_normal])
+        self.gate_margin = [np.array([args.margin, args.margin, args.margin_normal])
+                            for _ in gates]
+        for spec in args.gate_margin:
+            # GATE:MARGIN, e.g. 10:0.6, for gates the drone tracks worst.
+            g, m = spec.split(':')
+            self.gate_margin[int(g)] = np.array([float(m), float(m), float(m) + 0.1])
         self.layout = []  # ('fixed', p) | ('gate', i) | ('via', lo, hi)
         self.layout.append(('fixed', START))
         # Run-up in the start room: the clock only starts at gate 0.
@@ -165,7 +170,8 @@ class Problem:
                 lo = np.minimum(a, b) - args.via_box
                 hi = np.maximum(a, b) + args.via_box
                 lo[2], hi[2] = 1.0, 4.4
-                self.layout.append(('via', lo, hi))
+                for _ in range(args.vias_per_gap):
+                    self.layout.append(('via', lo, hi))
         self.layout.append(('via', np.array([-38.0, 8.0, 1.2]), np.array([-31.0, 18.5, 4.4])))
         self.layout.append(('end', np.array([-37.0, 6.0, 1.5]), np.array([-31.5, 18.0, 3.5])))
         self.gate_knot = [k for k, item in enumerate(self.layout) if item[0] == 'gate']
@@ -205,9 +211,54 @@ class Problem:
         d = [np.linalg.norm(pts[k+1] - pts[k]) for k in range(n_seg)]
         T = [max(0.3, di / self.args.v_init) for di in d]
         x += list(np.log(T))
-        lo += [np.log(0.08)] * n_seg
+        lo += [np.log(self.args.t_min)] * n_seg
         hi += [np.log(6.0)] * n_seg
         return np.array(x), list(zip(lo, hi))
+
+    def resample(self, path, bounds):
+        """Initial guess from a previous result with any layout: knots are
+        placed on its spline at times spread evenly between its gates."""
+        old = json.load(open(path))
+        spline = Spline(np.array(old['knots']), np.array(old['durations']))
+        gate_t = list(old['gate_knot_times'])
+        old_t = spline.t_knot
+        times, k = [], 0
+        while k < len(self.layout):
+            kind = self.layout[k][0]
+            if kind == 'fixed':
+                times.append(0.0)
+                k += 1
+            elif kind == 'gate':
+                times.append(gate_t[self.layout[k][1]])
+                k += 1
+            else:
+                run = k
+                while run < len(self.layout) and self.layout[run][0] in ('via', 'end'):
+                    run += 1
+                n = run - k
+                t_a = times[-1]
+                if run < len(self.layout):
+                    t_b = gate_t[self.layout[run][1]]
+                    times += list(t_a + (t_b - t_a) * np.arange(1, n + 1) / (n + 1))
+                else:
+                    # After the last gate: the old post-race knots in order.
+                    tail = [t for t in old_t if t > t_a + 1e-9][-n:]
+                    times += tail if len(tail) == n else list(
+                        t_a + (old_t[-1] - t_a) * np.arange(1, n + 1) / n)
+                k = run
+        x = []
+        for (kind, *rest), t in zip(self.layout, times):
+            if kind == 'fixed':
+                continue
+            p = spline.evaluate(t)[0]
+            if kind == 'gate':
+                center, axes, _ = self.course.gates[rest[0]]
+                x += list(axes.T @ (p - center))
+            else:
+                x += list(p)
+        x += list(np.log(np.maximum(np.diff(times), 0.05)))
+        lo, hi = np.array(bounds).T
+        return np.clip(np.array(x), lo, hi)
 
     def unpack(self, x):
         knots = []
@@ -263,10 +314,17 @@ class Problem:
             b2 = np.cross(b3, [1.0, 0.0, 0.0])
             b2 /= np.linalg.norm(b2)
             body = np.column_stack([np.cross(b2, b3), b2, b3])
-            reach = half + np.abs(axes.T @ body) @ DRONE_HALF - self.gate_margin
+            reach = half + np.abs(axes.T @ body) @ DRONE_HALF - self.gate_margin[g]
             offset = np.abs(axes.T @ (knots[k] - center))
             pen_gate += np.sum(np.maximum(0.0, offset - reach) ** 2)
         penalty += a.w_gate * pen_gate
+        if a.quiet > 0.0:
+            # A fresh Unity stalls its main thread for 0.1-0.16 s the first
+            # time a gate turns green (gate 0), and keeps applying the last
+            # rotor command meanwhile: keep the thrust steady right after it.
+            t_g0 = spline.t_knot[self.gate_knot[0]]
+            window = (t >= t_g0) & (t <= t_g0 + a.quiet)
+            penalty += a.w_quiet * np.sum(dt[window] * (np.linalg.norm(jerk[window], axis=1) / a.quiet_jerk) ** 2)
         race = self.race_time(T)
         other = T.sum() - race
         total = race + a.w_other * other + self.weight * penalty
@@ -319,6 +377,13 @@ def main():
     ap.add_argument('--w-other', type=float, default=0.05)
     ap.add_argument('--w-gate', type=float, default=100.0)
     ap.add_argument('--cross', type=int, nargs='*', default=[], help='gates to fly through')
+    ap.add_argument('--quiet', type=float, default=0.0, help='steady-thrust window after gate 0 [s]')
+    ap.add_argument('--quiet-jerk', type=float, default=50.0, help='jerk scale in that window [m/s^3]')
+    ap.add_argument('--w-quiet', type=float, default=1.0)
+    ap.add_argument('--gate-margin', nargs='*', default=[], help='per-gate margin GATE:METRES')
+    ap.add_argument('--t-min', type=float, default=0.08, help='shortest spline segment [s]')
+    ap.add_argument('--vias-per-gap', type=int, default=1, help='free waypoints between gates')
+    ap.add_argument('--resample', help='initial guess from a previous result with another layout')
     ap.add_argument('--runup-vias', type=int, default=1, help='free waypoints before gate 0')
     args = ap.parse_args()
     course = Course()
@@ -326,6 +391,8 @@ def main():
     x0, bounds = problem.initial()
     if args.init:
         x0 = np.array(json.load(open(args.init))['x'])
+    elif args.resample:
+        x0 = problem.resample(args.resample, bounds)
     x = solve(problem, x0, bounds, args)
     knots, T = problem.unpack(x)
     spline = Spline(knots, T)

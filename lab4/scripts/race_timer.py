@@ -35,6 +35,12 @@ STATIC_TFS = os.path.join(
 UNITY_LOG = os.path.expanduser(
     '~/.config/unity3d/DefaultCompany/tesse_vnav_scenes/Player.log')
 DRONE_COLLIDER_NAME = 'tesse_aero_quadrotor_agent'
+# Root x scale of the doors in the scene (level1); the others are 1.
+DOOR_X_SCALE = {3: 0.6, 5: 0.6, 6: 0.6, 7: 0.6, 8: 0.6, 11: 0.6}
+# Where a gate's trigger appears in the Unity log relative to the box-model
+# touch [s]: Unity fires at the next physics step and the log is read with
+# each state, so usually 0.0-0.09 s later.
+LOG_WINDOW = (-0.06, 0.16)
 
 # Unity (x, y, z) -> ROS (x, z, y); applied on both sides of a rotation.
 UNITY_TO_ROS = np.array([[1, 0, 0], [0, 0, 1], [0, 1, 0]], dtype=float)
@@ -66,9 +72,13 @@ def load_gates(path=STATIC_TFS):
             x, y, z, qx, qy, qz, qw = map(float, fields[1:8])
             rotation = quat_matrix(qx, qy, qz, qw) @ correction
             center = np.array([x, y, z]) + rotation @ np.array([-0.0403248 * 0.5, 0.0, 0.0])
+            # Doors 3, 5, 6, 7, 8 and 11 are scaled 0.6 along their own x,
+            # which the 90 degree correction turns into the trigger's
+            # thickness (0.12 m instead of 0.2 m).
+            thickness = 0.1 * DOOR_X_SCALE.get(index, 1.0)
             gates[index] = (UNITY_TO_ROS @ center,
                             UNITY_TO_ROS @ rotation @ UNITY_TO_ROS,
-                            np.array([4.667062 * 0.25, 4.6 * 0.25, 0.1]))
+                            np.array([4.667062 * 0.25, 4.6 * 0.25, thickness]))
     return [gates[i] for i in sorted(gates)]
 
 
@@ -130,6 +140,7 @@ class RaceTimer:
         self.finished = False
         self.reported = False
         self.from_unity = []
+        self.rejected = []
         self.unity_hits = []
         if self.attempt > 1:
             rospy.loginfo('Attempt %d: waiting for gate 0', self.attempt)
@@ -222,49 +233,58 @@ class RaceTimer:
         self.marker_pub.publish(marker)
 
     def unity_events(self):
-        """One OnTriggerEnter per drone collider; group hits closer than 0.1 s."""
+        """One OnTriggerEnter per drone collider; group hits closer than 0.05 s (one or two physics steps)."""
         events = []
         for stamp, count in self.unity_hits:
-            if events and stamp - events[-1] < 0.1:
+            if events and stamp - events[-1] < 0.05:
                 continue
             events.append(stamp)
         return events
 
-    def fill_from_unity(self):
-        """Unity is the reference: a gate the box model calls missed counts as
-        touched when Unity logged a trigger no other gate explains, between
-        the neighbouring gates. Its time is the log time minus the median
-        log delay of the gates both agree on."""
+    def match_unity(self):
+        """Make Unity the referee: a gate passes only with its own trigger in
+        the Unity log. Gates and triggers both happen in order, so each gate
+        takes the next unused trigger logged LOG_WINDOW after its box-model
+        touch; a touched gate without one is missed. A trigger left between
+        two gates fills a gate the box model missed. Without a log the box
+        model stands alone."""
         events = self.unity_events()
-        matched, delays = set(), []
-        for t in self.touch:
+        self.rejected, self.from_unity = [], []
+        if not events:
+            return False
+        used, last = set(), -np.inf
+        for i, t in enumerate(self.touch):
             if t is None:
                 continue
-            for k, e in enumerate(events):
-                if k not in matched and -0.05 <= e - t <= 0.25:
-                    matched.add(k)
-                    delays.append(e - t)
-                    break
-        if not delays:
-            return
-        delay = float(np.median(delays))
-        self.from_unity = []
+            k = next((k for k, e in enumerate(events) if k not in used and e > last
+                      and LOG_WINDOW[0] <= e - t <= LOG_WINDOW[1]), None)
+            if k is None:
+                self.rejected.append(i)
+            else:
+                used.add(k)
+                last = events[k]
+        for i in self.rejected:
+            self.touch[i] = None
+        delay = 0.05
         for i, t in enumerate(self.touch):
-            if t is not None:
+            if t is not None or i in self.rejected:
                 continue
             before = max([x for x in self.touch[:i] if x is not None], default=-np.inf)
             after = min([x for x in self.touch[i + 1:] if x is not None], default=np.inf)
             for k, e in enumerate(events):
-                if k not in matched and before < e - delay < after:
-                    matched.add(k)
+                if k not in used and before + LOG_WINDOW[0] < e - delay and e - LOG_WINDOW[1] < after:
+                    used.add(k)
                     self.touch[i] = e - delay
                     self.from_unity.append(i)
                     break
+        return True
 
     def report(self):
         self.reported = True
-        self.fill_from_unity()
+        have_log = self.match_unity()
         start = self.touch[0]
+        if start is None:
+            start = min((t for t in self.touch if t is not None), default=0.0)
         missed = [i for i, t in enumerate(self.touch) if t is None]
         lines = ['', '=== Lab4 race, attempt %d ===' % self.attempt]
         previous = start
@@ -288,16 +308,14 @@ class RaceTimer:
                 lines.append('note: gates touched out of order: %s' % out_of_order)
         lines.append('collisions during the race: %d %s' % (
             len(self.collisions), sorted({name for _, name in self.collisions})))
-        events = self.unity_events()
         if self.from_unity:
             lines.append('gates timed from the Unity log (box model saw no overlap): %s' % self.from_unity)
+        if self.rejected:
+            lines.append('gates the box model touched but Unity did not trigger: %s' % self.rejected)
         result['from_unity_log'] = self.from_unity
-        unconfirmed = [i for i, t in enumerate(self.touch)
-                       if t is not None and not any(-0.05 <= e - t <= 0.25 for e in events)]
-        result['unity_trigger_events'] = events
-        result['unconfirmed_by_unity'] = unconfirmed
-        lines.append('Unity trigger events: %d (gate touches predicted: %d); not confirmed by Unity: %s' % (
-            len(events), sum(t is not None for t in self.touch), unconfirmed or 'none'))
+        result['rejected_by_unity'] = self.rejected
+        result['unity_trigger_events'] = self.unity_events()
+        lines.append('referee: %s' % ('Unity trigger log' if have_log else 'box model only (no Unity log)'))
         print('\n'.join(lines), flush=True)
         if self.args.output:
             with open(self.args.output, 'a') as f:

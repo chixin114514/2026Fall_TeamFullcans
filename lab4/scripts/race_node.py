@@ -14,6 +14,8 @@ The drone first hovers at the spawn point, then starts the spline. The desired
 state is also published on /desired_state for logging and RViz.
 """
 import json
+import threading
+import time
 
 import numpy as np
 import rospy
@@ -96,6 +98,7 @@ class RaceNode:
         self.yaw_free = rospy.get_param('~yaw_free', False)
         self.reversible = rospy.get_param('~reversible', False)
         self.fb_tilt_thrust = rospy.get_param('~fb_tilt_thrust', 0.0)
+        self.att_lead = rospy.get_param('~att_lead', 0.0)
         self.traj = Trajectory(rospy.get_param('~trajectory'), rospy.get_param('~time_scale', 1.0))
         # Learned reference offsets from race_ilc.py (position, velocity, acceleration).
         self.correction = None
@@ -110,7 +113,12 @@ class RaceNode:
         self.desired_pub = rospy.Publisher('/desired_state', MultiDOFJointTrajectoryPoint, queue_size=10)
         self.path_pub = rospy.Publisher('/desired_path', Path, queue_size=1, latch=True)
         self.publish_path()
+        self.lock = threading.Lock()
+        self.last_state = None
+        self.stall_after = rospy.get_param('~stall_after', 0.0)
         rospy.Subscriber('/current_state', Odometry, self.on_state, queue_size=1, tcp_nodelay=True)
+        if self.stall_after > 0.0:
+            threading.Thread(target=self.stall_watchdog, daemon=True).start()
         rospy.loginfo('Race trajectory %.2f s (gates at %.2f .. %.2f s), lead %.3f s',
                       self.traj.duration, self.traj.gate_times[0], self.traj.gate_times[-1], self.lead)
 
@@ -167,10 +175,42 @@ class RaceNode:
                     rospy.loginfo('GO at t=%.3f', stamp)
             else:
                 self.hover_since = None
+        if self.phase == 'race':
+            with self.lock:
+                self.last_state = (stamp, time.monotonic(), x, vel, R, omega_world)
+        self.control(stamp, x, vel, R, omega_world, msg.header.stamp)
 
+    def stall_watchdog(self):
+        """A fresh Unity stalls its main thread for 0.08-0.16 s the first time
+        it draws a green gate. Its network thread still takes rotor commands,
+        and afterwards it runs the missed physics steps back to back with the
+        last one received. Meanwhile, keep sending the command for the middle
+        of the stretch it will have to catch up, from the last state flown
+        forward along the plan."""
+        while not rospy.is_shutdown():
+            time.sleep(0.005)
+            with self.lock:
+                last = self.last_state
+            if last is None or self.phase != 'race':
+                continue
+            stamp, wall, x, vel, R, omega_world = last
+            gap = time.monotonic() - wall
+            if gap < self.stall_after or stamp - self.t0 > self.traj.duration:
+                continue
+            dt = 0.5 * gap
+            ref_a = self.reference(stamp + 0.5 * dt)[2]
+            self.control(stamp + dt, x + vel * dt + 0.5 * ref_a * dt * dt, vel + ref_a * dt,
+                         rodrigues(omega_world, dt) @ R, omega_world, rospy.Time.from_sec(stamp + dt))
+
+    def control(self, stamp, x, vel, R, omega_world, header_stamp):
         # Predict the state at the time the command takes effect.
         lead = self.lead
         ref_x, ref_v, ref_a, ref_j = self.reference(stamp + lead)
+        if self.att_lead > 0.0 and self.phase == 'race':
+            # The attitude trails the thrust direction by about one physics
+            # step; at 20 g a few degrees is metres per second squared, so aim
+            # the feedforward thrust further ahead than the position.
+            _, _, ref_a, ref_j = self.reference(stamp + lead + self.att_lead)
         if lead > 0.0:
             x = x + vel * lead + 0.5 * ref_a * lead * lead
             vel = vel + ref_a * lead
@@ -230,7 +270,7 @@ class RaceNode:
         if not np.all(np.isfinite(speeds)):
             return
         cmd = Actuators()
-        cmd.header.stamp = msg.header.stamp
+        cmd.header.stamp = header_stamp
         cmd.angular_velocities = speeds.tolist()
         self.rotor_pub.publish(cmd)
 

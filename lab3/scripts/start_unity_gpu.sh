@@ -25,6 +25,13 @@ chmod +x "$LAB3_RUNTIME/lab3/lab3.x86_64"
 if [[ $LAB3_DISPLAY == :97 ]]; then
   [[ ! -e /tmp/.X97-lock ]] || { printf 'Display :97 is already in use.\n' >&2; exit 1; }
 fi
+# TESSE uses fixed UDP ports, so a second simulator (e.g. Lab4) would answer
+# this bridge instead of the Lab3 player.
+if ss -uln 2>/dev/null | grep -q ':9000 '; then
+  ss -ulpn 2>/dev/null | grep ':9000 ' >&2
+  printf 'UDP port 9000 is in use by another TESSE simulator; stop it first.\n' >&2
+  exit 1
+fi
 source "$LAB3_WS/devel/setup.bash"
 LAB3_BRIDGE_NODE=$(readlink -f "$LAB3_WS/src/tesse_ros_bridge")/src/tesse_ros_bridge/tesse_ros_node.py
 mkdir -p "$LAB3_SESSION"
