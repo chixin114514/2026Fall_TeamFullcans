@@ -3,6 +3,7 @@
  * Feel free to edit any part of this file!
  */
 #include <memory>
+#include "demo_display.h"
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
@@ -18,6 +19,7 @@ using namespace std;
 // If non-empty, every visualization frame is written here (for the video).
 static std::string frames_dir;
 static bool show = true;
+static DemoDisplay display;
 
 /** Color-code a dense flow field: hue = direction, value = magnitude
  *  (normalized by `max_magnitude` pixels, saturating above it). */
@@ -88,7 +90,8 @@ void imageCallback(const sensor_msgs::ImageConstPtr &msg) {
     ++frame_id;
     if (show) {
       cv::imshow("view", vis);
-      cv::waitKey(1);
+      const int key = cv::waitKey(1);
+      if (display.enterOnly() && display.advanceRequested(key)) ros::shutdown();
     }
     prev_gray = gray;
     // ~~~~ end solution
@@ -105,10 +108,11 @@ void imageCallback(const sensor_msgs::ImageConstPtr &msg) {
 int main(int argc, char **argv) {
   ros::init(argc, argv, "optical_flow");
   ros::NodeHandle local_nh("~");
+  display.configure(local_nh);
   frames_dir = local_nh.param<std::string>("frames_dir", "");
   show = local_nh.param<bool>("show", true);
 
-  if (show) cv::namedWindow("view", cv::WINDOW_NORMAL);
+  if (show) display.open("view");
   image_transport::ImageTransport it(local_nh);
   image_transport::Subscriber sub = it.subscribe("/images_topic", 2000, imageCallback);
 

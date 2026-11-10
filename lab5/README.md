@@ -41,6 +41,25 @@ bash scripts/make_videos.sh                                      # → video/
 bash scripts/build_report.sh                                     # → report/lab5_report.pdf
 ```
 
+一键现场演示（在图形桌面终端中运行，无需预先启动 `roscore`）：
+
+```bash
+bash scripts/demo_lab5.sh                         # SIFT/ORB 图像匹配 → SIFT/LK 视频 → D8 光流
+bash scripts/demo_lab5.sh --dataset smooth         # 改用 smooth 数据集
+bash scripts/demo_lab5.sh --width 1920 --height 1080 # 指定窗口尺寸
+bash scripts/demo_lab5.sh --skip-flow               # 跳过 D8
+```
+
+脚本自动加载工作空间，缺少编译结果或源码更新时自动编译。
+默认窗口使用桌面宽度的 85%、高度的 80%（无法检测桌面时为 1600×900），可拖动调整。
+先展示 SIFT、ORB 两组静态过程图（每组 5 张），
+随后进入 SIFT、LK、Farneback 连续视频。
+**在图片/视频窗口或启动终端按回车**：关闭当前图片显示下一张，或停止当前视频播放下一段。
+默认不按时间切换；视频自然结束也会进入下一项。`Ctrl+C` 结束整个演示。
+`--image-seconds N`、`--seconds N` 可选用自动切换（默认都为 0）。
+`--build` 强制编译，`--dry-run` 仅打印命令。
+工作空间和数据目录可通过 `LAB5_WS`、`LAB5_DATASETS` 覆盖。
+
 视频帧导出到仓库外的 `~/vnav-builds/lab5_frames/`，不提交。
 
 ## 目录

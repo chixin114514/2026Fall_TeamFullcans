@@ -9,6 +9,11 @@ LAB4_SESSION=${LAB4_SESSION:-/tmp/lab4-unity-gpu}
 # another TESSE session (e.g. lab3 on 9000) can run beside this one.
 LAB4_PORT=${LAB4_PORT:-9000}
 LAB4_ROS_PORT=${LAB4_ROS_PORT:-11316}
+# Unity's X display: headless Xvfb :98 by default. LAB4_XEPHYR=1 opens it as a
+# Xephyr window on the Windows desktop instead (Unity aborts on WSLg's :0
+# itself with an XCB threading error).
+LAB4_DISPLAY=${LAB4_DISPLAY:-:98}
+LAB4_XEPHYR=${LAB4_XEPHYR:-0}
 # Recent WSL exposes the D3D12 libraries itself; older images need setup_unity_gpu.sh.
 GPU_LIB=
 for dir in ${LAB4_GPU_DIR:+"$LAB4_GPU_DIR/lib"} /usr/lib/wsl/lib /opt/vnav-gpu/lib; do
@@ -32,10 +37,10 @@ if [[ ! -f "$LAB4_RUNTIME/lab4/lab4.x86_64" ]]; then
   7z x -aos "-o$LAB4_RUNTIME" "$LAB4_RUNTIME/lab4.zip"
 fi
 chmod +x "$LAB4_RUNTIME/lab4/lab4.x86_64"
-[[ ! -e /tmp/.X98-lock ]] || { printf 'Display :98 is already in use.\n' >&2; exit 1; }
+[[ ! -e /tmp/.X${LAB4_DISPLAY#:}-lock ]] || { printf 'Display %s is already in use.\n' "$LAB4_DISPLAY" >&2; exit 1; }
 mkdir -p "$LAB4_SESSION"
 LAB4_PID_DIR=$(mktemp -d "$LAB4_SESSION/pids.XXXXXX")
-export DISPLAY=:98 ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT ROS_HOSTNAME=localhost
+export DISPLAY=$LAB4_DISPLAY ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT ROS_HOSTNAME=localhost
 unset LIBGL_ALWAYS_SOFTWARE LIBGL_ALWAYS_INDIRECT
 export GALLIUM_DRIVER=d3d12 MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 export LD_LIBRARY_PATH="$GPU_LIB"
@@ -56,13 +61,18 @@ guest_service() {
   local name=$1; shift
   local pidfile="$LAB4_PID_DIR/$name.pid"
   pidfiles+=("$pidfile")
-  ros env DISPLAY=:98 \
+  ros env DISPLAY=$LAB4_DISPLAY \
     ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT ROS_HOSTNAME=localhost \
     bash -c 'printf "%s\n" "$$" > "$1"; shift; exec "$@"' service "$pidfile" "$@" \
     > "$LAB4_SESSION/$name.log" 2>&1 &
   pids+=("$!")
 }
-guest_service xvfb Xvfb :98 -screen 0 960x600x24
+if [[ $LAB4_XEPHYR == 1 ]]; then
+  guest_service xephyr env DISPLAY="${LAB4_HOST_DISPLAY:-:0}" Xephyr "$LAB4_DISPLAY" \
+    -screen 960x600 -title "Lab4 Unity race" -no-host-grab
+else
+  guest_service xvfb Xvfb "$LAB4_DISPLAY" -screen 0 960x600x24
+fi
 guest_service master roscore -p "$LAB4_ROS_PORT"
 ready=false
 for attempt in {1..60}; do
@@ -83,7 +93,7 @@ env -u PYTHONPATH ./lab4.x86_64 -screen-width 960 -screen-height 600 \
 LAB4_PLAYER_PID=$!
 LAB4_WINDOW_ID=
 for attempt in {1..120}; do
-  LAB4_WINDOW_ID=$(ros env DISPLAY=:98 \
+  LAB4_WINDOW_ID=$(ros env DISPLAY=$LAB4_DISPLAY \
     xdotool search --onlyvisible --name tesse_vnav_scenes | head -n1) || true
   if [[ -n "$LAB4_WINDOW_ID" ]]; then break; fi
   kill -0 "$LAB4_PLAYER_PID"
@@ -101,7 +111,7 @@ guest_service bridge roslaunch tesse_ros_bridge tesse_quadrotor_bridge.launch \
 ros env ROS_MASTER_URI=http://localhost:$LAB4_ROS_PORT \
   ROS_HOSTNAME=localhost timeout 60 rostopic echo -n 1 /current_state \
   > "$LAB4_SESSION/initial_state.txt"
-ros env DISPLAY=:98 xdotool \
+ros env DISPLAY=$LAB4_DISPLAY xdotool \
   windowfocus "$LAB4_WINDOW_ID" mousemove 512 570 sleep 0.5 \
   mousedown 1 sleep 1 mouseup 1 sleep 0.5 mousemove 900 30
 printf 'Unity GPU rendering verified: NVIDIA RTX 4060 via D3D12. Logs: %s\n' "$LAB4_SESSION"

@@ -23,6 +23,7 @@ class LKFeatureTracker {
   void trackFeatures(const cv::Mat& frame);
 
   void printStats() const;
+  void configureDisplay(const ros::NodeHandle& nh) { display_.configure(nh); }
 
   /// Same meaning as FeatureTracker::setOutput.
   void setOutput(const std::string& output_dir, const std::string& stats_csv,
@@ -75,6 +76,7 @@ class LKFeatureTracker {
   double min_distance_ = 10.0;
 
   bool show_ = true;
+  DemoDisplay display_;
   std::string output_dir_;
   std::string frames_dir_;
   int save_frame_ = -1;

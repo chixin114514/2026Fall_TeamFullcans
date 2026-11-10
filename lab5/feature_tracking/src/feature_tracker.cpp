@@ -360,12 +360,22 @@ void FeatureTracker::showAndSave(const std::string& name, const cv::Mat& img,
     cv::imwrite(output_dir_ + "/" + name + ".png", img);
   }
   if (!show_) return;
-  cv::namedWindow(name, cv::WINDOW_NORMAL);
+  display_.open(name);
   imshow(name, img);
   if (pause_on_display_) {
-    while (ros::ok() && waitKey(10) == -1) {} // Instead of using waitKey(0);
+    ROS_INFO_STREAM("Image: " << name << " -- press Enter for the next image");
+    const auto started = std::chrono::steady_clock::now();
+    while (ros::ok() && !display_.advanceRequested(waitKey(10))) {
+      if (display_delay_ms_ > 0 &&
+          std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::steady_clock::now() - started).count() >= display_delay_ms_) {
+        break;
+      }
+    }
+    display_.close(name);
   } else {
-    waitKey(10);
+    const int key = waitKey(10);
+    if (display_.enterOnly() && display_.advanceRequested(key)) ros::shutdown();
   }
 }
 

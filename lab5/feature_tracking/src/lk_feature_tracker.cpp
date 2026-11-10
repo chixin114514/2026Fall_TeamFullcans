@@ -34,7 +34,7 @@ void LKFeatureTracker::setOutput(const std::string& output_dir,
   frames_dir_ = frames_dir;
   save_frame_ = save_frame;
   show_ = show;
-  if (show_) cv::namedWindow(window_name_, cv::WINDOW_NORMAL);
+  if (show_) display_.open(window_name_);
   if (!stats_csv.empty()) {
     stats_csv_.reset(new std::ofstream(stats_csv));
     *stats_csv_ << "frame,kp1,kp2,matches,good_matches,inliers,inlier_ratio,time_ms"
@@ -259,7 +259,8 @@ void LKFeatureTracker::show(const cv::Mat& frame, std::vector<cv::Point2f>& prev
   }
   if (show_) {
     cv::imshow(window_name_, img);
-    cv::waitKey(10);
+    const int key = cv::waitKey(10);
+    if (display_.enterOnly() && display_.advanceRequested(key)) ros::shutdown();
   }
   // ~~~~ end solution
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
