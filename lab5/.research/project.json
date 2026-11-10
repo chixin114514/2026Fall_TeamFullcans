@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "projectId": "8ccc7414-c237-4995-9f53-01cefa9271d5",
+  "name": "lab5",
+  "rootDocuments": [
+    {
+      "path": "report/lab5_report.tex",
+      "name": "lab5_report",
+      "isDefault": true
+    }
+  ],
+  "primaryBibliography": "report/references.bib",
+  "trusted": false,
+  "engine": "lualatex",
+  "venue": "neurips",
+  "wordBudget": null,
+  "pageBudget": 9,
+  "spellingWords": []
+}

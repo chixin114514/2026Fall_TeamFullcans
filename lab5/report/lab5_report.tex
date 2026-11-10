@@ -2,10 +2,11 @@
 \usepackage[a4paper,left=22mm,right=22mm,bottom=22mm,top=22mm]{geometry}
 \usepackage{fontspec}
 \usepackage[british]{babel}
-\usepackage{amsmath,amssymb,graphicx,booktabs,array,tabularx,fancyhdr,multirow}
+\usepackage{amsmath,amssymb,graphicx,booktabs,array,tabularx,fancyhdr}
 \usepackage[square,comma,numbers,sort&compress]{natbib}
 \usepackage[hidelinks]{hyperref}
 \usepackage{caption,subcaption}
+\usepackage{float}
 \usepackage{microtype}
 \usepackage{xcolor}
 \graphicspath{{figures/}}
@@ -16,6 +17,14 @@
 \renewcommand{\topfraction}{0.9}
 \renewcommand{\textfraction}{0.07}
 \renewcommand{\floatpagefraction}{0.8}
+% Text that cites a figure is kept on the same page as the figure.
+\newsavebox{\keepbox}
+\newenvironment{keep}{\par\begin{lrbox}{\keepbox}\begin{minipage}{\linewidth}\setlength{\parskip}{0.4em}}{\end{minipage}\end{lrbox}%
+  \noindent\usebox{\keepbox}\par}
+\renewcommand{\bottomfraction}{0.8}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{5}
 \pagestyle{fancy}
 \fancyhead{}
 \fancyhead[C]{\small Lab 5: Feature tracking and matching}
@@ -37,17 +46,19 @@
 \maketitle
 
 \begin{abstract}
-We implemented the Lab~5 stencil (ROS Noetic, OpenCV~3.4.2 + contrib built by the
-official \code{opencv3\_catkin} package): SIFT, SURF, ORB and FAST+BRIEF trackers with
-$k$NN matching, Lowe's ratio test and RANSAC inlier detection; a Harris + pyramidal
-Lucas--Kanade tracker; and Farneback dense optical flow. On the \code{box} image pair
-SIFT reproduces the handout (603/969 keypoints, 79 inliers, 79\,\% inlier ratio) and
-SURF gives the most inliers (88), while ORB only works once the scale pyramid is
-enabled. On the two video datasets all methods have $>84\,\%$ inlier ratio;
-Harris+LK is the most reliable (95--99.7\,\% inliers) and, together with FAST+BRIEF, the
-fastest (3.0--5.9\,ms per frame pair), ORB is the best descriptor-based compromise, and
-SIFT is 12--33$\times$ slower than those two. Section~\ref{sec:team} lists the commands that reproduce
-every number in this report.
+Matching two unrelated views and tracking features between consecutive video frames
+call for different pipelines. We built both kinds in the Lab~5 stencil (ROS Noetic,
+OpenCV~3.4.2 with contrib): SIFT, SURF, ORB and FAST+BRIEF trackers with $k$NN
+matching, Lowe's ratio test and RANSAC; a Harris + pyramidal Lucas--Kanade tracker; and
+Farneback dense optical flow. On the \code{box} image pair, where the box is rotated and
+about half as large in the scene, scale-invariant descriptors win: SURF finds the most
+inliers (88), SIFT reproduces the handout (603/969 keypoints, 79 inliers, 79\,\% inlier
+ratio), and ORB matches well once its scale pyramid is enabled. On the two video
+datasets every method keeps more than 84\,\% of its matches as inliers, and Harris+LK
+leads on both reliability (95.5--99.7\,\% inliers) and speed (3.0--5.9\,ms per frame
+pair). Among the descriptor methods, ORB gives the best trade-off for onboard visual
+odometry: 98.1\,\% inliers on the real data at 9--12\,ms per pair, against 64--145\,ms
+for SIFT.
 \end{abstract}
 
 
@@ -58,14 +69,14 @@ $s_x=s_y=1$ and $s_\theta=0$, so a point $p=[x\ y\ z]^\top$ with $z>0$ projects 
 $(u,v)=(x/z,\,y/z)$, and the pixel $(u,v)$ corresponds to the ray of points
 $\lambda w$, $\lambda>0$, with $w=[u\ v\ 1]^\top$.
 
-\subsection{Deliverable 1 -- Perspective projection of a sphere}
+\subsection{Deliverable 1: Perspective projection of a sphere}
 
 \paragraph{1. Sphere on the optical axis.}
-Let the centre be $c=[0\ 0\ d]^\top$. Because $d>r+1$, the whole sphere lies in front
-of the image plane $z=1$ (every point has $z\ge d-r>1$), so it is entirely visible.
-A pixel $(u,v)$ belongs to the image of the sphere iff its ray $\{\lambda w\}$ meets the
-sphere, i.e.\ iff the distance from $c$ to the line through the origin with direction
-$w$ is at most $r$:
+Let the centre be $c=[0\ 0\ d]^\top$. Because $d>r+1$, every point of the sphere has
+$z\ge d-r>1$, so the sphere lies entirely in front of the image plane $z=1$ and is fully
+visible. A pixel $(u,v)$ belongs to the image of the sphere iff its ray $\{\lambda w\}$
+meets the sphere, i.e.\ iff the distance from $c$ to the line through the origin with
+direction $w$ is at most $r$:
 \begin{equation}
   \frac{\lVert c\times w\rVert^2}{\lVert w\rVert^2}\le r^2 .
 \end{equation}
@@ -77,49 +88,66 @@ $\lVert c\times w\rVert^2=d^2(u^2+v^2)$ and $\lVert w\rVert^2=u^2+v^2+1$, hence
   \quad\Longleftrightarrow\quad
   \boxed{\,u^2+v^2=\frac{r^2}{d^2-r^2}\,}.
 \end{equation}
-The projection is a disc centred at the principal point whose boundary is a circle of
-radius $\rho=r/\sqrt{d^2-r^2}$ (well defined since $d>r$).
+The projection is a disc centred at the principal point, bounded by a circle of radius
+$\rho=r/\sqrt{d^2-r^2}$ (well defined since $d>r$).
 Geometrically, the tangent rays form a right circular cone with apex at the optical
-centre, axis along the optical axis and half-angle $\alpha$ with $\sin\alpha=r/d$; the
-image plane is perpendicular to the axis, so it cuts the cone in a circle of radius
+centre, axis along the optical axis and half-angle $\alpha$ with $\sin\alpha=r/d$. The
+image plane is perpendicular to the axis and cuts the cone in a circle of radius
 $\tan\alpha=r/\sqrt{d^2-r^2}$. For $d\gg r$ this tends to $r/d$, the familiar
 ``size divided by depth'' rule.
 
 \paragraph{2. Sphere at an arbitrary position.}
-For a general centre $c=[c_x\ c_y\ c_z]^\top$ the tangency condition
-$\lVert c\times w\rVert^2=r^2\lVert w\rVert^2$ can be rewritten with
-$\lVert c\times w\rVert^2=\lVert c\rVert^2\lVert w\rVert^2-(c^\top w)^2$ as
+For a general centre $c=[c_x\ c_y\ c_z]^\top$, the identity
+$\lVert c\times w\rVert^2=\lVert c\rVert^2\lVert w\rVert^2-(c^\top w)^2$ turns the
+tangency condition $\lVert c\times w\rVert^2=r^2\lVert w\rVert^2$ into
 \begin{equation}
   (c_x u+c_y v+c_z)^2=k\,(u^2+v^2+1),\qquad k=\lVert c\rVert^2-r^2 .
   \label{eq:conic}
 \end{equation}
-This is a quadratic equation in $(u,v)$, so the contour is always a \textbf{conic}: the
-intersection of the tangent cone (still a right circular cone, but now with its axis
-along $c$) with the image plane, which is no longer perpendicular to the axis.
-Rotating the image axes so that $u'$ points along $(c_x,c_y)$ and writing
-$\rho_c=\sqrt{c_x^2+c_y^2}$, \eqref{eq:conic} becomes, after completing the square,
+This equation is quadratic in $(u,v)$, so the contour is always a \textbf{conic}. It is
+the intersection of the tangent cone (still a right circular cone, now with its axis
+along $c$) with an image plane that is no longer perpendicular to that axis.
+Rotating the image axes so that $u'$ points along $(c_x,c_y)$, writing
+$\rho_c=\sqrt{c_x^2+c_y^2}$ and completing the square turns \eqref{eq:conic} into
 \begin{equation}
   (c_z^2-r^2)\Bigl(u'-\frac{\rho_c c_z}{c_z^2-r^2}\Bigr)^2+k\,v'^2=\frac{r^2k}{c_z^2-r^2}.
 \end{equation}
 \begin{itemize}
-  \item If the sphere is fully in front of the camera ($c_z>r$, hence $k>0$) both
-    coefficients are positive: the projection is an \textbf{ellipse} centred at
+  \item If the sphere is fully in front of the camera ($c_z>r$, hence $k>0$), both
+    coefficients are positive and the projection is an \textbf{ellipse} centred at
     $u'_0=\rho_c c_z/(c_z^2-r^2)$, $v'_0=0$, with semi-axes
     \[a_{\text{radial}}=\frac{r\sqrt{\lVert c\rVert^2-r^2}}{c_z^2-r^2},\qquad
       a_{\perp}=\frac{r}{\sqrt{c_z^2-r^2}} .\]
-    The major axis points radially away from the principal point and the elongation
+    The major axis points radially away from the principal point, and the elongation
     $a_{\text{radial}}/a_\perp=\sqrt{(\lVert c\rVert^2-r^2)/(c_z^2-r^2)}\ge 1$ grows
-    as the sphere moves towards the border of the field of view. Note that the centre of
-    the ellipse is \emph{not} the projection $\rho_c/c_z$ of the sphere centre; it is
-    shifted outwards. For $c_x=c_y=0$ we recover the circle of part 1.
-  \item If the sphere touches the plane $z=0$ through the optical centre ($c_z=r$) the
-    $u'^2$ coefficient vanishes and the contour is a \textbf{parabola}; if it crosses
-    that plane ($|c_z|<r$, camera still outside the sphere) the coefficients have
-    opposite signs and the contour is (one branch of) a \textbf{hyperbola}. These cases
-    are only of theoretical interest because part of the sphere is behind the camera.
+    as the sphere moves towards the border of the field of view. The centre of the
+    ellipse is shifted outwards from $\rho_c/c_z$, the projection of the sphere centre.
+    For $c_x=c_y=0$ we recover the circle of part~1.
+  \item If the sphere touches the plane $z=0$ through the optical centre ($c_z=r$), the
+    $u'^2$ coefficient vanishes and the contour is a \textbf{parabola}. If it crosses
+    that plane ($|c_z|<r$, camera still outside the sphere), the coefficients have
+    opposite signs and the contour is (one branch of) a \textbf{hyperbola}. In both
+    cases part of the sphere is behind the camera.
 \end{itemize}
 
-\subsection{Deliverable 2 -- Vanishing points}
+Figure~\ref{fig:sphere} checks these formulas numerically. We project $2\times10^5$
+points sampled on a unit sphere at depth $c_z=5$; for $c_x=0,\dots,10$ the extents of the
+projected points match the analytic ellipse to within $4\times10^{-6}$. The ellipse
+stretches radially as the sphere moves off axis ($a_{\text{radial}}/a_\perp=2.27$ at
+$63^\circ$), and its centre lies further out than the projected sphere centre.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\linewidth]{d1_sphere_projection.pdf}
+  \caption{Perspective projection of a sphere ($r=1$, $c_z=5$). (a)~Projected surface
+    samples (blue), analytic contour from \eqref{eq:conic} (black) and projection of the
+    sphere centre (red cross) for $c_x=0,3,6$. (b)~Elongation
+    $a_{\text{radial}}/a_\perp$ against the angle of the sphere centre off the optical
+    axis: analytic (line) and measured from the projected samples (dots).}
+  \label{fig:sphere}
+\end{figure}
+
+\subsection{Deliverable 2: Vanishing points}
 
 \paragraph{1. Vanishing point of a family of parallel lines.}
 Write a 3D line as $p(\lambda)=p_0+\lambda u$ with $\lVert u\rVert=1$. Its image is
@@ -127,43 +155,52 @@ Write a 3D line as $p(\lambda)=p_0+\lambda u$ with $\lVert u\rVert=1$. Its image
   \pi(p(\lambda))=\Bigl(\frac{p_{0,x}+\lambda u_x}{p_{0,z}+\lambda u_z},\
                         \frac{p_{0,y}+\lambda u_y}{p_{0,z}+\lambda u_z}\Bigr).
 \end{equation}
-If $u_z\neq0$, letting $\lambda\to\infty$ (the direction in which the line moves away
-from the camera, i.e.\ $\lambda u_z>0$) gives
+If $u_z\neq0$, letting $\lambda\to\infty$ in the direction in which the line moves away
+from the camera ($\lambda u_z>0$) gives
 \begin{equation}
-  \boxed{\,v_\infty=\Bigl(\frac{u_x}{u_z},\ \frac{u_y}{u_z}\Bigr)\,}
+  \boxed{\,v_\infty=\Bigl(\frac{u_x}{u_z},\ \frac{u_y}{u_z}\Bigr)\,},
 \end{equation}
-which depends only on the direction $u$ and not on the point $p_0$. Hence every line
-with direction $u$ -- in particular two parallel lines $p_0+\lambda u$ and
-$q_0+\mu u$ -- passes through $v_\infty$ in the image: $v_\infty$ is the vanishing
-point. It is the image of the point at infinity $[u^\top\ 0]^\top$, i.e.\ the
-intersection of the image plane with the ray through the optical centre parallel to the
-lines. With a general calibration matrix $K$ it reads $v_\infty\simeq Ku$ in homogeneous
-coordinates.
+which depends only on the direction $u$ and not on the point $p_0$. Every line with
+direction $u$, in particular both parallel lines $p_0+\lambda u$ and $q_0+\mu u$,
+therefore passes through $v_\infty$ in the image: $v_\infty$ is the vanishing point. It
+is the image of the point at infinity $[u^\top\ 0]^\top$, i.e.\ the intersection of the
+image plane with the ray through the optical centre parallel to the lines. With a
+general calibration matrix $K$ it reads $v_\infty\simeq Ku$ in homogeneous coordinates.
 
-\emph{Geometric view.} Each 3D line together with the optical centre $O$ spans a plane
+\emph{Geometric view.} Each 3D line spans, together with the optical centre $O$, a plane
 whose intersection with the image plane is the image line. For two parallel lines both
 planes contain the direction $u$, so they intersect along the line through $O$ with
-direction $u$; this line hits the image plane exactly at $v_\infty$.
+direction $u$, which hits the image plane exactly at $v_\infty$.
 
 \paragraph{2. When do parallel lines stay parallel?}
-\textbf{Claim:} the images of two (distinct, not through $O$) parallel 3D lines are
+\textbf{Claim:} the images of two distinct parallel 3D lines (neither through $O$) are
 parallel if and only if their direction is parallel to the image plane, $u_z=0$.
 
 \emph{Proof.} ($\Leftarrow$) If $u_z=0$ the depth along the line is constant,
 $z=p_{0,z}$, and
 $\pi(p(\lambda))=\frac{1}{p_{0,z}}[p_{0,x}\ p_{0,y}]^\top+\frac{\lambda}{p_{0,z}}[u_x\ u_y]^\top$:
 the image is a line with direction $[u_x\ u_y]^\top$. The second line has the same image
-direction, so both image lines are parallel (the vanishing point is at infinity,
-$Ku$ has third coordinate $0$).
-($\Rightarrow$) If $u_z\neq0$ both image lines contain the finite point $v_\infty$ from
-part 1, so they intersect there and cannot be parallel (they can only coincide, when
-the two 3D lines are coplanar with $O$). $\square$
+direction, so the two image lines are parallel (the vanishing point $Ku$ has third
+coordinate $0$ and lies at infinity).
+($\Rightarrow$) If $u_z\neq0$, both image lines contain the finite point $v_\infty$ from
+part~1. They intersect there and cannot be parallel; they can only coincide, when the
+two 3D lines are coplanar with $O$. $\square$
 
-In the geometric picture: the two planes through $O$ meet in the line through $O$ with
-direction $u$; this line meets the image plane at a finite point unless it is parallel to
-it, i.e.\ $u_z=0$. A practical consequence is that, for a camera looking straight at a
-wall, the horizontal and vertical edges on the wall stay parallel in the image, while
-edges going in depth converge.
+In the geometric picture, the two planes through $O$ meet in the line through $O$ with
+direction $u$, and this line meets the image plane at a finite point unless it is
+parallel to it ($u_z=0$). For a camera looking straight at a wall, for example, the
+horizontal and vertical edges on the wall stay parallel in the image, while edges
+receding in depth converge. Figure~\ref{fig:vp} projects five parallel lines with
+different starting points for both cases.
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\linewidth]{d2_vanishing_points.pdf}
+  \caption{Images of five parallel 3D lines (dots: projected starting points $p_0$).
+    (a)~With $u_z\neq0$ all images converge to $v_\infty=(1,\,0.5)$. (b)~With $u_z=0$
+    they keep the image direction $[u_x\ u_y]^\top$ and stay parallel.}
+  \label{fig:vp}
+\end{figure}
 
 
 \section{Team work}\label{sec:team}
@@ -172,74 +209,74 @@ edges going in depth converge.
 
 \paragraph{Build.} The official 2023 ROS1 stencil (\code{feature\_tracking}, package
 \code{lab\_5}) is built in a catkin workspace together with \code{opencv3\_catkin}
-(OpenCV 3.4.2 + contrib, which still contains the patented SIFT and SURF in
-\code{xfeatures2d}). Compared with the official package we only switched off modules the
-lab does not use (Python bindings, VTK/viz, FFMPEG) and replaced \code{glog\_catkin} by the
-system glog. Because \code{cv\_bridge} exports the system OpenCV~4.2 libraries, we also
-filter them out of the link line of \code{lab\_5}; otherwise two \code{highgui} versions
-(GTK2 and GTK3) are loaded and \code{imshow} aborts. \code{scripts/build\_workspace.sh}
-builds everything (OpenCV takes 4~min on 12
-cores).
+(OpenCV 3.4.2 + contrib, whose \code{xfeatures2d} module still contains the patented
+SIFT and SURF). Relative to the official package we switched off modules the lab does
+not use (Python bindings, VTK/viz, FFMPEG) and use the system glog instead of
+\code{glog\_catkin}. Because \code{cv\_bridge} exports the system OpenCV~4.2 libraries,
+we also filter them out of the link line of \code{lab\_5}; otherwise two
+\code{highgui} versions (GTK2 and GTK3) are loaded and \code{imshow} aborts.
+\code{scripts/build\_workspace.sh} builds everything (OpenCV takes 4~min on 12 cores).
 
 \paragraph{Descriptor-based trackers (D3--D6).} We compare SIFT~\cite{lowe2004sift},
 SURF~\cite{bay2006surf}, ORB~\cite{rublee2011orb} and FAST~\cite{rosten2006fast} +
 BRIEF~\cite{calonder2010brief}.
 \code{FeatureTracker::trackFeatures} detects keypoints in both images
-(\code{detector->detect}), describes them (\code{detector->compute}; for FAST the
-descriptor is computed by a separate \code{BriefDescriptorExtractor}), and calls
-\code{matchDescriptors}, which runs \code{knnMatch} with $k=2$ and keeps
-\code{m[0]} if \code{m[0].distance < 0.8 m[1].distance} (matches with fewer than two
-neighbours are dropped). SIFT and SURF use the default \code{FlannBasedMatcher}
-(randomised kd-trees on float descriptors~\cite{muja2009flann}); ORB and BRIEF descriptors are binary, so they are
-matched with a brute-force Hamming matcher (\code{BFMatcher(NORM\_HAMMING)}); a FLANN
-LSH index is selectable with a parameter and compared below.
-The good matches are passed to the provided \code{inlierMaskComputation}
-(fundamental matrix with RANSAC, 3\,px epipolar threshold), and the inliers are drawn in
-green over the red outliers with two \code{cv::drawMatches} calls
-(\code{DRAW\_OVER\_OUTIMG}). All statistics are averaged by the provided code and also
-logged per frame to CSV.
+(\code{detector->detect}), describes them (\code{detector->compute}; FAST uses a
+separate \code{BriefDescriptorExtractor}), and calls \code{matchDescriptors}. That
+function runs \code{knnMatch} with $k=2$ and keeps \code{m[0]} if
+\code{m[0].distance < 0.8 m[1].distance}; queries with fewer than two neighbours are
+dropped. SIFT and SURF use the default \code{FlannBasedMatcher} (randomised kd-trees on
+float descriptors~\cite{muja2009flann}). ORB and BRIEF descriptors are binary and are
+matched with a brute-force Hamming matcher (\code{BFMatcher(NORM\_HAMMING)}); a
+parameter switches to a FLANN LSH index, compared below.
+The good matches go to the provided \code{inlierMaskComputation} (fundamental matrix
+with RANSAC, 3\,px epipolar threshold), and two \code{cv::drawMatches} calls
+(\code{DRAW\_OVER\_OUTIMG}) draw the inliers in green over the red outliers. The
+provided code averages all statistics, and we also log them per frame to CSV.
 
 \paragraph{Two fixes to the stencil.} In video mode, \code{imageCallback} stored
 \code{prev\_image = image}, where \code{image} comes from \code{cv\_bridge::toCvShare} and
-does not own its pixels; we keep a \code{clone()} instead. The first frame was also
-matched with itself (100\,\% inliers); it is now skipped.
+does not own its pixels; we keep a \code{clone()} instead. The stencil also matched the
+first frame with itself (100\,\% inliers); we now skip it.
 
 \paragraph{Statistics.} As in the handout table, ``\# of Matches'' is the number of
 $k$NN queries (one per keypoint of image~1), ``Good Matches'' are those that pass the
-ratio test, and the inlier ratio is $\#\text{inliers}/\#\text{good matches}$. We added
-the wall-clock time of detection + description + matching for one image pair (both images
-are processed, drawing excluded; Intel Core i5-12400F, Release build).
+ratio test, and the inlier ratio is $\#\text{inliers}/\#\text{good matches}$. We add the
+wall-clock time of detection, description and matching for one image pair (both images
+processed, drawing excluded; Intel Core i5-12400F, Release build).
 
-\subsection{Deliverable 3 -- SIFT keypoints and descriptors}
+\begin{keep}
+\subsection{Deliverable 3: SIFT keypoints and descriptors}
 
 Figure~\ref{fig:kp} shows the 603 and 969 SIFT keypoints detected in \code{box.png} and
 \code{box\_in\_scene.png}, drawn with their scale (circle radius) and orientation.
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{d3_sift_keypoints.jpg}
+  \includegraphics[width=0.78\linewidth]{d3_sift_keypoints.jpg}
   \caption{SIFT keypoints (\code{DRAW\_RICH\_KEYPOINTS}): 603 in \code{box.png} (left),
     969 in \code{box\_in\_scene.png} (right).}
   \label{fig:kp}
 \end{figure}
+\end{keep}
 
-\subsection{Deliverable 4 -- Descriptor-based matching}
+\subsection{Deliverable 4: Descriptor-based matching}
 
 \begin{enumerate}
   \item The SIFT descriptor has \textbf{128 dimensions} (a $4\times4$ grid of 8-bin
-    gradient orientation histograms), stored as \code{CV\_32F}: the descriptor matrices are
-    $603\times128$ and $969\times128$.
+    gradient orientation histograms), stored as \code{CV\_32F}; the descriptor matrices
+    are $603\times128$ and $969\times128$.
   \item Figure~\ref{fig:matches}(a) shows the best FLANN match of every keypoint of
-    \code{box.png} (603 matches). Most of them are wrong: every keypoint gets a nearest
-    neighbour, even the ones on the background of \code{box.png} that do not exist in the
-    second image.
-  \item[3--4.] After the ratio test with threshold 0.8 only 98 matches remain
-    (Fig.~\ref{fig:matches}(b)); almost all of them now connect the box to its copy in the
-    scene, i.e.\ the ratio test removes most outliers. (FLANN's kd-trees are randomised,
-    so the count varies between 95 and 104 over 20 runs, mean 99.7; the handout reports 93.)
+    \code{box.png} (603 matches). Most of them are wrong, because every keypoint gets a
+    nearest neighbour, including those on the background of \code{box.png} that have no
+    counterpart in the second image.
+  \item[3--4.] The ratio test with threshold 0.8 keeps 98 matches
+    (Fig.~\ref{fig:matches}(b)), and almost all of them connect the box to its copy in the
+    scene. FLANN's kd-trees are randomised, so over 20 runs the count ranges from 95 to
+    104 (mean 99.7; the handout reports 93).
 \end{enumerate}
 
-\begin{figure}[h]
+\begin{figure}[!htb]
   \centering
   \begin{subfigure}{0.49\linewidth}\includegraphics[width=\linewidth]{d4_sift_matches_all.jpg}
     \caption{All 603 nearest-neighbour matches.}\end{subfigure}\hfill
@@ -249,27 +286,28 @@ Figure~\ref{fig:kp} shows the 603 and 969 SIFT keypoints detected in \code{box.p
   \label{fig:matches}
 \end{figure}
 
-\subsection{Deliverable 5 -- Matching quality}
+\begin{keep}
+\subsection{Deliverable 5: Matching quality}
 
-Figure~\ref{fig:inliers} shows the inliers (green) and outliers (red) of the 98 good
-matches of that run; Table~\ref{tab:pair} (first column) gives the statistics averaged
-over 20 runs, which agree with the handout (603 / 969 / 603 / 93 / 78 / 83.9\,\%).
+Figure~\ref{fig:inliers} shows the inliers (green) and outliers (red) among the 98 good
+matches of that run.
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.75\linewidth]{d5_sift_inliers.jpg}
+  \includegraphics[width=0.64\linewidth]{d5_sift_inliers.jpg}
   \caption{SIFT: 76 RANSAC inliers (green) and 22 outliers (red) among the 98 ratio-test matches.}
   \label{fig:inliers}
 \end{figure}
+\end{keep}
 
-\subsection{Deliverable 6.a -- Comparison on the image pair}
+\begin{keep}
+Table~\ref{tab:pair} (first column) gives the statistics averaged over 20 runs, close
+to the handout values (603 / 969 / 603 / 93 / 78 / 83.9\,\%).
 
-\begin{table}[h]
-  \centering
-  \caption{Statistics on \code{box.png}$\to$\code{box\_in\_scene.png}. ORB: 2000
-    features, 8 pyramid levels; FAST: threshold 10, 32-byte BRIEF; all others default.
-    Mean of 20 runs (SIFT/SURF vary slightly because FLANN is randomised; the
-    brute-force matches of ORB and BRIEF are deterministic).}
+\begin{table}[H]
+  \centering\small
+  \caption{Statistics on \code{box.png}$\to$\code{box\_in\_scene.png}, mean of 20 runs.
+    ORB: 2000 features, 8 pyramid levels; FAST: threshold 10, 32-byte BRIEF; others default.}
   \label{tab:pair}
   \begin{tabular}{lrrrr}
     \toprule
@@ -285,34 +323,34 @@ Time / pair [ms] & 64.8 & 58.4 & 19.4 & 25.0 \\
     \bottomrule
   \end{tabular}
 \end{table}
+\end{keep}
 
-\paragraph{What we tried.} Table~\ref{tab:pairsweep} lists all configurations.
-\begin{itemize}
-  \item \textbf{ORB pyramid.} With the stencil's \code{ORB::create(500, 1.2, 1)} (one
-    pyramid level, used to avoid the ``Unknown interpolation method'' error mentioned in
-    the handout) ORB finds only 7 inliers, because the box appears about $2\times$
-    smaller in the scene and ORB is then not scale invariant. With OpenCV~3.4.2 the
-    8-level pyramid works without that error and gives 26 inliers (89.7\,\% ratio);
-    raising the number of features to 2000 gives 55 inliers.
-  \item \textbf{SURF Hessian threshold.} 100 (default) vs.\ 400: fewer keypoints and
-    25\,\% faster, but 76 instead of 88 inliers. The default is kept.
-  \item \textbf{FAST threshold.} 10 (default) vs.\ 30: fewer corners, but even fewer
-    good matches. FAST+BRIEF is the weakest method on this pair: neither FAST nor BRIEF
-    is scale invariant and BRIEF is not rotation invariant, and the box is both rotated
-    and shrunk. Figure~\ref{fig:pairgrid} also shows that several of its 17 ``inliers''
-    are visibly wrong: the fundamental-matrix test only checks the distance to an
-    epipolar line, so with few correct matches RANSAC can accept wrong ones.
-  \item \textbf{FLANN-LSH vs.\ brute force.} For ORB and BRIEF,
-    \code{FlannBasedMatcher(new flann::LshIndexParams(20, 10, 2))} returns the same good
-    matches as brute-force Hamming (we checked independently in Python that it returns the
-    exact nearest neighbour for 498 of 500 ORB descriptors), but it is 5--20$\times$
-    slower here because the LSH index is rebuilt for every image pair and the descriptor
-    sets are small. Brute-force Hamming (XOR + popcount) is therefore the better choice.
-\end{itemize}
+\subsection{Deliverable 6.a: Comparison on the image pair}
 
-\begin{table}[h]
+The box appears rotated and about $2\times$ smaller in the scene, so this pair tests
+scale and rotation invariance. SURF finds the most inliers and SIFT the highest inlier
+ratio.
+
+\begin{keep}
+Figure~\ref{fig:funnel} shows where each pipeline loses its matches. The ratio
+test keeps 17\,\% of the SIFT and 14\,\% of the SURF queries, but only 5\,\% for ORB and
+2\,\% for FAST+BRIEF; on this pair the descriptor, not RANSAC, sets the final count.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.65\linewidth]{d6a_match_funnel.pdf}
+  \caption{Matches surviving each stage on the box pair, log scale: $k$NN queries (one per
+    keypoint of \code{box.png}), ratio-test matches and RANSAC inliers. Configurations as
+    in Table~\ref{tab:pair}.}
+  \label{fig:funnel}
+\end{figure}
+\end{keep}
+
+Table~\ref{tab:pairsweep} lists every configuration we ran.
+
+\begin{table}[!htb]
   \centering\small
-  \caption{All configurations tried on the image pair.}
+  \caption{All configurations run on the image pair.}
   \label{tab:pairsweep}
   \begin{tabular}{llrrrrr}
     \toprule
@@ -332,30 +370,60 @@ Time / pair [ms] & 64.8 & 58.4 & 19.4 & 25.0 \\
   \end{tabular}
 \end{table}
 
-\begin{figure}[h]
+Four parameter choices explain the differences.
+\begin{itemize}
+  \item \textbf{ORB needs its scale pyramid.} The stencil's
+    \code{ORB::create(500, 1.2, 1)} uses one pyramid level to avoid the ``Unknown
+    interpolation method'' error mentioned in the handout, which makes ORB single-scale
+    and leaves 7 inliers. OpenCV~3.4.2 runs the 8-level pyramid without that error and
+    gives 26 inliers (89.7\,\% ratio); with 2000 features ORB reaches 55 inliers at
+    19\,ms, a third of the SIFT and SURF time.
+  \item \textbf{The default SURF Hessian threshold (100) gives the most inliers.} Raising
+    it to 400 saves 25\,\% of the time but drops the inliers from 88 to 76.
+\end{itemize}
+\begin{keep}
+\begin{itemize}
+  \item \textbf{FAST+BRIEF is built for small viewpoint changes.} Neither FAST nor BRIEF
+    is scale invariant and BRIEF is not rotation invariant, so this pair leaves it 41 good
+    matches and 17 inliers; raising the FAST threshold from 10 to 30 removes good matches
+    faster than corners. With so few correct matches, RANSAC also accepts some wrong ones
+    (Fig.~\ref{fig:pairgrid}), because the fundamental-matrix test only checks the
+    distance to an epipolar line.
+\end{itemize}
+
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{d6a_inliers_grid.jpg}
+  \includegraphics[width=0.95\linewidth]{d6a_inliers_grid.jpg}
   \caption{Inliers (green) and outliers (red) for SURF, ORB (2000 features, 8 levels),
     FAST+BRIEF and the stencil ORB (500 features, 1 level).}
   \label{fig:pairgrid}
 \end{figure}
+\end{keep}
+\begin{itemize}
+  \item \textbf{Brute-force Hamming beats FLANN-LSH for binary descriptors.}
+    With an LSH index (\code{LshIndexParams(20, 10, 2)}), \code{FlannBasedMatcher} returns the same good
+    matches as brute force (an independent Python check found the exact nearest neighbour
+    for 498 of 500 ORB descriptors) but runs 5--20$\times$ slower, because the LSH index
+    is rebuilt for every image pair and the descriptor sets are small. Brute-force
+    Hamming distance is a XOR and a popcount per pair.
+\end{itemize}
 
-\subsection{Deliverable 6.b -- Real datasets}
+\subsection{Deliverable 6.b: Real datasets}
 
-We used the two required bags:
-\code{30fps\_424x240\_2018-10-01-18-35-06.bag} (real RealSense colour images,
-$424\times240$, 1584 frames, a hand-held walk through a tunnel) and
-\code{vnav-lab5-smooth-trajectory.bag} (simulated TESSE camera, $720\times480$, 1386
-frames). Every consecutive pair of frames is matched (current frame = image~1, previous
-frame = image~2). The bag is played at real-time rate; the subscriber queue (1000) is
-large enough that no frame is dropped: 1578--1583 and 1382--1385 frame pairs were
-processed (a few frames at the start/end of the bag are missed while the node connects or
-shuts down). For every method we tried 2--3 parameter sets (Table~\ref{tab:videosweep})
-and Tables~\ref{tab:30fps}--\ref{tab:smooth} use the one with the most inliers,
-which was the same on both datasets.
+We ran every method on the two required bags and matched each frame against the previous
+one (current frame = image~1, previous frame = image~2). The bags play at real-time rate,
+and the subscriber queue (1000) is large enough that no frame is dropped: 1578--1583 and
+1382--1385 frame pairs were processed, the few missing ones at the start and end of the bag
+while the node connects or shuts down. For every method we ran 2--3 parameter sets; the
+tables below report the set with the most inliers, which was the same on both datasets.
 
-\begin{table}[h]
-  \centering
+\begin{keep}
+Table~\ref{tab:30fps} gives the averages for \code{30fps\_424x240\_2018-10-01-18-35-06.bag}:
+real RealSense colour images, $424\times240$, 1584 frames of a hand-held walk through a
+tunnel.
+
+\begin{table}[H]
+  \centering\small
   \caption{Average over all frame pairs of \code{30fps\_424x240} (real data).}
   \label{tab:30fps}
   \begin{tabular}{lrrrrr}
@@ -372,9 +440,14 @@ Time / pair [ms] & 63.7 & 28.7 & 8.8 & 5.4 & 3.0 \\
     \bottomrule
   \end{tabular}
 \end{table}
+\end{keep}
 
-\begin{table}[h]
-  \centering
+\begin{keep}
+Table~\ref{tab:smooth} gives the averages for \code{vnav-lab5-smooth-trajectory.bag}:
+simulated TESSE camera images, $720\times480$, 1386 frames.
+
+\begin{table}[H]
+  \centering\small
   \caption{Average over all frame pairs of \code{vnav-lab5-smooth-trajectory} (simulated data).}
   \label{tab:smooth}
   \begin{tabular}{lrrrrr}
@@ -391,42 +464,18 @@ Time / pair [ms] & 144.9 & 72.1 & 12.1 & 4.4 & 5.9 \\
     \bottomrule
   \end{tabular}
 \end{table}
+\end{keep}
 
+\begin{keep}
 Parameters: SIFT contrast threshold 0.02 (default 0.04); SURF Hessian 100; ORB 2000
 features, 8 levels; FAST threshold 10 + 32-byte BRIEF; ORB/BRIEF matched with
 brute-force Hamming; ratio 0.8 everywhere. Harris+LK: up to 1000 corners, quality level
-0.01, minimum distance 5\,px (Section~\ref{sec:lk}).
+0.01, minimum distance 5\,px (Section~\ref{sec:lk}). Table~\ref{tab:videosweep} lists all
+configurations we ran.
 
-\begin{figure}[p]
-  \centering
-  \includegraphics[width=\linewidth]{d6b_30fps_per_frame.pdf}\\[0.5em]
-  \includegraphics[width=\linewidth]{d6b_smooth_per_frame.pdf}
-  \caption{Number of inliers and inlier ratio for every frame pair of the two datasets.}
-  \label{fig:perframe}
-\end{figure}
-
-\begin{figure}[p]
-  \centering
-  \includegraphics[width=\linewidth]{d6b_30fps_frame150.jpg}\\[0.5em]
-  \includegraphics[width=\linewidth]{d6b_smooth_frame150.jpg}
-  \caption{Inliers (green) and outliers (red) at frame pair 150 of each dataset (top:
-    real, bottom: simulated). Full SIFT videos: \code{video/d6\_sift\_tracking\_*.mp4}.}
-  \label{fig:videoframes}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=0.65\linewidth]{d6b_timing.pdf}
-  \caption{Average time per frame pair (detection and description of both frames +
-    matching; for LK: tracking + re-detection). Log scale. Repeating the whole set of runs
-    changed individual timings by up to $\pm30\,\%$ (system load), so only the order of
-    magnitude and the ranking are meaningful; the counts changed by less than 1\,\%.}
-  \label{fig:timing}
-\end{figure}
-
-\begin{table}[h]
+\begin{table}[H]
   \centering\small
-  \caption{All configurations tried on the videos (bold: used in Tables~\ref{tab:30fps}--\ref{tab:smooth}).}
+  \caption{All configurations run on the videos (bold: used in Tables~\ref{tab:30fps}--\ref{tab:smooth}).}
   \label{tab:videosweep}
   \begin{tabular}{llrrrr@{\hspace{1.5em}}rrrr}
     \toprule
@@ -448,68 +497,126 @@ brute-force Hamming; ratio 0.8 everywhere. Harris+LK: up to 1000 corners, qualit
     \bottomrule
   \end{tabular}
 \end{table}
+\end{keep}
+
+\begin{keep}
+Figure~\ref{fig:videoframes} shows the inliers and outliers of the four descriptor
+methods on one frame pair of each dataset.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.67\linewidth]{d6b_30fps_frame150.jpg}\\[0.5em]
+  \includegraphics[width=0.67\linewidth]{d6b_smooth_frame150.jpg}
+  \caption{Inliers (green) and outliers (red) at frame pair 150 of each dataset (top:
+    real, bottom: simulated). Full SIFT videos: \code{video/d6\_sift\_tracking\_*.mp4}.}
+  \label{fig:videoframes}
+\end{figure}
+\end{keep}
 
 \paragraph{Conclusions.}
 \begin{itemize}
   \item \textbf{Consecutive frames are much easier than the image pair.} Between two
-    video frames the viewpoint changes by a few pixels and there is almost no scale or
-    rotation change, so all methods reach 84--98\,\% inlier ratio, including FAST+BRIEF
-    and single-level ORB, which failed on the box pair. Invariance to large scale and
-    rotation changes (SIFT, SURF, multi-scale ORB) is what matters for matching
-    unrelated views (e.g.\ loop closure), not for frame-to-frame tracking.
-  \item \textbf{Number of keypoints} depends mostly on thresholds and on the scene:
-    SURF finds by far the most keypoints on the simulated images (1194) and SIFT the
-    fewest (270), even with a lowered contrast threshold;
-    on the real images FAST and ORB find the most. Lowering thresholds increases the
-    number of inliers almost proportionally, at a small cost in inlier ratio.
-  \item \textbf{Quality.} On the real dataset the binary descriptors keep the largest
-    fraction of matches after the ratio test (FAST+BRIEF 77\,\%, ORB 74\,\%, vs.\
-    56\,\% for SIFT) and ORB has the highest inlier ratio of the descriptor methods
-    (98.1\,\%). On the simulated
-    dataset all ratios are lower (84--91\,\%): the scene has large textureless walls and
-    repetitive structures (identical gates, floor tiles), which produce ambiguous
-    descriptors; Fig.~\ref{fig:perframe} shows the dips when the camera faces such
-    regions or turns quickly.
-  \item \textbf{Speed} (Fig.~\ref{fig:timing}). Binary methods are an order of
-    magnitude faster: FAST+BRIEF 4--5\,ms and ORB 9--12\,ms per pair versus 29--72\,ms
-    for SURF and 64--145\,ms for SIFT (both images are processed in each pair; caching
-    the previous frame's keypoints would halve this). SIFT on the $720\times480$
-    simulated images cannot run at 30\,Hz. Binary descriptors are also 8--16$\times$
-    smaller (32 bytes vs.\ 256/512 bytes for SURF/SIFT) and are compared with a Hamming
-    distance instead of an L2 distance.
-  \item \textbf{Applications.} For real-time VO/SLAM on a drone (high frame rate,
-    limited compute), ORB is the best compromise: fast, rotation- and scale-invariant
-    enough for re-localisation (this is why ORB-SLAM uses it). FAST+BRIEF is the fastest
-    descriptor-based option but only for small inter-frame motion. SIFT/SURF are the
-    most robust to large viewpoint/scale changes (box pair) and are suited to offline
-    tasks such as structure from motion, image stitching or object recognition, where
-    accuracy matters more than speed.
+    video frames the image moves by a few pixels with almost no scale or rotation change,
+    so all methods reach 84--98\,\% inlier ratio, including FAST+BRIEF and single-level
+    ORB. Invariance to large scale and rotation changes (SIFT, SURF, multi-scale ORB)
+    pays off when matching unrelated views, as in loop closure, more than in
+    frame-to-frame tracking.
+  \item \textbf{Keypoint counts follow the thresholds and the scene.} SURF finds by far
+    the most keypoints on the simulated images (1194) and SIFT the fewest (270, with the
+    contrast threshold already halved); on the real images FAST and ORB find the most.
+    Lowering a threshold raises the number of inliers almost proportionally at a small
+    cost in inlier ratio.
+\end{itemize}
+\begin{itemize}
+  \item \textbf{Binary descriptors keep more of their matches.} On the real dataset
+    FAST+BRIEF keeps 77\,\% and ORB 74\,\% of the $k$NN matches after the ratio test,
+    against 56\,\% for SIFT, and ORB has the highest inlier ratio of the descriptor
+    methods (98.1\,\%). On the simulated dataset all ratios are lower (84--91\,\%):
+    large textureless walls and repeated structures (identical gates, floor tiles) give
+    ambiguous descriptors, and Fig.~\ref{fig:perframe} shows the ratio dropping when the
+    camera faces such regions or turns quickly.
 \end{itemize}
 
-\subsection{Deliverable 7 -- Harris corners + Lucas--Kanade tracker}\label{sec:lk}
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=\linewidth]{d6b_per_frame.pdf}
+  \caption{Inliers per frame pair (left) and inlier ratio (right) on the real (top) and
+    simulated (bottom) dataset, smoothed with a centred 15-pair moving average (0.5\,s).
+    Note the truncated ratio axes. Harris+LK (black) has the highest ratio throughout;
+    the descriptor methods dip when the camera turns quickly or faces textureless or
+    repetitive regions.}
+  \label{fig:perframe}
+\end{figure}
+
+\begin{keep}
+\begin{itemize}
+  \item \textbf{Binary methods are an order of magnitude faster}
+    (Fig.~\ref{fig:timing}): FAST+BRIEF takes 4--5\,ms and ORB 9--12\,ms per pair, against
+    29--72\,ms for SURF and 64--145\,ms for SIFT. Each pair processes both images, so
+    caching the previous frame's keypoints would roughly halve the detection cost. SIFT
+    on the $720\times480$ simulated images exceeds the 33\,ms budget of a 30\,Hz camera
+    four times over. Binary descriptors are also 8--16$\times$ smaller (32 bytes against
+    256/512 bytes for SURF/SIFT) and are compared with a Hamming distance instead of an
+    L2 distance.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.65\linewidth]{d6b_timing.pdf}
+  \caption{Average time per frame pair (detection and description of both frames plus
+    matching; for LK, tracking plus re-detection), log scale. Only ORB, FAST+BRIEF and
+    Harris+LK fit the 33\,ms budget of a 30\,Hz camera on both datasets. Timings varied
+    by up to $\pm30\,\%$ between repeated runs (system load); counts by less than 1\,\%.}
+  \label{fig:timing}
+\end{figure}
+\end{keep}
+
+\begin{keep}
+\begin{itemize}
+  \item \textbf{ORB suits onboard VO, SIFT/SURF suit offline matching.} For real-time
+    VO/SLAM on a drone, with a high frame rate and limited compute, ORB is fast and
+    invariant enough to rotation and scale for re-localisation, which is also the choice
+    made in ORB-SLAM~\cite{murartal2015orbslam}. FAST+BRIEF is the fastest descriptor-based option when the
+    inter-frame motion is small. SIFT and SURF handle the largest viewpoint and scale
+    changes (box pair) and fit offline tasks such as structure from motion, image
+    stitching or object recognition, where accuracy matters more than speed.
+    Figure~\ref{fig:tradeoff} places all configurations of Table~\ref{tab:videosweep} on
+    a plot of time against inliers: within the 30\,Hz budget, ORB gives the most inliers on both
+    datasets (668 and 392 per pair).
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{d6b_tradeoff.pdf}
+  \caption{Time against inliers per frame pair for every configuration of
+    Table~\ref{tab:videosweep}. Lines join the configurations of one method in order of
+    keypoint count; filled markers are the configurations used in
+    Tables~\ref{tab:30fps}--\ref{tab:smooth}. Dashed line: 33\,ms budget of a 30\,Hz
+    camera.}
+  \label{fig:tradeoff}
+\end{figure}
+\end{keep}
+
+\subsection{Deliverable 7: Harris corners + Lucas--Kanade tracker}\label{sec:lk}
 
 \paragraph{Implementation.} We combine Harris corners~\cite{harris1988corner} with the
 Lucas--Kanade tracker~\cite{lucas1981lk}. Our \code{trackFeatures} converts the frame to
 grayscale and runs \code{calcOpticalFlowPyrLK} ($21\times21$ window, 4 pyramid
 levels, at most 30 iterations / $\varepsilon=0.01$) from the corners of the previous
-frame. Corners with \code{status == 1} are the matches; the provided
-\code{inlierMaskComputation} (fundamental matrix + RANSAC) gives the inliers. Only the
-inliers are kept and tracked further, and the set is topped up every frame with new Harris
-corners (\code{goodFeaturesToTrack} with \code{useHarrisDetector = true}, $k=0.04$,
-quality level 0.01), masked so that they are at least the minimum distance away from the
-corners already being tracked. \code{show()} draws the last 20 positions of every track
-in green and the RANSAC outliers in red (Fig.~\ref{fig:lk}; videos in
+frame. Corners with \code{status == 1} are the matches, and the provided
+\code{inlierMaskComputation} (fundamental matrix + RANSAC) selects the inliers. Only the
+inliers are tracked further. Every frame, \code{goodFeaturesToTrack}
+(\code{useHarrisDetector = true}, $k=0.04$, quality level 0.01) tops up the set with new
+Harris corners, masked to stay at least the minimum distance away from the corners
+already tracked. \code{show()} draws the last 20 positions of every track in green and
+the RANSAC outliers in red (Fig.~\ref{fig:lk}; videos in
 \code{video/d7\_lk\_tracking\_*.mp4}). For the statistics, ``Keypoints in Img~1'' are the
 corners LK tries to track, ``Keypoints in Img~2'' the corners available in the current
-frame after re-detection, ``Matches'' = one query per corner (as for the descriptor
-methods) and ``Good matches'' = corners with \code{status == 1}. Results are in the last
-column of Tables~\ref{tab:30fps}--\ref{tab:smooth}.
+frame after re-detection, ``Matches'' counts one query per corner (as for the descriptor
+methods), and ``Good matches'' are corners with \code{status == 1}. The results are in
+the last column of Tables~\ref{tab:30fps}--\ref{tab:smooth}.
 
-The average number of corners is below the maximum (561 of 1000 on the real data, 276
-on the simulated one) because \code{goodFeaturesToTrack} only accepts corners with a
-Harris response above 1\,\% of the strongest corner in the image.
-
-\begin{figure}[h]
+\begin{figure}[!htb]
   \centering
   \begin{subfigure}{0.40\linewidth}\includegraphics[width=\linewidth]{d7_30fps_lk_tracks.jpg}
     \caption{\code{30fps\_424x240}, frame 150.}\end{subfigure}\hfill
@@ -519,71 +626,88 @@ Harris response above 1\,\% of the strongest corner in the image.
   \label{fig:lk}
 \end{figure}
 
+The average number of corners stays below the maximum (561 of 1000 on the real data, 276
+on the simulated data) because \code{goodFeaturesToTrack} only accepts corners whose
+Harris response exceeds 1\,\% of the strongest corner in the image.
+
 \paragraph{Assumptions of the LK tracker.}
 \begin{enumerate}
   \item \textbf{Brightness constancy:} a feature keeps the same intensity between
     frames, $I(x+\delta x, y+\delta y, t+\delta t)=I(x,y,t)$; linearising gives the optical
     flow constraint $I_x u + I_y v + I_t = 0$.
   \item \textbf{Small motion:} the displacement is small enough for that first-order
-    Taylor expansion to hold (the image pyramid extends this to larger motions, coarse to
-    fine).
-  \item \textbf{Spatial coherence:} all pixels in the window around a feature move with
-    the same (translational) flow, which gives an over-determined system solved by least
-    squares. It is well conditioned only if the $2\times2$ structure tensor
-    $\sum\nabla I\nabla I^\top$ has two large eigenvalues -- exactly what the Harris
-    corner detector selects, which is why Harris corners and LK go together.
+    Taylor expansion to hold. The image pyramid extends this to larger motions, coarse to
+    fine.
+  \item \textbf{Spatial coherence:} all pixels in the window around a feature share the
+    same translational flow, which gives an over-determined system solved by least
+    squares. The system is well conditioned only if the $2\times2$ structure tensor
+    $\sum\nabla I\nabla I^\top$ has two large eigenvalues, and that is exactly what the
+    Harris detector selects; hence the pairing of Harris corners with LK.
 \end{enumerate}
 
 \paragraph{Comparison with the descriptor-based methods.}
-Harris+LK has the highest inlier ratio on both datasets (99.7\,\% and 95.5\,\%) and is
-among the fastest (3.0 and 5.9\,ms per pair: no descriptors, the search is local, and the
-corners of the previous frame are reused). Its number of inliers (552 and 255) is
-comparable to ORB/FAST+BRIEF. The reason is that LK searches for each feature only around
-its previous position, so it cannot produce the far-away ambiguous matches that a global
-descriptor search can (e.g.\ between repeated gates or floor tiles), and the inlier-only
-tracking removes bad points. On the other hand, LK only works under its assumptions: it
-needs small inter-frame motion and constant brightness, it slowly drifts, and it cannot
-match two unrelated views. It would fail completely on the box pair of
-Deliverable~6.a and cannot be used for loop closure or re-localisation, where
-descriptors are needed. In the per-frame plots (Fig.~\ref{fig:perframe}) LK is also the
-most stable curve, while the descriptor methods have dips at fast rotations.
+Harris+LK has the highest inlier ratio on both datasets (99.7\,\% and 95.5\,\%), is among
+the fastest (3.0 and 5.9\,ms per pair), and its inlier count (552 and 255) is comparable
+to ORB and FAST+BRIEF. It is fast because it computes no descriptors, searches locally
+and reuses the corners of the previous frame. It is reliable because LK searches for
+each feature only around its previous position, so it cannot produce the distant
+ambiguous matches that a global descriptor search can (between repeated gates or floor
+tiles, for example), and tracking only inliers keeps bad points from propagating. In
+the per-frame plots (Fig.~\ref{fig:perframe}) LK has the steadiest curve, while the
+descriptor methods dip at fast rotations. The distributions in
+Fig.~\ref{fig:ratiodist} show the same: the 5th percentile of the LK inlier ratio is
+98.7\,\% on the real and 88.2\,\% on the simulated data, against 86.4\,\% and 75.6\,\% for
+SIFT. Its strength comes from its assumptions: LK
+needs small inter-frame motion and constant brightness, and long tracks accumulate
+drift. Matching unrelated views, as in the box pair of Deliverable~6.a, loop closure or
+re-localisation, remains the job of descriptors.
 
-\subsection{Deliverable 8 (optional) -- Farneback dense optical flow}
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.88\linewidth]{d7_ratio_distribution.pdf}
+  \caption{Distribution of the per-frame inlier ratio for the configurations of
+    Tables~\ref{tab:30fps}--\ref{tab:smooth} (1578--1583 pairs per method on the real,
+    1384--1385 on the simulated data). Boxes: quartiles and median; whiskers: 5th and
+    95th percentiles.}
+  \label{fig:ratiodist}
+\end{figure}
+
+\subsection{Deliverable 8 (optional): Farneback dense optical flow}\label{sec:flow}
 
 The node in \code{self\_flow.cpp} computes the dense flow between consecutive grayscale
 frames with Farneback's polynomial-expansion method~\cite{farneback2003flow}
-(\code{calcOpticalFlowFarneback}; pyramid scale 0.5, 3 levels, $15\times15$ window, 3 iterations,
-polynomial neighbourhood 5, $\sigma=1.2$) and shows, side by side, the frame with the
-flow vectors on a 16-pixel grid and a colour-coded flow field (hue = direction,
+(\code{calcOpticalFlowFarneback}; pyramid scale 0.5, 3 levels, $15\times15$ window, 3
+iterations, polynomial neighbourhood 5, $\sigma=1.2$). It shows, side by side, the frame
+with the flow vectors on a 16-pixel grid and a colour-coded flow field (hue = direction,
 brightness = magnitude, saturated at 10\,px). We ran it on both datasets
-(\code{roslaunch lab\_5} \code{self\_flow.launch}); Fig.~\ref{fig:flow} shows one frame, and
-\code{video/d8\_farneback\_flow\_*.mp4} the full sequences. During the rotation in
-Fig.~\ref{fig:flow} the flow is nearly uniform (one colour) on the far walls and much
-larger on the nearby door frame on the right, as expected from parallax. Textureless
-regions (uniform walls, floor) get unreliable, near-zero flow, since no method can
-estimate motion where the image has no gradient (aperture problem).
+(\code{roslaunch lab\_5} \code{self\_flow.launch}).
 
-\begin{figure}[h]
+\begin{keep}
+Figure~\ref{fig:flow} shows one frame of each dataset;
+\code{video/d8\_farneback\_flow\_*.mp4} contains the full sequences.
+
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{d8_smooth_farneback.jpg}\\[0.4em]
-  \includegraphics[width=0.75\linewidth]{d8_30fps_farneback.jpg}
+  \includegraphics[width=0.64\linewidth]{d8_smooth_farneback.jpg}\\[0.4em]
+  \includegraphics[width=0.48\linewidth]{d8_30fps_farneback.jpg}
   \caption{Farneback dense optical flow. Left: frame with flow vectors ($2\times$
     scaled); right: colour-coded flow. Top: simulated dataset, bottom: real dataset.}
   \label{fig:flow}
 \end{figure}
+\end{keep}
 
-\subsection{Reproducing the results}
-\begin{verbatim}
-bash scripts/build_workspace.sh            # opencv3_catkin + lab_5
-source ~/vnav-builds/lab5_ws/devel/setup.bash && roscore &
-roslaunch lab_5 two_frames_tracking.launch descriptor:=SIFT   # interactive D3-D5
-python3 scripts/run_experiments.py pair    # D3-D6a  -> results/d6a_pair/
-python3 scripts/run_experiments.py video --frames-for SIFT LK # D6b, D7
-bash scripts/run_flow.sh 30fps; bash scripts/run_flow.sh smooth   # D8
-python3 scripts/make_figures.py            # report/figures/ + table rows
-bash scripts/make_videos.sh; bash scripts/build_report.sh
-\end{verbatim}
+During the rotation in the simulated frame, the flow is nearly uniform (one colour) on the
+far walls and much larger on the nearby door frame on the right, the parallax expected from
+the closer surface. Textureless regions (uniform walls, floor) get near-zero, unreliable
+flow: where the image has no gradient, its motion cannot be estimated.
 
+
+
+\section*{Individual responsibility}
+
+Within the team I was responsible for the Harris corner detection, the Lucas--Kanade
+optical-flow tracker and the ROS video processing (Section~\ref{sec:lk}), and I
+implemented the core of the Farneback dense optical flow (Section~\ref{sec:flow}).
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
