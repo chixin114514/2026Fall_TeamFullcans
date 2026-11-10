@@ -148,6 +148,7 @@ int main(int argc,
   } else if (descriptor == "LK") {
     ///////////////////// Lucas-Kanade ///////////////////////////////////////////////////
     lk_tracker.reset(new LKFeatureTracker());
+    lk_tracker->configureDisplay(local_nh);
     lk_tracker->setCornerParams(local_nh.param<int>("lk_max_corners", 500),
                                 local_nh.param<double>("lk_quality_level", 0.01),
                                 local_nh.param<double>("lk_min_distance", 10.0));
@@ -159,8 +160,10 @@ int main(int argc,
   }
 
   if (feature_tracker) {
+    feature_tracker->configureDisplay(local_nh);
     feature_tracker->setOutput(mode == 0, output_dir, stats_csv,
                                frames_dir, save_frame, show);
+    feature_tracker->setDisplayDelay(local_nh.param<int>("display_delay_ms", 0));
     feature_tracker->setRatioThreshold(local_nh.param<double>("ratio", 0.8));
     feature_tracker->setUseBruteForceMatcher(local_nh.param<bool>("bf_matcher", true));
   }

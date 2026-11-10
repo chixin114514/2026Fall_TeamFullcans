@@ -115,6 +115,7 @@ class RaceNode:
         self.publish_path()
         self.lock = threading.Lock()
         self.last_state = None
+        self.last_x = None
         self.stall_after = rospy.get_param('~stall_after', 0.0)
         rospy.Subscriber('/current_state', Odometry, self.on_state, queue_size=1, tcp_nodelay=True)
         if self.stall_after > 0.0:
@@ -165,6 +166,12 @@ class RaceNode:
         R = quat_matrix(q.x, q.y, q.z, q.w)
         omega_world = np.array([w.x, w.y, w.z])
 
+        if self.last_x is not None and np.linalg.norm(x - self.last_x) > 3.0:
+            # Respawned at the start: hover again, then fly the race again.
+            self.phase, self.t0, self.hover_since = 'hover', None, None
+            with self.lock:
+                self.last_state = None
+        self.last_x = x
         if self.phase == 'hover':
             if np.linalg.norm(x - self.start) < 0.15 and np.linalg.norm(vel) < 0.2:
                 if self.hover_since is None:

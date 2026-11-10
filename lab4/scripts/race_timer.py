@@ -22,6 +22,7 @@ import time
 import numpy as np
 import rospy
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
 from visualization_msgs.msg import Marker
 
 try:
@@ -124,6 +125,9 @@ class RaceTimer:
         self.args = args
         self.gates = load_gates()
         self.marker_pub = rospy.Publisher('/race/timer', Marker, queue_size=1, latch=True)
+        # JSON for race_overlay.py: state, start stamp, gates passed, final time.
+        self.status_pub = rospy.Publisher('/race/status', String, queue_size=1, latch=True)
+        self.final = None
         self.attempt = 0
         self.reset()
         self.log_path = args.unity_log
@@ -133,6 +137,7 @@ class RaceTimer:
             rospy.Subscriber('/tesse/collision', CollisionStats, self.on_collision, queue_size=100)
 
     def reset(self):
+        self.final = None
         self.attempt += 1
         self.prev = None
         self.touch = [None] * len(self.gates)
@@ -144,6 +149,7 @@ class RaceTimer:
         self.unity_hits = []
         if self.attempt > 1:
             rospy.loginfo('Attempt %d: waiting for gate 0', self.attempt)
+        self.publish_status()
 
     def on_collision(self, msg):
         if msg.is_collision and self.touch[0] is not None and not self.finished:
@@ -195,6 +201,10 @@ class RaceTimer:
             self.publish_marker()
         if self.touch[-1] is not None and self.touch[0] is not None:
             self.finished = True
+            # Stop the clock at the last gate now; the official result follows
+            # once Unity has logged its trigger.
+            self.final = {'state': 'stopped', 'time': self.touch[-1] - self.touch[0]}
+            self.publish_status()
 
     def read_unity_log(self):
         if not os.path.exists(self.log_path):
@@ -231,6 +241,16 @@ class RaceTimer:
         else:
             marker.text = 'Gates %d/%d' % (passed, len(self.gates))
         self.marker_pub.publish(marker)
+        self.publish_status()
+
+    def publish_status(self):
+        status = {'attempt': self.attempt, 'gates': sum(t is not None for t in self.touch),
+                  'total': len(self.gates), 'start': self.touch[0]}
+        if self.final is not None:
+            status.update(self.final)
+        else:
+            status['state'] = 'waiting' if self.touch[0] is None else 'running'
+        self.status_pub.publish(String(json.dumps(status)))
 
     def unity_events(self):
         """One OnTriggerEnter per drone collider; group hits closer than 0.05 s (one or two physics steps)."""
@@ -316,6 +336,8 @@ class RaceTimer:
         result['rejected_by_unity'] = self.rejected
         result['unity_trigger_events'] = self.unity_events()
         lines.append('referee: %s' % ('Unity trigger log' if have_log else 'box model only (no Unity log)'))
+        self.final = ({'state': 'finished', 'time': result['race_time']} if 'race_time' in result
+                      else {'state': 'dnf', 'missed': missed})
         print('\n'.join(lines), flush=True)
         if self.args.output:
             with open(self.args.output, 'a') as f:

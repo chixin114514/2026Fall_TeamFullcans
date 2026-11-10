@@ -1,5 +1,7 @@
 #pragma once
 
+#include "demo_display.h"
+
 #include "feature_tracker.h"
 #include <chrono>
 #include <fstream>
@@ -34,6 +36,10 @@ public:
 
   /// Binary descriptors only: brute-force Hamming (true) or FLANN-LSH (false).
   void setUseBruteForceMatcher(bool use_bf) { use_bf_matcher_ = use_bf; }
+
+  /// Pair mode: 0 waits for a key; a positive delay advances automatically.
+  void setDisplayDelay(int delay_ms) { display_delay_ms_ = delay_ms; }
+  void configureDisplay(const ros::NodeHandle& nh) { display_.configure(nh); }
 
   /** Visualization / logging options (not part of the original stencil).
     @param[in] pause_on_display Block on every imshow until a key is pressed
@@ -113,6 +119,8 @@ private:
   void showAndSave(const std::string& name, const cv::Mat& img, bool save);
 
   bool pause_on_display_ = true;
+  DemoDisplay display_;
+  int display_delay_ms_ = 0;
   bool show_ = true;
   std::string output_dir_;
   std::string frames_dir_;
