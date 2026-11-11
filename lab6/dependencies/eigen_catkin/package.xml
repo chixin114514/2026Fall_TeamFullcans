@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<package>
+  <name>eigen_catkin</name>
+  <version>0.0.0</version>
+  <description>Stub that exports the system Eigen 3 (libeigen3-dev) in place of ethz-asl/eigen_catkin.</description>
+  <maintainer email="noreply@example.com">TeamFullcans</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

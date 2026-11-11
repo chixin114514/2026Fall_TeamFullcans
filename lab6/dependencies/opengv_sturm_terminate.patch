@@ -1,0 +1,18 @@
+diff --git a/src/math/Sturm.cpp b/src/math/Sturm.cpp
+index 5c9678c..8a0636d 100644
+--- a/src/math/Sturm.cpp
++++ b/src/math/Sturm.cpp
+@@ -74,6 +74,13 @@ opengv::math::Bracket::dividable( double eps ) const
+     return false;
+   if( numberRoots() == 0 )
+     return false;
++  // Bisection cannot separate a repeated root, roots closer than the floating-point
++  // resolution, or a root count that underflowed (size_t) because round-off made the
++  // Sturm sign changes inconsistent. Stop once the bracket is narrower than eps or the
++  // midpoint no longer moves; otherwise bracketRoots/findRoots2 never terminate.
++  const double center = 0.5 * (_upperBound + _lowerBound);
++  if( (_upperBound - _lowerBound) < eps || center <= _lowerBound || center >= _upperBound )
++    return false;
+   return true;
+ }
+ 
