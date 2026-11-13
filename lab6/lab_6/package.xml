@@ -29,5 +29,6 @@
   <run_depend>eigen_catkin</run_depend>
   <run_depend>opengv</run_depend>
   <run_depend>tf_conversions</run_depend>
+  <run_depend>tf2_ros</run_depend>
 
 </package>

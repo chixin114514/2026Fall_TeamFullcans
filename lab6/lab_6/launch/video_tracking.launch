@@ -12,6 +12,9 @@
     <remap from="/depth_images_topic" to="/tesse/depth_cam/mono/image_raw"/>
   </node>
 
+  <!-- The bag has no /tf; RViz needs the "world" frame of the published poses to exist. -->
+  <node name="world_frame" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 world world_anchor"/>
+
   <node name="viz" pkg="rviz" type="rviz" args="-d $(find lab_6)/rviz/office.rviz" />
 
   <!-- Tip: press space on the terminal you ran this roslaunch to pause the rosbag-->

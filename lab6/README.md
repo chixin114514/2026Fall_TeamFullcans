@@ -11,6 +11,27 @@
 
 代码：`lab_6/`（官方包 `lab_6`，所有 TODO 已实现）。
 
+## 演示
+
+```bash
+bash scripts/demo.sh          # 逐步演示，回车进入下一步；RViz 在 Windows 桌面上打开
+bash scripts/demo.sh list     # 列出步骤；bash scripts/demo.sh 5 只跑第 5 步
+```
+
+| 步骤 | 内容 |
+| --- | --- |
+| 1 | office：5 点 Nistér + RANSAC（D4） |
+| 2 | office：8 点、已知旋转的 2 点（D4） |
+| 3 | office：Arun 3D–3D（D5） |
+| 4 | office：5 点不用 RANSAC（选做） |
+| 5 | 比赛 bag（bonus）：Lab 4 竞速，5 点 |
+| 6 | 比赛 bag（bonus）：2 点与 Arun，实时 |
+| 7 | 结果汇总表与报告 |
+
+RViz 右侧：绿色为真值轨迹，黄色为逐帧估计（以上一帧真值为起点），红色为只靠估计串联的视觉里程计，
+点云由深度图和真值位姿生成。单独启动某个配置用 `bash scripts/run_rviz.sh <0|1|2|3> [bag]`，
+停止用 `bash scripts/run_rviz.sh stop`。
+
 ## 复现
 
 环境：Ubuntu 20.04 + ROS Noetic，lab5 工作空间已编译（`lab5/scripts/build_workspace.sh`）。

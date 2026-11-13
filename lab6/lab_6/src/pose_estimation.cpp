@@ -89,6 +89,9 @@ DEFINE_bool(refine_inliers, true,
             "returns the model of the best minimal sample).");
 DEFINE_string(rpe_csv, "", "If non-empty, one row per frame pair with the RPE is written here.");
 DEFINE_bool(show_matches, false, "Show lab5's inlier/outlier match window.");
+DEFINE_bool(latest_only, false,
+            "Live display: when processing falls behind the bag, skip stale frames and "
+            "process the newest one (default: every frame pair is evaluated).");
 
 using namespace std;
 namespace enc = sensor_msgs::image_encodings;
@@ -164,10 +167,11 @@ void poseCallbackTesse(const nav_msgs::Odometry::ConstPtr& msg){
   // and convert to pose message
   tf::poseTFToMsg(current_pose * transform_camera_body, curr_pose_.pose);
 
-  // publish the converted pose message so we can visualize in rViz
+  // Buffer the camera pose; cameraCallback interpolates it at each image stamp and
+  // publishes it on /gt_camera_pose together with the estimate, so the two RViz
+  // arrows always refer to the same frame even when processing lags behind the bag.
   curr_pose_.header.frame_id = "world";
   curr_pose_.header.stamp = msg->header.stamp;
-  pub_pose_gt_.publish(curr_pose_);
 
   gt_buffer_.push_back(curr_pose_);
   while (gt_buffer_.size() > 100000) gt_buffer_.pop_front();  // > 8 min at 200 Hz (~25 MB)
@@ -736,6 +740,10 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
   pose_estimation.header.frame_id = "world";
   pose_estimation.header.stamp = rgb_msg->header.stamp;
   pub_pose_estimation_.publish(pose_estimation);
+  // Ground-truth camera pose of the same frame (interpolated at the image stamp).
+  curr_pose_.header.frame_id = "world";
+  curr_pose_.header.stamp = rgb_msg->header.stamp;
+  pub_pose_gt_.publish(curr_pose_);
   // ***************************** end solution *****************************
 
   // Save for next iteration
@@ -756,6 +764,13 @@ void syncCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs::
 // Processes at most one frame, so the main loop goes back to ros::spinOnce() between
 // frames and the subscriber queues never overflow while a backlog is worked off.
 void processPendingFrame() {
+  if (FLAGS_latest_only) {
+    // Drop frames that already have a newer frame with ground truth behind them.
+    while (pending_frames_.size() > 1 && !gt_buffer_.empty() &&
+           gt_buffer_.back().header.stamp >= pending_frames_[1].first->header.stamp) {
+      pending_frames_.pop_front();
+    }
+  }
   if (!pending_frames_.empty() && !gt_buffer_.empty() &&
       gt_buffer_.back().header.stamp >= pending_frames_.front().first->header.stamp) {
     const auto frame = pending_frames_.front();

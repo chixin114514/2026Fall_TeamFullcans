@@ -59,8 +59,8 @@ METHODS = {
 SMOOTH_S = 2.0  # centred rolling median window for the time plots, in seconds
 
 
-def load(name):
-    d = pd.read_csv(RES / "rpe" / f"{name}.csv")
+def load(name, base=RES / "rpe"):
+    d = pd.read_csv(base / f"{name}.csv")
     return d
 
 
@@ -259,6 +259,36 @@ def stats(d):
     )
 
 
+def fig_race(frames, names, name):
+    """Bonus: Lab 4 race. a, ground-truth motion per frame; b, rotation error; c, translation-direction error."""
+    fig, axes = plt.subplots(3, 1, figsize=(180 * MM, 120 * MM), sharex=True,
+                             gridspec_kw=dict(height_ratios=[0.7, 1, 1]))
+    ref = frames[names[0]]
+    axes[0].plot(ref["t"], ref["gt_tran_norm"] * 1e2, color="#4D4D4D", lw=1.0)
+    axes[0].set_ylabel("Camera step (cm)")
+    axes[0].set_ylim(0, None)
+    axes[0].grid(axis="y", lw=0.3, color="#E3E3E3")
+    for ax, col, ylabel, floor in ((axes[1], "rot_err_deg", "Rotation error (deg)", 1e-3),
+                                   (axes[2], "tran_err_unit", "Translation error (unit vectors)", 1e-4)):
+        for n in names:
+            if n == "2pt" and col == "rot_err_deg":
+                continue
+            d, m = frames[n], METHODS[n]
+            ax.plot(d["t"], np.clip(d[col].values, floor, None), color=m["color"], lw=0.9,
+                    marker="o", ms=1.2, label=m["label"])
+        ax.set_yscale("log")
+        plain_log(ax, "y")
+        ax.set_ylabel(ylabel)
+        ax.grid(axis="y", which="major", lw=0.3, color="#E3E3E3")
+    axes[2].set_xlabel("Time since take-off segment start (s)")
+    axes[2].legend(loc="upper left", ncol=len(names), bbox_to_anchor=(0, 3.62), frameon=False)
+    for ax, lab in zip(axes, "abc"):
+        panel_label(ax, lab)
+    axes[0].set_xlim(0, max(frames[n]["t"].max() for n in names))
+    fig.align_ylabels(axes)
+    save(fig, name)
+
+
 def main():
     names = [n for n in METHODS if (RES / "rpe" / f"{n}.csv").exists()]
     frames = {n: load(n) for n in names}
@@ -281,11 +311,23 @@ def main():
         print(sweep.to_string(float_format="%.4g"))
         print(s3.to_string(float_format="%.4g"))
 
+    race_dir = RES / "race" / "rpe"
+    race_names = [n for n in METHODS if (race_dir / f"{n}.csv").exists()]
+    if race_names:
+        race = {n: load(n, race_dir) for n in race_names}
+        time_axis(race)
+        fig_race(race, [n for n in ("5pt", "8pt", "2pt", "arun") if n in race], "bonus_race_rpe")
+        summary["_race"] = {n: stats(race[n]) for n in race_names}
+
     (RES / "summary.json").write_text(json.dumps(summary, indent=2))
     cols = ["frames", "rot_med_deg", "rot_lt1deg", "tu_med", "tu_lt05", "tu_lt01", "tm_med_mm",
             "inlier_ratio_med", "time_ms_med"]
     print(pd.DataFrame({k: v for k, v in summary.items() if not k.startswith("_")}).T[cols]
           .to_string(float_format="%.4g"))
+    if "_race" in summary:
+        print("race:")
+        print(pd.DataFrame(summary["_race"]).T[cols + ["gt_step_med_mm", "matches_med"]]
+              .to_string(float_format="%.4g"))
 
 
 if __name__ == "__main__":
