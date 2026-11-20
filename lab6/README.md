@@ -65,3 +65,6 @@ bash scripts/build_report.sh                     # → report/lab6_report.pdf
 - `lab_6/` 官方包；`dependencies/eigen_catkin` 是导出系统 Eigen 的桩包，
   `dependencies/opengv_sturm_terminate.patch` 修复 OpenGV 求根偶发死循环
 - `results/rpe/*.csv` 每帧 RPE；`results/sweep/` 阈值扫描；`notes/` 过程记录
+- `results/screenshots/` 团队部分演示截图：`match_*.png` 是 SIFT 匹配与 RANSAC 内点/外点（光流箭头），
+  `d4_*.png`、`d5_*.png`、`bonus_*.png` 是 RViz 位姿对比与轨迹。重新生成：
+  `bash scripts/run_match_images.sh`、`bash scripts/run_screenshots.sh`

@@ -9,6 +9,8 @@
 #include <fstream>
 #include <memory>
 #include <deque>
+#include <set>
+#include <sstream>
 #include <iomanip>
 #include <limits>
 #include <chrono>
@@ -89,6 +91,10 @@ DEFINE_bool(refine_inliers, true,
             "returns the model of the best minimal sample).");
 DEFINE_string(rpe_csv, "", "If non-empty, one row per frame pair with the RPE is written here.");
 DEFINE_bool(show_matches, false, "Show lab5's inlier/outlier match window.");
+DEFINE_string(match_dump_dir, "",
+              "If non-empty, save a SIFT-match / RANSAC-inlier image for the frames in "
+              "--match_dump_frames to this directory.");
+DEFINE_string(match_dump_frames, "", "Comma-separated frame-pair indices to save, e.g. 200,800.");
 DEFINE_bool(mask_self_depth, false,
             "Race bag: the simulator's depth camera renders the drone's own body. Pixels "
             "closer than 1.5 m in >= 90% of frames are that body and get no depth.");
@@ -113,6 +119,10 @@ using RansacProblem3D = opengv::sac_problems::point_cloud::PointCloudSacProblem;
 // Global variables. As a general coding style, global variables are followed
 // by a trailing underscore (Google coding style).
 std::unique_ptr<TrackerWrapper> feature_tracker_;
+// RANSAC inliers of the current frame pair, as indices into the 2D matches.
+std::vector<int> ransac_inlier_idx_;
+// Arun only: index of the 2D match behind each 3D correspondence (matches without depth are dropped).
+std::vector<int> cloud_to_match_;
 ros::Publisher pub_pose_estimation_, pub_pose_gt_;
 ros::Subscriber sub_cinfo_;
 geometry_msgs::PoseStamped curr_pose_;
@@ -396,6 +406,60 @@ void maskSelfDepth(cv::Mat* depth) {
   depth->setTo(std::numeric_limits<float>::quiet_NaN(), self);
 }
 
+/** Save, for selected frame pairs, the current image twice with every match drawn as an
+ *  arrow from its position in the previous frame to its position in this one: on top all
+ *  SIFT matches that passed Lowe's ratio test, below the same arrows split by RANSAC into
+ *  inliers (green) and outliers (red). Correct matches form a coherent flow field;
+ *  mismatches stand out as arrows that go against it. */
+void dumpMatches(const cv::Mat& /*img1*/, const cv::Mat& img2,
+                 const std::vector<cv::Point2f>& pts1, const std::vector<cv::Point2f>& pts2) {
+  static std::set<int> frames;
+  static bool parsed = false;
+  if (!parsed) {
+    std::stringstream ss(FLAGS_match_dump_frames);
+    for (std::string tok; std::getline(ss, tok, ',');) if (!tok.empty()) frames.insert(std::stoi(tok));
+    parsed = true;
+  }
+  if (!frames.count(frame_log_.frame)) return;
+
+  std::vector<bool> inlier(pts1.size(), false);
+  for (int k : ransac_inlier_idx_) {
+    const int i = cloud_to_match_.empty() ? k : cloud_to_match_[k];
+    if (i >= 0 && i < static_cast<int>(inlier.size())) inlier[i] = true;
+  }
+  auto panel = [&](bool split) {
+    cv::Mat out;
+    img2.convertTo(out, -1, 0.6, 0);   // darken so the arrows stand out
+    for (int pass = 0; pass < 2; ++pass) {           // draw inliers on top of outliers
+      for (size_t i = 0; i < pts1.size(); ++i) {
+        if (split && (pass == 0) == inlier[i]) continue;
+        if (!split && pass == 1) continue;
+        const cv::Scalar c = !split ? cv::Scalar(0, 220, 255)
+                                    : inlier[i] ? cv::Scalar(60, 220, 60) : cv::Scalar(40, 40, 255);
+        cv::arrowedLine(out, pts1[i], pts2[i], c, 2, cv::LINE_AA, 0, 0.3);
+        cv::circle(out, pts2[i], 2, c, cv::FILLED, cv::LINE_AA);
+      }
+    }
+    std::ostringstream label;
+    if (!split) {
+      label << "SIFT matches (ratio test): " << pts1.size();
+    } else {
+      label << "RANSAC " << FLAGS_ransac_px << " px: " << ransac_inlier_idx_.size()
+            << " inliers, " << pts1.size() - ransac_inlier_idx_.size() << " outliers";
+    }
+    cv::rectangle(out, cv::Point(0, 0), cv::Point(out.cols, 34), cv::Scalar(0, 0, 0), cv::FILLED);
+    cv::putText(out, label.str(), cv::Point(10, 24), cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                cv::Scalar(255, 255, 255), 2, cv::LINE_AA);
+    return out;
+  };
+  cv::Mat both;
+  cv::hconcat(panel(false), panel(true), both);
+  char name[64];
+  std::snprintf(name, sizeof(name), "/frame%04d_matches_ransac.png", frame_log_.frame);
+  cv::imwrite(FLAGS_match_dump_dir + name, both);
+  ROS_INFO("saved %s", (FLAGS_match_dump_dir + name).c_str());
+}
+
 void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs::ImageConstPtr &depth_msg) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   //  DELIVERABLE 4-5 | A Suite of Methods for Motion Estimation
@@ -460,6 +524,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
   static int frame_idx = 0;
   frame_log_ = FrameLog();
   frame_log_.frame = ++frame_idx;
+  ransac_inlier_idx_.clear();
+  cloud_to_match_.clear();
   frame_log_.stamp = rgb_msg->header.stamp.toSec();
 
   // Track features returns the 2D-2D matches between images
@@ -552,6 +618,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
           frame_log_.valid = true;
         }
         frame_log_.n_inliers = ransac.inliers_.size();
+        ransac_inlier_idx_ = ransac.inliers_;
         // ***************************** end solution *****************************
       }
     } else {
@@ -603,6 +670,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
           frame_log_.valid = true;
         }
         frame_log_.n_inliers = ransac.inliers_.size();
+        ransac_inlier_idx_ = ransac.inliers_;
         // ***************************** end solution *****************************
       }
     } else {
@@ -650,6 +718,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
           frame_log_.valid = true;
         }
         frame_log_.n_inliers = ransac.inliers_.size();
+        ransac_inlier_idx_ = ransac.inliers_;
         // ***************************** end solution *****************************
       }
     } else {
@@ -685,6 +754,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
     opengv::points_t cloud_1, cloud_2;
     for (auto i = 0ul; i < bearing_vector_1.size(); i++) {
         if (!has_depth[i]) continue;
+        cloud_to_match_.push_back(static_cast<int>(i));
         cloud_1.push_back(bearing_vector_1[i]);
         cloud_2.push_back(bearing_vector_2[i]);
     }
@@ -717,6 +787,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
           frame_log_.valid = true;
         }
         frame_log_.n_inliers = ransac.inliers_.size();
+        ransac_inlier_idx_ = ransac.inliers_;
         // ***************************** end solution *****************************
       }
     } else {
@@ -768,6 +839,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
   curr_pose_.header.stamp = rgb_msg->header.stamp;
   pub_pose_gt_.publish(curr_pose_);
   // ***************************** end solution *****************************
+
+  if (!FLAGS_match_dump_dir.empty()) dumpMatches(prev_bgr, bgr, pts1, pts2);
 
   // Save for next iteration
   prev_bgr = bgr.clone();

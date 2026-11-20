@@ -7,10 +7,12 @@
 # Real time by default (RATE=1): the node skips stale frames (--latest_only) and uses a
 # 0.3 px RANSAC threshold (PX=...) so the 5-point solver keeps a usable update rate.
 # The report's evaluation uses every frame at 0.1 px (scripts/run_experiments.py).
-# Runs on its own ROS master (port 11320) so it does not disturb other experiments.
+# Runs on its own ROS master (port 11320, DEMO_PORT=... for another) so it does not disturb
+# other experiments.
 # Started with sh (dash)? Re-run under bash, which the rest of the script needs.
 if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 set -e
+PORT=${DEMO_PORT:-11320}   # ROS master of the demo; another port runs a second demo alongside
 if [[ ${1:-} == stop ]]; then STOP_ONLY=1; fi
 LAB6=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 EST=${1:-0}; [[ $EST == stop ]] && EST=0
@@ -25,25 +27,28 @@ else
   GT=/tesse/odom; PLAY=(-r "${RATE:-1.0}"); MASK=false
   RVIZ_CFG=office_paths.rviz
 fi
-# Stop any previous demo first: every process bound to master 11320, including the
+# Stop any previous demo first: every process bound to master $PORT, including the
 # bag player (its process is named "play", not "rosbag").
 stop_demo() {
   for p in $(pgrep -u "$(id -u)" .); do
     [[ $p == $$ || $p == $PPID ]] && continue
     # an older copy of this script: its ROS_MASTER_URI is exported inside, not in environ
     if [[ $(tr '\0' ' ' < /proc/$p/cmdline 2>/dev/null) == "bash "*run_rviz.sh* ]]; then
-      kill "$p" 2>/dev/null; continue
+      other=$(tr '\0' '\n' < /proc/$p/environ 2>/dev/null | sed -n 's/^DEMO_PORT=//p')
+      [[ ${other:-11320} == "$PORT" ]] && kill "$p" 2>/dev/null
+      continue
     fi
-    tr '\0' '\n' < /proc/$p/environ 2>/dev/null | grep -qx "ROS_MASTER_URI=http://localhost:11320" && kill "$p" 2>/dev/null
+    tr '\0' '\n' < /proc/$p/environ 2>/dev/null | grep -qx "ROS_MASTER_URI=http://localhost:$PORT" && kill "$p" 2>/dev/null
   done
   sleep 2
 }
 stop_demo
 [[ -n ${STOP_ONLY:-} ]] && exit 0
-export ROS_MASTER_URI=http://localhost:11320 ROS_HOSTNAME=localhost DISPLAY=${DISPLAY:-:0}
+export ROS_MASTER_URI=http://localhost:$PORT ROS_HOSTNAME=localhost DISPLAY=${DISPLAY:-:0}
+export DISABLE_ROS1_EOL_WARNINGS=1   # RViz's modal end-of-life dialog
 pids=()
 trap 'kill "${pids[@]}" 2>/dev/null' EXIT
-roscore -p 11320 > /dev/null 2>&1 & pids+=("$!"); sleep 3
+roscore -p "$PORT" > /dev/null 2>&1 & pids+=("$!"); sleep 3
 rosparam set use_sim_time true
 rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 world world_anchor & pids+=("$!")
 rosrun lab_6 pose_estimation --use_ransac="${RANSAC:-true}" --pose_estimator="$EST" --scale_translation=true \
@@ -53,7 +58,7 @@ rosrun lab_6 pose_estimation --use_ransac="${RANSAC:-true}" --pose_estimator="$E
   /depth_images_topic:=/tesse/depth_cam/mono/image_raw & pids+=("$!")
 python3 -u "$LAB6/scripts/rviz_paths.py" /rgb_images_topic:=/tesse/left_cam/rgb/image_raw \
   /depth_images_topic:=/tesse/depth_cam/mono/image_raw & pids+=("$!")
-rviz -d "$LAB6/lab_6/rviz/$RVIZ_CFG" & pids+=("$!")
+rviz -d "${RVIZ_CONFIG:-$LAB6/lab_6/rviz/$RVIZ_CFG}" & pids+=("$!")
 sleep 8
 # Only the needed topics: the race bag also holds a recorded /clock that would fight --clock.
 rosbag play --clock -l "${PLAY[@]}" "$BAG" \
