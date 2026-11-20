@@ -8,6 +8,8 @@
 # 0.3 px RANSAC threshold (PX=...) so the 5-point solver keeps a usable update rate.
 # The report's evaluation uses every frame at 0.1 px (scripts/run_experiments.py).
 # Runs on its own ROS master (port 11320) so it does not disturb other experiments.
+# Started with sh (dash)? Re-run under bash, which the rest of the script needs.
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 set -e
 if [[ ${1:-} == stop ]]; then STOP_ONLY=1; fi
 LAB6=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -16,9 +18,12 @@ BAG=${2:-$HOME/datasets/vnav/lab6/office.bag}
 source ~/vnav-builds/lab6_ws/devel/setup.bash
 # Ground truth: /tesse/odom in the office bag, /current_state in the race bag.
 if [[ -z ${STOP_ONLY:-} ]] && rosbag info "$BAG" | grep -q "/current_state"; then
-  GT=/current_state; PLAY=(-r "${RATE:-1.0}" -s 1.5 -u 21)
+  read -r START DUR < <(python3 "$LAB6/scripts/race_window.py" "$BAG")   # flight segment only
+  GT=/current_state; PLAY=(-r "${RATE:-1.0}" -s "$START" -u "$DUR"); MASK=true  # depth sees the drone
+  RVIZ_CFG=race_paths.rviz   # structure only: grey point cloud, no RGB colours
 else
-  GT=/tesse/odom; PLAY=(-r "${RATE:-1.0}")
+  GT=/tesse/odom; PLAY=(-r "${RATE:-1.0}"); MASK=false
+  RVIZ_CFG=office_paths.rviz
 fi
 # Stop any previous demo first: every process bound to master 11320, including the
 # bag player (its process is named "play", not "rosbag").
@@ -43,11 +48,12 @@ rosparam set use_sim_time true
 rosrun tf2_ros static_transform_publisher 0 0 0 0 0 0 world world_anchor & pids+=("$!")
 rosrun lab_6 pose_estimation --use_ransac="${RANSAC:-true}" --pose_estimator="$EST" --scale_translation=true \
   --latest_only=true --ransac_px="${PX:-0.3}" --ransac_max_iter="${MAXIT:-1000}" \
+  --mask_self_depth="$MASK" \
   /ground_truth_pose:="$GT" /rgb_images_topic:=/tesse/left_cam/rgb/image_raw \
   /depth_images_topic:=/tesse/depth_cam/mono/image_raw & pids+=("$!")
 python3 -u "$LAB6/scripts/rviz_paths.py" /rgb_images_topic:=/tesse/left_cam/rgb/image_raw \
   /depth_images_topic:=/tesse/depth_cam/mono/image_raw & pids+=("$!")
-rviz -d "$LAB6/lab_6/rviz/office_paths.rviz" & pids+=("$!")
+rviz -d "$LAB6/lab_6/rviz/$RVIZ_CFG" & pids+=("$!")
 sleep 8
 # Only the needed topics: the race bag also holds a recorded /clock that would fight --clock.
 rosbag play --clock -l "${PLAY[@]}" "$BAG" \

@@ -66,6 +66,7 @@ def run(name, estimator, ransac, args, out=OUT, ransac_px=None, ransac_3d_m=None
          f"--pose_estimator={estimator}", f"--use_ransac={str(ransac).lower()}",
          "--scale_translation=true", f"--ransac_px={ransac_px}", f"--ransac_max_iter={args.max_iter}",
          f"--ransac_3d_m={ransac_3d_m}", f"--rpe_csv={csv}",
+         f"--mask_self_depth={str(args.race).lower()}",
          f"/ground_truth_pose:={args.gt_topic}",
          "/rgb_images_topic:=/tesse/left_cam/rgb/image_raw",
          "/depth_images_topic:=/tesse/depth_cam/mono/image_raw"],
@@ -108,10 +109,12 @@ def main():
     args = ap.parse_args()
     out = Path(args.out) if args.out else OUT
     if args.race:
-        # The drone hovers before take-off; the flight lasts from about 2 s to 20 s into the bag.
+        # The drone hovers before take-off and after the last gate: evaluate the flight only.
+        from race_window import flight_window
         args.bag, args.gt_topic = str(RACE_BAG), "/current_state"
         out = Path(args.out) if args.out else RACE_OUT
-        args.start, args.duration = args.start or 1.5, args.duration or 21.0
+        start, duration = flight_window(args.bag)
+        args.start, args.duration = args.start or start, args.duration or duration
 
     core = None
     if subprocess.run(["rostopic", "list"], capture_output=True).returncode != 0:

@@ -13,9 +13,11 @@ LAB4=$(cd "$LAB6/../lab4" && pwd)
 SIM=${LAB6_SIM:-$HOME/vnav-builds/lab6-sim/lab6}
 OUT=${1:-$LAB6/results/race/race.bag}
 SESSION=$(dirname "$OUT")/session
-V_MAX=${LAB6_V_MAX:-8.0}
-A_MAX=${LAB6_A_MAX:-6.0}
-DURATION=${LAB6_RECORD_S:-45}
+# Lab 4 race speed limits, lowered from the race setting (8 m/s, 6 m/s^2) so that
+# consecutive frames overlap enough for frame-to-frame motion estimation.
+V_MAX=${LAB6_V_MAX:-3.0}
+A_MAX=${LAB6_A_MAX:-2.0}
+DURATION=${LAB6_RECORD_S:-75}
 DISPLAY_NUM=:98
 ROS_PORT=11316
 PORT=9000
@@ -69,7 +71,7 @@ for _ in {1..40}; do rosnode ping -c 1 /controller_node > /dev/null 2>&1 && brea
 DISPLAY=$DISPLAY_NUM xdotool windowfocus "$WIN" key r
 sleep 2
 
-rosbag record -O "$OUT" /current_state /desired_state /clock \
+rosbag record -O "$OUT" /current_state /desired_state /clock /tf \
   /tesse/left_cam/rgb/image_raw /tesse/left_cam/camera_info \
   /tesse/right_cam/rgb/image_raw /tesse/right_cam/camera_info \
   /tesse/depth_cam/mono/image_raw /tesse/depth_cam/camera_info \

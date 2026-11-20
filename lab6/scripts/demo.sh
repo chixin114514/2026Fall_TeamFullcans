@@ -7,6 +7,8 @@
 #
 # RViz opens on the Windows desktop (WSLg). Every step uses its own ROS master on port
 # 11320 (scripts/run_rviz.sh), so it does not disturb other ROS work. Ctrl-C stops the demo.
+# Started with sh (dash)? Re-run under bash, which the rest of the script needs.
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 set -eo pipefail
 LAB6=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$LAB6"
@@ -66,7 +68,7 @@ STEPS=(
   "Office bag: Arun 3-point, 3D-3D with depth (Deliverable 5)"
   "Office bag: 5-point WITHOUT RANSAC (optional baseline)"
   "Race bag (bonus): Lab 4 race flown in the Lab 6 simulator, 5-point"
-  "Race bag (bonus): 2-point and Arun at real time"
+  "Race bag (bonus): 2-point and Arun"
   "Results: summary table and the report"
 )
 
@@ -97,10 +99,10 @@ step4() {
 step5() {
   [[ -f $RACE ]] || { note "skipped: no race bag"; return; }
   note "Recorded with scripts/record_race_bag.sh: the Lab 4 planner and controller fly the" \
-       "gate course (about 96 m in 18 s, up to 7.3 m/s) in the Lab 6 simulator; the bag holds" \
-       "stereo RGB, depth and odometry. The red frames in the cloud are the gates."
-  note "" "Live settings: 0.5 px RANSAC, newest frame only (about 10 Hz pose updates)." \
-       "The depth camera also renders the drone's own body; the map masks it out."
+       "gate course (about 95 m in 43 s, up to 3 m/s) in the Lab 6 simulator; the bag holds" \
+       "stereo RGB, depth and odometry. The grey cloud is the venue structure from depth."
+  note "" "Live settings: 0.5 px RANSAC, newest frame only." \
+       "The depth camera also renders the drone's own body; the map and Arun mask it out."
   show 0 "$RACE" PX=0.5
 }
 step6() {

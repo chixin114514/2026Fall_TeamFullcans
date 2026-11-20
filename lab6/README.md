@@ -25,7 +25,7 @@ bash scripts/demo.sh list     # 列出步骤；bash scripts/demo.sh 5 只跑第 
 | 3 | office：Arun 3D–3D（D5） |
 | 4 | office：5 点不用 RANSAC（选做） |
 | 5 | 比赛 bag（bonus）：Lab 4 竞速，5 点 |
-| 6 | 比赛 bag（bonus）：2 点与 Arun，实时 |
+| 6 | 比赛 bag（bonus）：2 点与 Arun |
 | 7 | 结果汇总表与报告 |
 
 RViz 右侧：绿色为真值轨迹，黄色为逐帧估计（以上一帧真值为起点），红色为只靠估计串联的视觉里程计，

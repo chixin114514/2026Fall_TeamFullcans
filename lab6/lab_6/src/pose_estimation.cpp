@@ -89,6 +89,9 @@ DEFINE_bool(refine_inliers, true,
             "returns the model of the best minimal sample).");
 DEFINE_string(rpe_csv, "", "If non-empty, one row per frame pair with the RPE is written here.");
 DEFINE_bool(show_matches, false, "Show lab5's inlier/outlier match window.");
+DEFINE_bool(mask_self_depth, false,
+            "Race bag: the simulator's depth camera renders the drone's own body. Pixels "
+            "closer than 1.5 m in >= 90% of frames are that body and get no depth.");
 DEFINE_bool(latest_only, false,
             "Live display: when processing falls behind the bag, skip stale frames and "
             "process the newest one (default: every frame pair is evaluated).");
@@ -375,6 +378,24 @@ void evaluateRPE(const tf::Transform& gt_t_prev_frame,
  *  @param[in]  rgb_msg    RGB Camera message
  *  @param[in]  depth_msg  Depth Camera message
  */
+/** Remove the drone's own body from the depth image (see FLAGS_mask_self_depth).
+ *  The body is static in the camera frame, so it is learnt from how often each pixel is
+ *  closer than kNear; until kMinFrames frames are seen, every close pixel is removed. */
+void maskSelfDepth(cv::Mat* depth) {
+  static constexpr float kNear = 1.5f;
+  static constexpr double kFraction = 0.9;
+  static constexpr int kMinFrames = 15;
+  static cv::Mat near_count;
+  static int n_frames = 0;
+  cv::Mat near = (*depth < kNear) & (*depth == *depth);   // close and not NaN
+  if (near_count.empty()) near_count = cv::Mat::zeros(depth->size(), CV_32S);
+  cv::add(near_count, 1, near_count, near);
+  ++n_frames;
+  cv::Mat self = n_frames >= kMinFrames ? near_count >= kFraction * n_frames : near;
+  *depth = depth->clone();                                  // the input shares the ROS buffer
+  depth->setTo(std::numeric_limits<float>::quiet_NaN(), self);
+}
+
 void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs::ImageConstPtr &depth_msg) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   //  DELIVERABLE 4-5 | A Suite of Methods for Motion Estimation
@@ -404,6 +425,8 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &rgb_msg, const sensor_msgs
     depth.convertTo(depth_m, CV_32F, 1e-3);
     depth = depth_m;
   }
+
+  if (FLAGS_mask_self_depth) maskSelfDepth(&depth);
 
   // Ground-truth camera pose at the image timestamp.
   geometry_msgs::PoseStamped gt_curr;
