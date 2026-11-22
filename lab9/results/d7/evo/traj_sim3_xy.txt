@@ -1,0 +1,17 @@
+--------------------------------------------------------------------------------
+name:	kimera
+infos:	813 poses, 79.875m path length, 180.400s duration
+--------------------------------------------------------------------------------
+name:	orb_slam3
+infos:	3638 poses, 81.626m path length, 181.850s duration
+--------------------------------------------------------------------------------
+name:	ldso
+infos:	696 poses, 78.963m path length, 181.850s duration
+--------------------------------------------------------------------------------
+name:	data
+infos:	36382 poses, 80.626m path length, 181.905s duration
+--------------------------------------------------------------------------------
+Plot saved to results/d7/evo/traj_sim3_xy_trajectories.png
+Plot saved to results/d7/evo/traj_sim3_xy_xyz.png
+Plot saved to results/d7/evo/traj_sim3_xy_rpy.png
+Plot saved to results/d7/evo/traj_sim3_xy_speeds.png

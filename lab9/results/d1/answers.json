@@ -1,0 +1,28 @@
+{
+  "poses": 8,
+  "landmarks": 12,
+  "landmarks_per_pose": {
+    "x1": 2,
+    "x2": 3,
+    "x3": 3,
+    "x4": 4,
+    "x5": 4,
+    "x6": 4,
+    "x7": 4,
+    "x8": 5
+  },
+  "observers_of_l2": [
+    "x1",
+    "x2",
+    "x3"
+  ],
+  "no_fill_in_variables": [
+    "l3",
+    "l5",
+    "l8",
+    "l9",
+    "l10",
+    "l11",
+    "l12"
+  ]
+}

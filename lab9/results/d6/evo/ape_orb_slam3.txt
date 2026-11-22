@@ -1,0 +1,35 @@
+--------------------------------------------------------------------------------
+Loaded 36382 stamps and poses from: results/d6/data.tum
+Loaded 3678 stamps and poses from: output/orbslam/orb_slam3.txt
+--------------------------------------------------------------------------------
+Synchronizing trajectories...
+Found 3638 of max. 3678 possible matching timestamps between...
+	results/d6/data.tum
+and:	output/orbslam/orb_slam3.txt
+..with max. time diff.: 0.01 (s) and time offset: 0.0 (s).
+--------------------------------------------------------------------------------
+Aligning using Umeyama's method...
+Rotation of alignment:
+[[-0.30597838  0.32732323 -0.89400041]
+ [ 0.15553852  0.94360823  0.29225207]
+ [ 0.93924704 -0.04962869 -0.33963509]]
+Translation of alignment:
+[ 4.66815932 -1.74208409  0.8662085 ]
+Scale correction: 1.0
+--------------------------------------------------------------------------------
+Compared 3638 absolute pose pairs.
+Calculating APE for translation part pose relation...
+--------------------------------------------------------------------------------
+APE w.r.t. translation part (m)
+(with SE(3) Umeyama alignment)
+
+       max	0.077355
+      mean	0.035301
+    median	0.040273
+       min	0.002424
+      rmse	0.038662
+       sse	5.438027
+       std	0.015767
+
+--------------------------------------------------------------------------------
+Saving results to results/d6/evo/ape_orb_slam3.zip...

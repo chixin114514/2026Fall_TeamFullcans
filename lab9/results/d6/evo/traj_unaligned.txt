@@ -1,0 +1,11 @@
+--------------------------------------------------------------------------------
+name:	kimera
+infos:	818 poses, 79.120m path length, 181.400s duration
+--------------------------------------------------------------------------------
+name:	orb_slam3
+infos:	3678 poses, 81.553m path length, 183.850s duration
+--------------------------------------------------------------------------------
+Plot saved to results/d6/evo/traj_unaligned_trajectories.png
+Plot saved to results/d6/evo/traj_unaligned_xyz.png
+Plot saved to results/d6/evo/traj_unaligned_rpy.png
+Plot saved to results/d6/evo/traj_unaligned_speeds.png

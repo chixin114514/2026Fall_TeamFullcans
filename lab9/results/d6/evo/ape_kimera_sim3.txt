@@ -1,0 +1,35 @@
+--------------------------------------------------------------------------------
+Loaded 36382 stamps and poses from: results/d6/data.tum
+Loaded 818 stamps and poses from: output/kimera/kimera.txt
+--------------------------------------------------------------------------------
+Synchronizing trajectories...
+Found 813 of max. 818 possible matching timestamps between...
+	results/d6/data.tum
+and:	output/kimera/kimera.txt
+..with max. time diff.: 0.01 (s) and time offset: 0.0 (s).
+--------------------------------------------------------------------------------
+Aligning using Umeyama's method... (with scale correction)
+Rotation of alignment:
+[[ 0.99958251  0.00639763 -0.02817598]
+ [-0.00599445  0.99987877  0.01437054]
+ [ 0.0282645  -0.01419564  0.99949968]]
+Translation of alignment:
+[-0.22768898  0.04175449 -0.06068903]
+Scale correction: 1.0113298377062467
+--------------------------------------------------------------------------------
+Compared 813 absolute pose pairs.
+Calculating APE for translation part pose relation...
+--------------------------------------------------------------------------------
+APE w.r.t. translation part (m)
+(with Sim(3) Umeyama alignment)
+
+       max	0.409974
+      mean	0.147701
+    median	0.122357
+       min	0.027815
+      rmse	0.169731
+       sse	23.421344
+       std	0.083624
+
+--------------------------------------------------------------------------------
+Saving results to results/d6/evo/ape_kimera_sim3.zip...

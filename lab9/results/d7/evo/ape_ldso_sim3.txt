@@ -1,0 +1,35 @@
+--------------------------------------------------------------------------------
+Loaded 36382 stamps and poses from: results/d6/data.tum
+Loaded 711 stamps and poses from: results/d7/ldso.txt
+--------------------------------------------------------------------------------
+Synchronizing trajectories...
+Found 696 of max. 711 possible matching timestamps between...
+	results/d6/data.tum
+and:	results/d7/ldso.txt
+..with max. time diff.: 0.01 (s) and time offset: 0.0 (s).
+--------------------------------------------------------------------------------
+Aligning using Umeyama's method... (with scale correction)
+Rotation of alignment:
+[[ 0.33267465  0.28364441 -0.89937391]
+ [ 0.94248004 -0.13290998  0.30670231]
+ [-0.03254137 -0.94967404 -0.31154497]]
+Translation of alignment:
+[ 4.68625357 -1.6831992   0.98696129]
+Scale correction: 1.5237236938196501
+--------------------------------------------------------------------------------
+Compared 696 absolute pose pairs.
+Calculating APE for translation part pose relation...
+--------------------------------------------------------------------------------
+APE w.r.t. translation part (m)
+(with Sim(3) Umeyama alignment)
+
+       max	0.085879
+      mean	0.036277
+    median	0.028984
+       min	0.002757
+      rmse	0.042948
+       sse	1.283796
+       std	0.022989
+
+--------------------------------------------------------------------------------
+Saving results to results/d7/evo/ape_ldso_sim3.zip...

@@ -1,0 +1,347 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,left=22mm,right=22mm,bottom=22mm,top=22mm]{geometry}
+\usepackage{fontspec}
+\usepackage[british]{babel}
+\usepackage{amsmath,amssymb,graphicx,booktabs,array,tabularx,fancyhdr}
+\usepackage[square,comma,numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption,subcaption}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{xcolor}
+\graphicspath{{figures/}}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.4em}
+\setlength{\headheight}{14pt}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.8}
+\renewcommand{\bottomfraction}{0.8}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{5}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[C]{\small Lab 9: Visual SLAM --- ORB-SLAM3, Kimera-VIO and LDSO}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\abstractname}{Summary}
+\newcommand{\studentname}{Team Fullcans}
+% Monospace identifiers may break after underscores and dots.
+\DeclareRobustCommand{\code}[1]{\begingroup\ttfamily\codebreaks#1\endgroup}
+\newcommand{\codebreaks}{\renewcommand{\_}{\textunderscore\allowbreak}}
+\setlength{\emergencystretch}{3em}
+\title{Lab 9 Report\\[0.3em]\large Visual SLAM: information-matrix sparsity, ORB-SLAM, and a
+comparison of ORB-SLAM3, Kimera-VIO and LDSO on EuRoC}
+\author{\studentname}
+\date{Report date: 20 November 2026}
+\hypersetup{pdftitle={Lab 9 Report: Visual SLAM}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+In the individual part we read the structure of a landmark-SLAM information matrix and
+predict how marginalisation fills it in (D1), propose shortest-path initialisation for pose
+graphs (D2), and summarise the ORB-SLAM architecture and its defences against wrong loop
+closures (D3). We also answer the optional questions on LSD-SLAM (D4) and on reducing
+landmark SLAM to a rotation-only problem (D5).
+In the team part (D6) we ran the stereo-inertial ORB-SLAM3 and the stereo VIO front-end and
+back-end of Kimera-VIO on the \emph{whole} EuRoC \code{MH\_01\_easy} sequence (182\,s, 80.6\,m)
+and evaluated both with \code{evo}. Before alignment the two trajectories look unrelated
+because they are expressed in different world frames: Kimera starts at the ground-truth pose,
+while ORB-SLAM3 saves its trajectory in the IMU frame of its first keyframe, which is tilted
+by about $110^\circ$ with respect to gravity-aligned world axes. After an $\mathrm{SE}(3)$ alignment
+both match the ground truth. ORB-SLAM3 reaches an ATE RMSE of \textbf{3.9\,cm} and Kimera-VIO
+\textbf{17.6\,cm}. With only the first pose aligned, Kimera drifts monotonically to 0.62\,m (0.8\,\% of
+the path), while ORB-SLAM3 ends within 1.8\,cm of the ground truth because it re-uses its map
+when it revisits a place. Both estimates have the correct metric scale (Sim(3) scale factors 1.008
+and 1.011), as expected from stereo + IMU.
+For the optional D7 we built and ran the monocular, direct LDSO on the same sequence. It recovers
+the trajectory only up to scale (raw length 52\,m, scale factor 1.52). After a $\mathrm{Sim}(3)$
+alignment it reaches 4.3\,cm ATE RMSE, between ORB-SLAM3 (2.1\,cm) and Kimera-VIO (17.0\,cm). Its 16
+accepted loop closures reduce the error by 0.6\,cm.
+\end{abstract}
+
+\input{sec_individual}
+
+\section{Team work}\label{sec:team}
+
+\subsection{Setup}\label{sec:setup}
+
+We used the provided Docker images \code{orbslam:latest} (ORB-SLAM3~\cite{campos2021orbslam3},
+\code{Stereo-Inertial/\allowbreak stereo\_inertial\_euroc} with the stock \code{EuRoC.yaml}, Pangolin viewer
+enabled by the lab patch) and \code{kimera:latest} (Kimera-VIO~\cite{rosinol2020kimera} pinned at
+commit \code{980ff72d}, since the \code{feature/prerelease} branch no longer exists; lab
+\code{params/} unchanged, loop closure detection off, \code{--initial\_k=50 --final\_k=10000}).
+The dataset is EuRoC~\cite{burri2016euroc} \code{MH\_01\_easy} (3682 stereo pairs at 20\,Hz, IMU at
+200\,Hz). The containers are started with \code{run\_docker\_vnav.sh}, which maps our container
+paths to the docker host and forwards the X display. Both GUIs (Pangolin and Kimera's OpenCV
+display) ran without errors. The two systems were run one after the other.
+
+\textbf{One fix was needed for Kimera.} Kimera-VIO reads
+\code{state\_groundtruth\_estimate0/\allowbreak sensor.yaml} with OpenCV's \code{FileStorage}, which only
+accepts YAML files that start with \code{\%YAML:1.0}. The original EuRoC files do not have this
+line, and the first run aborted with \emph{Cannot open file \dots/sensor.yaml}. We did not change
+the SLAM code or the dataset. \code{scripts/run\_slam.sh} instead builds a hard-linked copy
+\code{MH\_01\_easy\_kimera} (no extra disk space) in which only the \code{*.yaml} files get the
+header, and runs Kimera on it with \code{run\_kimera.sh -p}.
+
+Both runs covered the full sequence: ORB-SLAM3 output 3678 poses (one per frame, from $t_0$ to
+the last image, 126 keyframes, a single map) and Kimera-VIO 818 keyframe poses (about 4.5\,Hz)
+from frame 50 to the end. Then \code{fix\_timestamps.py} converted the ORB-SLAM3 stamps from
+ns to s and Kimera's \code{traj\_vio.csv} to TUM format, and the ground truth was converted with
+\code{evo\_traj euroc \dots --save\_as\_tum}. Plots come from \code{evo\_traj}~\cite{grupp2017evo}
+with \code{--save\_plot} (no interactive window in our container), and the error statistics
+come from \code{evo\_ape --align}. Timestamps are associated within 10\,ms; 3638 ORB-SLAM3 poses
+and 813 Kimera poses fall inside the ground-truth interval. All commands are in
+\code{scripts/evaluate.sh}, all numbers are in \code{results/d6/metrics.json}.
+
+\subsection{Deliverable 6: trajectories without alignment}\label{sec:d6a}
+
+\begin{figure}[tbp]
+\centering
+\begin{subfigure}[b]{0.48\linewidth}
+  \includegraphics[width=\linewidth,trim=60 90 0 80,clip]{d6_evo_traj_unaligned.png}
+  \caption{\code{evo\_traj tum kimera.txt orb\_slam3.txt --plot}}
+\end{subfigure}
+
+\vspace{0.4em}
+\begin{subfigure}[b]{\linewidth}
+  \includegraphics[width=\linewidth]{d6_unaligned.pdf}
+  \caption{Same data: top view (dots mark the first pose) and height over time.}
+\end{subfigure}
+\caption{D6, no alignment: each trajectory is plotted in the world frame chosen by its own system.}
+\label{fig:unaligned}
+\end{figure}
+
+\paragraph{What we see.} The two trajectories in Fig.~\ref{fig:unaligned} have the same length
+(Kimera 79.1\,m, ORB-SLAM3 81.6\,m) and, after rotating one of them, the same shape, but they are
+rotated, translated and tilted with respect to each other. Kimera starts at $(4.71,-1.79,0.69)$\,m
+and moves in a nearly horizontal plane, with $z$ between $-1.3$ and $1.3$\,m. ORB-SLAM3 starts
+exactly at the origin with identity orientation, and its ``height'' $z$ rises to 9.5\,m, which
+the MAV did not fly: the motion that is horizontal in the real world appears along $z$ in the
+ORB-SLAM3 frame. The two estimates are not wrong; they use \textbf{different world-frame
+conventions}:
+\begin{itemize}
+\item \textbf{Kimera-VIO} initialises its state from the ground truth (\code{autoInitialize: 0}
+  in \code{BackendParams.yaml}, which is why the run script passes \code{--log\_euroc\_gt\_data}):
+  its first pose is the ground-truth pose of frame 50. Its world frame therefore \emph{is} the
+  EuRoC (Vicon/Leica) world frame, with $z$ against gravity. After that point it is pure
+  odometry.
+\item \textbf{ORB-SLAM3} (stereo-inertial) estimates gravity during IMU initialisation, but
+  its \code{SaveTrajectory\allowbreak EuRoC} function writes every pose relative to the IMU pose of the \emph{first
+  keyframe} ($T_{w b_0}^{-1} T_{w b_k}$). Its world frame is thus the body frame of the
+  vehicle at start-up. In EuRoC the IMU $x$ axis points roughly up, so gravity is along
+  $(-0.94,\,0.05,\,0.34)$ in this frame; the frame is tilted by $110^\circ$ with respect to
+  the ground truth and its origin is the starting position.
+\end{itemize}
+Because the frames differ by a rigid transformation that is not observable from the data
+(a VIO system can observe roll and pitch from gravity, but the global yaw and position are
+unobservable and fixed by convention), a meaningful comparison needs an alignment step.
+
+\subsection{Deliverable 6: trajectories aligned with ground truth}\label{sec:d6b}
+
+\begin{figure}[tbp]
+\centering
+\begin{subfigure}[b]{0.48\linewidth}
+  \includegraphics[width=\linewidth,trim=60 90 0 80,clip]{d6_evo_traj_aligned.png}
+  \caption{\code{evo\_traj \dots --ref data.tum --plot --align}}
+\end{subfigure}
+
+\vspace{0.4em}
+\begin{subfigure}[b]{\linewidth}
+  \includegraphics[width=\linewidth]{d6_aligned.pdf}
+  \caption{Same data: top view and height, ground truth dashed.}
+\end{subfigure}
+
+\vspace{0.4em}
+\begin{subfigure}[b]{\linewidth}
+  \includegraphics[width=\linewidth]{d6_ate_time.pdf}
+  \caption{Position error over time after the $\mathrm{SE}(3)$ alignment (\code{evo\_ape --align}).}
+\end{subfigure}
+\caption{D6, after $\mathrm{SE}(3)$ alignment (Umeyama~\cite{umeyama1991}, no scale) of each estimate to the
+EuRoC ground truth.}
+\label{fig:aligned}
+\end{figure}
+
+\code{--align} solves for the rigid transformation $T\in\mathrm{SE}(3)$ that minimises
+$\sum_k\|T p^{\text{est}}_k - p^{\text{gt}}_k\|^2$ over all associated positions. For Kimera this transformation is
+almost the identity ($1.8^\circ$ of tilt, $0.3^\circ$ of yaw, 0.23\,m of translation), as expected
+from its ground-truth initialisation. For ORB-SLAM3 it is the $110^\circ$ rotation plus the
+$(4.67,-1.74,0.87)$\,m offset to the starting point. After alignment both trajectories lie on
+top of the ground truth (Fig.~\ref{fig:aligned}), including the height profile, and the
+differences are now visible only in the error plot and in Table~\ref{tab:ate}.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+ & Kimera-VIO & ORB-SLAM3 \\
+\midrule
+poses evaluated (rate) & 813 (keyframes, $\approx$4.5\,Hz) & 3638 (every frame, 20\,Hz)\\
+ATE RMSE, $\mathrm{SE}(3)$ align [m] & 0.176 & \textbf{0.039} \\
+ATE mean / median / max [m] & 0.157 / 0.136 / 0.396 & \textbf{0.035 / 0.040 / 0.077} \\
+rotation error RMSE [deg] & 2.54 & \textbf{1.25} \\
+ATE RMSE, $\mathrm{Sim}(3)$ align [m] & 0.170 & \textbf{0.021} \\
+estimated scale factor $s$ & 1.011 & 1.008 \\
+end-point error, first pose aligned [m] & 0.62 (0.78\,\% of path) & \textbf{0.018} \\
+max.\ error, first pose aligned [m] & 0.62 (at the end) & 0.16 \\
+\bottomrule
+\end{tabular}
+\caption{Accuracy on the full \code{MH\_01\_easy} sequence (\code{evo\_ape}, translation part unless
+stated; \code{results/d6/evo/ape\_*.txt}, \code{results/d6/metrics.json}).}
+\label{tab:ate}
+\end{table}
+
+\paragraph{Drift.} Kimera-VIO is visual-inertial \emph{odometry}: a fixed-lag smoother
+(iSAM2 over the last 25 keyframes, i.e.\ about 5\,s) with structureless stereo smart factors and
+IMU preintegration~\cite{forster2017preintegration}. Information older than the horizon is
+marginalised, and features are never matched against the old part of the map. Yaw and
+position errors therefore accumulate. With only the first pose aligned, its error grows
+monotonically and reaches its maximum, 0.62\,m, at the very end. The global $\mathrm{SE}(3)$
+alignment hides part of this by distributing the drift over the trajectory. This is why the
+aligned error in Fig.~\ref{fig:aligned}c is about 0.25\,m in the first 50\,s, while the MAV is
+still near the start, drops in the middle of the run and rises again to 0.40\,m at the end.
+ORB-SLAM3 has a constant error of about 4\,cm with no growth over time: its first-pose-aligned
+error stays below 0.16\,m everywhere and returns to 1.8\,cm at the end, when the MAV is back near
+its take-off point.
+
+\paragraph{Loop closure vs.\ map re-use.} Kimera-VIO was run as pure VIO (\code{USE\_LCD=0},
+i.e.\ without Kimera-RPGO), so it has no mechanism to correct past drift. ORB-SLAM3 is a full
+SLAM system with place recognition, loop closing and map merging. In this run, however, its
+log shows no loop or merge event: a single map with 126 keyframes was kept for the whole
+sequence. Its drift-free result comes from \emph{mid-term data association}. When the MAV
+returns to an area it already mapped (\code{MH\_01} flies over the same parts of the machine
+hall several times and ends near the start), tracking matches the current frame against the
+existing map points of covisible keyframes, and local visual-inertial BA ties the new keyframes
+to the old ones. The drift is corrected before it can grow, so the loop never needs to be
+``closed'' explicitly. On a longer sequence with a real loop the loop-closing thread and the
+global BA would also be used.
+
+\paragraph{Scale.} Both systems observe metric scale from the stereo baseline (11\,cm) and the
+accelerometer, so neither should have scale drift. A $\mathrm{Sim}(3)$ alignment confirms this:
+the estimated scale factors are 1.008 (ORB-SLAM3) and 1.011 (Kimera), and correcting scale
+reduces the ATE by only 0.6\,cm for Kimera. The 1.8\,cm reduction for ORB-SLAM3 is a
+noticeable fraction of its very small error, but it is still under 1\,\% of scale. This is
+different from monocular systems such as LDSO (Section~\ref{sec:d7}), whose trajectories have
+an arbitrary scale and need \code{--correct\_scale}.
+
+\paragraph{Other differences.} (i) Kimera publishes only keyframe poses, so its curve is
+sparser; ORB-SLAM3 writes a pose for every frame. (ii) ORB-SLAM3's trajectory starts
+0.9\,s before the ground truth and Kimera's 1.5\,s after it (Kimera skips the first 50
+frames), so evo evaluates slightly different time intervals; this has no effect on the
+comparison above. (iii) Kimera's rotation error is twice that of ORB-SLAM3 (2.5$^\circ$ vs
+1.3$^\circ$). Its yaw drift is the main source of its position error, because a yaw error
+$\delta\psi$ moves a point at distance $d$ by about $d\,\delta\psi$, and the hall is about
+10\,m across. (iv) The two systems also do different amounts of work: Kimera processed the
+sequence in 46\,s ($\approx 4\times$ faster than real time) while drawing its 3D mesh, and
+ORB-SLAM3 ran at about real time.
+
+\subsection{Deliverable 7 (optional): LDSO}\label{sec:d7}
+
+\paragraph{Setup.} LDSO~\cite{gao2018ldso} is DSO~\cite{engel2018dso} (direct, sparse,
+monocular) with ORB-feature place recognition (DBoW3) and a $\mathrm{Sim}(3)$ pose graph for
+loop closure. We built the upstream master (\code{9b0c48c}) unmodified, together with its
+bundled DBoW3 and g2o. Pangolin v0.6 is the only extra dependency and was installed in a
+local prefix (\code{scripts/build\_ldso.sh}). We ran it as in the handout,
+\code{run\_dso\_euroc preset=0 files=\dots/mav0/cam0}, i.e.\ on the left camera only, with
+the radial-tangential calibration shipped in \code{examples/EUROC/EUROC.txt} and without
+photometric calibration, which EuRoC does not provide (\code{scripts/run\_ldso.sh}). The Pangolin
+viewer worked. All 3682 frames were processed, without tracking loss, and LDSO kept 711
+keyframes. It ran single-threaded and slower than real time (about 16 min with the GUI). The
+place-recognition module accepted \textbf{16 loop closures}, for example keyframe 134$\to$97,
+571$\to$427 and 684$\to$216, and at the end of the sequence 687--697$\to$5--10, when the MAV
+returns to its take-off area. LDSO writes two trajectories, with and without the loop-closure
+pose graph (\code{results.txt} and \code{results.txt.noloop}). Both are clean TUM files with
+timestamps in seconds; our \code{fix\_ldso.py} found no malformed lines to drop. Because
+LDSO is monocular, all trajectories are aligned with $\mathrm{Sim}(3)$
+(\code{evo\_traj \dots --align --correct\_scale --plot\_mode xy}).
+
+\begin{figure}[tbp]
+\centering
+\begin{subfigure}[b]{0.36\linewidth}
+  \includegraphics[width=\linewidth]{d7_evo_traj_sim3_xy.png}
+  \caption{\code{evo\_traj} (\code{--align --correct\_scale --plot\_mode xy}).}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.62\linewidth}
+  \includegraphics[width=\linewidth]{d7_sim3_aligned.pdf}
+  \caption{Same alignment: x-y plane, LDSO with/without loop closure, and error over time.}
+\end{subfigure}
+\caption{D7: Kimera-VIO, ORB-SLAM3 and LDSO on \code{MH\_01\_easy}, each $\mathrm{Sim}(3)$-aligned
+to the ground truth.}
+\label{fig:d7}
+\end{figure}
+
+\begin{table}[tbp]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+ & Kimera-VIO & ORB-SLAM3 & LDSO & LDSO, no loop \\
+\midrule
+sensors & stereo + IMU & stereo + IMU & mono & mono \\
+poses evaluated & 813 & 3638 & 696 & 696 \\
+raw path length [m] (GT 80.6) & 79.1 & 81.6 & 52.2 & 52.3 \\
+$\mathrm{Sim}(3)$ scale factor $s$ & 1.011 & 1.008 & 1.524 & 1.534 \\
+ATE RMSE, $\mathrm{Sim}(3)$ [m] & 0.170 & \textbf{0.021} & 0.043 & 0.049 \\
+ATE max, $\mathrm{Sim}(3)$ [m] & 0.410 & \textbf{0.052} & 0.086 & 0.088 \\
+ATE RMSE, $\mathrm{SE}(3)$ only [m] & 0.176 & 0.039 & 1.570 & 1.590 \\
+\bottomrule
+\end{tabular}
+\caption{D7 accuracy on the full sequence (\code{results/d7/metrics.json},
+\code{results/d7/evo/ape\_*\_sim3.txt}).}
+\label{tab:d7}
+\end{table}
+
+\paragraph{Differences between the trajectories.}
+\begin{itemize}
+\item \textbf{Scale.} The raw LDSO trajectory is 52\,m long instead of 80.6\,m: a monocular
+  system can only recover the trajectory up to an unknown global scale, which DSO fixes
+  arbitrarily during initialisation. Evo has to stretch it by $s=1.52$. Without scale
+  correction ($\mathrm{SE}(3)$ only) the LDSO error is 1.57\,m, which only reflects the wrong
+  scale and says nothing about the shape. The two stereo-inertial systems need $s\approx1.01$.
+\item \textbf{Shape after $\mathrm{Sim}(3)$ alignment.} LDSO follows the ground truth closely
+  (4.3\,cm RMSE). It is about $4\times$ better than Kimera-VIO (17.0\,cm) and about half as
+  accurate as ORB-SLAM3 (2.1\,cm). In Fig.~\ref{fig:d7}a it is hard to tell LDSO and ORB-SLAM3
+  apart, while Kimera's yaw drift is visible on the right-hand part of the hall (around
+  $x\approx4$--5\,m), where Kimera is offset from the other two. The comparison favours LDSO
+  somewhat: $\mathrm{Sim}(3)$ alignment gives it a free scale parameter, and its error is
+  evaluated only at its 696 keyframes. Even so, on this well-textured, well-lit sequence the
+  direct photometric front-end is very accurate.
+\item \textbf{Effect of loop closure.} The trajectories with and without loop closure almost
+  overlap (Fig.~\ref{fig:d7}b). Loop closure reduces the RMSE from 4.9 to 4.3\,cm, and mostly
+  helps at the end of the sequence: without loops the error grows to 8\,cm in the last
+  20\,s, while the loops to keyframes 5--10 bring the end of the trajectory back onto the
+  start. The scale also changes slightly (1.534$\to$1.524), because the $\mathrm{Sim}(3)$ pose
+  graph corrects scale drift as well. The improvement is small because DSO's odometry drifts
+  little on \code{MH\_01}: the sequence is short, slow and well textured. Loop closure matters
+  much more on longer trajectories.
+\item \textbf{Frames and timing.} Like ORB-SLAM3, LDSO starts at the identity in its own
+  frame (here the first camera frame, $z$ along the optical axis), so without alignment it
+  would be rotated and scaled with respect to both other trajectories. It outputs only
+  keyframes (711, about 3.9\,Hz).
+\end{itemize}
+
+\section{Conclusions}
+The information-matrix exercises show that marginalisation always fills in the matrix
+among the neighbours of the eliminated variable, which is why fixed-lag smoothers and filters
+become dense while full smoothing stays sparse. On EuRoC \code{MH\_01\_easy}, the raw
+trajectories of ORB-SLAM3 and Kimera-VIO cannot be compared directly, because each system
+picks its own world frame. After an $\mathrm{SE}(3)$ alignment, ORB-SLAM3 is about $4.5\times$ more
+accurate (3.9\,cm vs 17.6\,cm ATE RMSE). The difference comes from map re-use rather than from
+the front-end: Kimera-VIO is odometry and drifts by 0.8\,\% of the travelled distance, while
+ORB-SLAM3 keeps re-observing its old map and has no measurable drift. Both recover the true
+metric scale. The monocular direct method LDSO cannot recover scale (factor 1.52). Once scale is
+corrected, its shape is accurate to 4.3\,cm, and loop closure only helps it slightly on this short,
+well-textured sequence.
+
+\section*{Individual responsibility}
+Team: Team Fullcans. The individual deliverables D1--D5 are answered in
+Section~1, and the team deliverables D6 and D7 (optional, LDSO) in Section~2.
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}
